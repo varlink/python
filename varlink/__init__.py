@@ -2,6 +2,7 @@
 
 import collections
 import json
+import os
 import re
 import select
 import socket
@@ -239,7 +240,8 @@ class Service:
         self.interfaces = {}
         self.connections = {}
 
-        self.add_interface('org.varlink.service.varlink', self)
+        directory = os.path.dirname(__file__)
+        self.add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
 
     def GetInfo(self):
         return {
