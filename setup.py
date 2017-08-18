@@ -8,4 +8,5 @@ setup(
     author = "Lars Karlitski",
     author_email = "lars@karlitski.net",
     url = "https://github.com/varlink/python-varlink",
+    license = "ASL2.0"
 )
