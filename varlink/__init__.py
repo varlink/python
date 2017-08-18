@@ -256,7 +256,7 @@ class Service:
         try:
             i = self.interfaces[interface]
         except KeyError:
-            raise InterfaceNotFound(interface_name)
+            raise InterfaceNotFound(interface)
 
         return { 'description': i.description }
 
