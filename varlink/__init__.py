@@ -231,7 +231,7 @@ class InvalidParameter(VarlinkError):
         }
 
 class Service:
-    def __init__(self, address, vendor, product, version, interface_dir='.'):
+    def __init__(self, address, vendor='', product='', version='', interface_dir='.'):
         self.address = address
         self.vendor = vendor
         self.product = product
