@@ -260,14 +260,17 @@ class Service:
 
         return { 'description': i.description }
 
-    def serve(self, address):
-        s = socket.socket(socket.AF_UNIX)
-        s.setblocking(0)
+    def serve(self, address, listen_fd=None):
+        if listen_fd:
+            s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
+        else:
+            if address[0] == '@':
+                address = address.replace('@', '\0', 1)
 
-        if address[0] == '@':
-            address = address.replace('@', '\0', 1)
-        s.bind(address)
-        s.listen()
+            s = socket.socket(socket.AF_UNIX)
+            s.setblocking(0)
+            s.bind(address)
+            s.listen()
 
         epoll = select.epoll()
         epoll.register(s, select.EPOLLIN)
