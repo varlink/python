@@ -231,8 +231,7 @@ class InvalidParameter(VarlinkError):
         }
 
 class Service:
-    def __init__(self, address, vendor='', product='', version='', interface_dir='.'):
-        self.address = address
+    def __init__(self, vendor='', product='', version='', interface_dir='.'):
         self.vendor = vendor
         self.product = product
         self.version = version
@@ -261,11 +260,10 @@ class Service:
 
         return { 'description': i.description }
 
-    def serve(self):
+    def serve(self, address):
         s = socket.socket(socket.AF_UNIX)
         s.setblocking(0)
 
-        address = self.address
         if address[0] == '@':
             address = address.replace('@', '\0', 1)
         s.bind(address)
