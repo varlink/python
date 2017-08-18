@@ -231,7 +231,7 @@ class InvalidParameter(VarlinkError):
         }
 
 class Service:
-    def __init__(self, address, vendor, product, version):
+    def __init__(self, address, vendor, product, version, interface_dir='.'):
         self.address = address
         self.vendor = vendor
         self.product = product
@@ -239,6 +239,7 @@ class Service:
         self.url = None
         self.interfaces = {}
         self.connections = {}
+        self.interface_dir = interface_dir
 
         directory = os.path.dirname(__file__)
         self.add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
@@ -331,6 +332,9 @@ class Service:
         return { 'parameters': out or {} }
 
     def add_interface(self, filename, handler):
+        if not os.path.isabs(filename):
+            filename = os.path.join(self.interface_dir, filename + '.varlink')
+
         with open(filename) as f:
             interface = Interface(f.read())
             interface.handler = handler
