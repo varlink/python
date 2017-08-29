@@ -1,14 +1,10 @@
-%define build_date %(date +"%%a %%b %%d %%Y")
-%define build_timestamp %(date +"%%Y%%m%%d.%%H%M%%S")
-
 Name:           python-varlink
 Version:        1
-Release:        %{build_timestamp}%{?dist}
+Release:        1%{?dist}
 Summary:        Python implementation of Varlink
 License:        ASL2.0
-URL:            https://github.com/varlink/python-varlink
-Source0:        https://github.com/varlink/python-varlink/archive/v%{version}.tar.gz
-
+URL:            https://github.com/varlink/%{name}
+Source0:        https://github.com/varlink/%{name}/archive/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  python3-devel
 
@@ -30,5 +26,5 @@ An python module for Varlink.
 %{python3_sitelib}/*
 
 %changelog
-* %{build_date} <info@varlink.org> %{version}-%{build_timestamp}
-- %{name} %{version}
+* Tue Aug 29 2017 <info@varlink.org> 1-1
+- python-varlink 1
