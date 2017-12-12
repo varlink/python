@@ -336,8 +336,16 @@ class Client(dict):
         message, _, data = data.rpartition(b'\0')
         if message:
             ret = json.loads(message)
-            # FIXME: error handling
-            return ret['parameters']
+            if "error" in ret:
+                # FIXME: error handling
+                if "parameters" in ret:
+                    parms = ret["parameters"]
+                else:
+                    parms = {}
+
+                raise VarlinkError(ret["error"], **parms)
+            else:
+                return ret['parameters']
         raise ConnectionError
 
     def add_interface(self, filename, handler):
