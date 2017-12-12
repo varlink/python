@@ -98,12 +98,77 @@ class Interface:
         while not scanner.end():
             member = read_member(scanner)
             self.members[member.name] = member
+            if member and type(member) == Method:
+                self.add_method(member)
+
+    def add_method(self,   method):
+        def _wrapped(*args, **kwds):
+            return self.call(method.name,  *args,  **kwds)
+        _wrapped.__name__ = method.name
+        setattr(self,  method.name,  _wrapped)
+
+    def call(self,  method_name,  *args,  **kwargs):
+        method = self.get_method(method_name)
+        if not method:
+            raise MethodNotFound(method_name)
+
+        sparam = self.filter_params(method.in_type,  args,  kwargs)
+        send = { 'method' : self.name + "." + method_name, 'parameters' : sparam }
+        reply = self.handler.send(send)
+        return reply
 
     def get_method(self, name):
         method = self.members.get(name)
         if method and type(method) == Method:
             return method
 
+    def filter_params(self,  types,  args,  kwargs):
+        if type(types) == CustomType:
+            types = self.members.get(types.name)
+
+        if type(types) == Alias:
+            types = types.type
+
+        if type(types) == Array:
+            return [ self.filter_params(types.element_type,  x,  None)  for x in args ]
+
+        if type(types) != Struct:
+            return str(args)
+
+        out = {}
+
+        mystruct = None
+        if not (type(args) is tuple):
+            mystruct = args
+            args = None
+
+        for name in types.fields:
+            if (type(args) is tuple):
+                if len(args):
+                    val = args[0]
+                    if len(args) > 1:
+                        args = args[1:]
+                    else:
+                        args = None
+                    out[name] = self.filter_params(types.fields[name],  val,  None)
+                    continue
+                else:
+                    if name in kwargs:
+                        out[name] = self.filter_params(types.fields[name],  kwargs[name],  None)
+                        continue
+
+            if mystruct:
+                try:
+                    if type(mystruct) is dict:
+                        val = mystruct[name]
+                    else:
+                        val = getattr(mystruct,  name)
+                    #print("name=",  name,  "val=",  val)
+                    out[name] = self.filter_params(types.fields[name],  val,  None)
+                except:
+                    pass
+
+        return out
 
 def read_type(scanner):
     if scanner.get('bool'):
@@ -229,6 +294,60 @@ class InvalidParameter(VarlinkError):
         self.parameters = {
             'parameter': name
         }
+
+class Client(dict):
+    def __init__(self,  address):
+        dict.__init__(self)
+        directory = os.path.dirname(__file__)
+        self.add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
+
+        if address.startswith("unix:"):
+            address = address[5:]
+            mode = address.rfind(';mode=')
+            if mode != -1:
+                address = address[:mode]
+            if address[0] == '@':
+                address = address.replace('@', '\0', 1)
+
+            s = socket.socket(socket.AF_UNIX)
+        else:
+            # FIXME: also accept other transports
+            raise ConnectionError
+
+        s.connect(address)
+        self.socket = s
+        info = self["org.varlink.service"].GetInfo()
+        for iface in info['interfaces']:
+            desc = self["org.varlink.service"].GetInterfaceDescription(iface)
+            interface = Interface(desc['description'])
+            interface.handler = self
+            self[interface.name] = interface
+
+    def send(self,  out):
+        out_buffer = json.dumps(out).encode('utf-8')
+        out_buffer += b'\0'
+        # FIXME: send until all sent
+        self.socket.send(out_buffer)
+        # FIXME: receive until b'\0'
+        data = self.socket.recv(8192)
+        if len(data) == 0:
+            raise ConnectionError
+
+        message, _, data = data.rpartition(b'\0')
+        if message:
+            ret = json.loads(message)
+            # FIXME: error handling
+            return ret['parameters']
+        raise ConnectionError
+
+    def add_interface(self, filename, handler):
+        if not os.path.isabs(filename):
+            filename = os.path.join(self.interface_dir, filename + '.varlink')
+
+        with open(filename) as f:
+            interface = Interface(f.read())
+            interface.handler = handler
+            self[interface.name] = interface
 
 class Service:
     def __init__(self, vendor='', product='', version='', interface_dir='.'):
