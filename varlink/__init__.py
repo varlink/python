@@ -101,18 +101,18 @@ class Interface:
             if isinstance(member, Method):
                 self.add_method(member)
 
-    def add_method(self,   method):
+    def add_method(self, method):
         def _wrapped(*args, **kwds):
-            return self.call(method.name,  *args,  **kwds)
+            return self.call(method.name, *args, **kwds)
         _wrapped.__name__ = method.name
-        setattr(self,  method.name,  _wrapped)
+        setattr(self, method.name, _wrapped)
 
-    def call(self,  method_name,  *args,  **kwargs):
+    def call(self, method_name, *args, **kwargs):
         method = self.get_method(method_name)
         if not method:
             raise MethodNotFound(method_name)
 
-        sparam = self.filter_params(method.in_type,  args,  kwargs)
+        sparam = self.filter_params(method.in_type, args, kwargs)
         send = { 'method' : self.name + "." + method_name, 'parameters' : sparam }
         reply = self.handler.send(send)
         return reply
@@ -122,7 +122,7 @@ class Interface:
         if method and isinstance(method, Method):
             return method
 
-    def filter_params(self,  types,  args,  kwargs):
+    def filter_params(self, types, args, kwargs):
         if isinstance(types, CustomType):
             types = self.members.get(types.name)
 
@@ -130,7 +130,7 @@ class Interface:
             types = types.type
 
         if isinstance(types, Array):
-            return [ self.filter_params(types.element_type,  x,  None)  for x in args ]
+            return [ self.filter_params(types.element_type, x, None)  for x in args ]
 
         if not isinstance(types, Struct):
             return str(args)
@@ -144,17 +144,17 @@ class Interface:
 
         for name in types.fields:
             if isinstance(args, tuple):
-                if len(args):
+                if args:
                     val = args[0]
                     if len(args) > 1:
                         args = args[1:]
                     else:
                         args = None
-                    out[name] = self.filter_params(types.fields[name],  val,  None)
+                    out[name] = self.filter_params(types.fields[name], val, None)
                     continue
                 else:
                     if name in kwargs:
-                        out[name] = self.filter_params(types.fields[name],  kwargs[name],  None)
+                        out[name] = self.filter_params(types.fields[name], kwargs[name], None)
                         continue
 
             if mystruct:
@@ -162,9 +162,9 @@ class Interface:
                     if isinstance(mystruct, dict):
                         val = mystruct[name]
                     else:
-                        val = getattr(mystruct,  name)
-                    #print("name=",  name,  "val=",  val)
-                    out[name] = self.filter_params(types.fields[name],  val,  None)
+                        val = getattr(mystruct, name)
+                    #print("name=", name, "val=", val)
+                    out[name] = self.filter_params(types.fields[name], val, None)
                 except:
                     pass
 
@@ -296,7 +296,7 @@ class InvalidParameter(VarlinkError):
         }
 
 class Client(dict):
-    def __init__(self,  address):
+    def __init__(self, address):
         dict.__init__(self)
         directory = os.path.dirname(__file__)
         self.add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
@@ -323,7 +323,7 @@ class Client(dict):
             interface.handler = self
             self[interface.name] = interface
 
-    def send(self,  out):
+    def send(self, out):
         out_buffer = json.dumps(out).encode('utf-8')
         out_buffer += b'\0'
         # FIXME: send until all sent
