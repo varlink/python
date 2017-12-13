@@ -98,7 +98,7 @@ class Interface:
         while not scanner.end():
             member = read_member(scanner)
             self.members[member.name] = member
-            if member and type(member) == Method:
+            if isinstance(member, Method):
                 self.add_method(member)
 
     def add_method(self,   method):
@@ -119,31 +119,31 @@ class Interface:
 
     def get_method(self, name):
         method = self.members.get(name)
-        if method and type(method) == Method:
+        if method and isinstance(method, Method):
             return method
 
     def filter_params(self,  types,  args,  kwargs):
-        if type(types) == CustomType:
+        if isinstance(types, CustomType):
             types = self.members.get(types.name)
 
-        if type(types) == Alias:
+        if isinstance(types, Alias):
             types = types.type
 
-        if type(types) == Array:
+        if isinstance(types, Array):
             return [ self.filter_params(types.element_type,  x,  None)  for x in args ]
 
-        if type(types) != Struct:
+        if not isinstance(types, Struct):
             return str(args)
 
         out = {}
 
         mystruct = None
-        if not (type(args) is tuple):
+        if not isinstance(args, tuple):
             mystruct = args
             args = None
 
         for name in types.fields:
-            if (type(args) is tuple):
+            if isinstance(args, tuple):
                 if len(args):
                     val = args[0]
                     if len(args) > 1:
@@ -159,7 +159,7 @@ class Interface:
 
             if mystruct:
                 try:
-                    if type(mystruct) is dict:
+                    if isinstance(mystruct, dict):
                         val = mystruct[name]
                     else:
                         val = getattr(mystruct,  name)
