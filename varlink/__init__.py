@@ -163,7 +163,6 @@ class Interface:
                         val = mystruct[name]
                     else:
                         val = getattr(mystruct, name)
-                    #print("name=", name, "val=", val)
                     out[name] = self.filter_params(types.fields[name], val, None)
                 except:
                     pass
