@@ -132,7 +132,7 @@ class Interface:
             return [self._filter_params(types.element_type, x, None) for x in args]
 
         if not isinstance(types, Struct):
-            return str(args)
+            return args
 
         out = {}
 
