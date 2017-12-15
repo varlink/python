@@ -96,32 +96,32 @@ class Interface:
             member = read_member(scanner)
             self.members[member.name] = member
             if isinstance(member, Method):
-                self.add_method(member)
+                self._add_method(member)
 
-    def add_method(self, method):
+    def _add_method(self, method):
         def _wrapped(*args, **kwds):
-            return self.call(method.name, *args, **kwds)
+            return self._call(method.name, *args, **kwds)
         _wrapped.__name__ = method.name
         # FIXME: add comments
         _wrapped.__doc__ = "Varlink call: " + method.signature
         setattr(self, method.name, _wrapped)
 
-    def call(self, method_name, *args, **kwargs):
-        method = self.get_method(method_name)
+    def _call(self, method_name, *args, **kwargs):
+        method = self._get_method(method_name)
         if not method:
             raise MethodNotFound(method_name)
 
-        sparam = self.filter_params(method.in_type, args, kwargs)
-        send = { 'method' : self.name + "." + method_name, 'parameters' : sparam }
+        sparam = self._filter_params(method.in_type, args, kwargs)
+        send = {'method' : self.name + "." + method_name, 'parameters' : sparam}
         reply = self.handler.send(send)
         return reply
 
-    def get_method(self, name):
+    def _get_method(self, name):
         method = self.members.get(name)
         if method and isinstance(method, Method):
             return method
 
-    def filter_params(self, types, args, kwargs):
+    def _filter_params(self, types, args, kwargs):
         if isinstance(types, CustomType):
             types = self.members.get(types.name)
 
@@ -129,7 +129,7 @@ class Interface:
             types = types.type
 
         if isinstance(types, Array):
-            return [ self.filter_params(types.element_type, x, None)  for x in args ]
+            return [self._filter_params(types.element_type, x, None) for x in args]
 
         if not isinstance(types, Struct):
             return str(args)
@@ -149,11 +149,11 @@ class Interface:
                         args = args[1:]
                     else:
                         args = None
-                    out[name] = self.filter_params(types.fields[name], val, None)
+                    out[name] = self._filter_params(types.fields[name], val, None)
                     continue
                 else:
                     if name in kwargs:
-                        out[name] = self.filter_params(types.fields[name], kwargs[name], None)
+                        out[name] = self._filter_params(types.fields[name], kwargs[name], None)
                         continue
 
             if mystruct:
@@ -162,7 +162,7 @@ class Interface:
                         val = mystruct[name]
                     else:
                         val = getattr(mystruct, name)
-                    out[name] = self.filter_params(types.fields[name], val, None)
+                    out[name] = self._filter_params(types.fields[name], val, None)
                 except:
                     pass
 
@@ -223,8 +223,8 @@ def read_member(scanner):
 
 
 class Connection:
-    def __init__(self, socket):
-        self.socket = socket
+    def __init__(self, _socket):
+        self.socket = _socket
         self.in_buffer = b''
         self.out_buffer = b''
 
@@ -387,7 +387,7 @@ class Service:
         except KeyError:
             raise InterfaceNotFound(interface)
 
-        return { 'description': i.description }
+        return {'description': i.description}
 
     def serve(self, address, listen_fd=None):
         if listen_fd:
@@ -427,7 +427,7 @@ class Service:
                             reply = error.json()
                         except Exception as error:
                             traceback.print_exception(type(error), error, error.__traceback__)
-                            reply = { 'error': 'InternalError' }
+                            reply = {'error': 'InternalError'}
 
                         connection.write(reply)
 
@@ -445,7 +445,7 @@ class Service:
         if not interface:
             raise InterfaceNotFound(interface_name)
 
-        method = interface.get_method(method_name)
+        method = interface._get_method(method_name)
         if not method:
             raise MethodNotFound(method_name)
 
@@ -459,7 +459,7 @@ class Service:
             raise MethodNotImplemented(method_name)
 
         out = func(**parameters)
-        return { 'parameters': out or {} }
+        return {'parameters': out or {}}
 
     def add_interface(self, filename, handler):
         if not os.path.isabs(filename):
