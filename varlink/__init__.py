@@ -11,6 +11,8 @@ import traceback
 class Scanner:
     def __init__(self, string):
         self.whitespace = re.compile(r'([ \t\n]|#.*$)+', re.ASCII | re.MULTILINE)
+        # FIXME: nested ()
+        self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))', re.ASCII | re.MULTILINE)
 
         self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]', re.ASCII)
         self.patterns = {
@@ -77,10 +79,11 @@ class Alias:
         self.type = varlink_type
 
 class Method:
-    def __init__(self, name, in_type, out_type):
+    def __init__(self, name, in_type, out_type, signature):
         self.name = name
         self.in_type = in_type
         self.out_type = out_type
+        self.signature = signature
 
 class Error:
     def __init__(self, name, varlink_type):
@@ -105,6 +108,8 @@ class Interface:
         def _wrapped(*args, **kwds):
             return self.call(method.name, *args, **kwds)
         _wrapped.__name__ = method.name
+        # FIXME: add comments
+        _wrapped.__doc__ = "Varlink call: " + method.signature
         setattr(self, method.name, _wrapped)
 
     def call(self, method_name, *args, **kwargs):
@@ -209,10 +214,14 @@ def read_member(scanner):
         return Alias(scanner.expect('member-name'), read_type(scanner))
     elif scanner.get('method'):
         name = scanner.expect('member-name')
+        # FIXME
+        sig = scanner.method_signature.match(scanner.string, scanner.pos)
+        if sig:
+            sig = name + sig.group(0)
         in_type = read_struct(scanner)
         scanner.expect('->')
         out_type = read_struct(scanner)
-        return Method(name, in_type, out_type)
+        return Method(name, in_type, out_type, sig)
     elif scanner.get('error'):
         return Error(scanner.expect('member-name'), read_type(scanner))
     else:
