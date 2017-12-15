@@ -186,6 +186,7 @@ def read_type(scanner):
             t = read_struct(scanner)
 
     if scanner.get('[]'):
+        # FIXME: handle array sizes [10]
         t = Array(t)
 
     return t
