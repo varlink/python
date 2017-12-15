@@ -55,12 +55,6 @@ class Scanner:
         return self.pos >= len(self.string)
 
 
-class Int:
-    pass
-
-class String:
-    pass
-
 class Struct:
     def __init__(self, fields):
         self.fields = collections.OrderedDict(fields)
@@ -176,13 +170,13 @@ class Interface:
 
 def read_type(scanner):
     if scanner.get('bool'):
-        t = String()
+        t = bool()
     elif scanner.get('int'):
-        t = String()
+        t = int()
     elif scanner.get('float'):
-        t = String()
+        t = float()
     elif scanner.get('string'):
-        t = String()
+        t = str()
     else:
         name = scanner.get('member-name')
         if name:
