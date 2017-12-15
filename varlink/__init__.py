@@ -259,43 +259,32 @@ class Connection:
         self.out_buffer += b'\0'
 
 class VarlinkError(Exception):
-    def __init__(self, name, **parameters):
-        self.name = name
-        self.parameters = parameters
+    def __init__(self, error, parameters):
+        super().__init__({"error" : error, "parameters" : parameters})
+        self.error = error
+        if isinstance(parameters, dict):
+            self.parameters = Namespace(**parameters)
+        else:
+            self.parameters = parameters
 
     def json(self):
-        return {
-            'error': self.name,
-            'parameters': self.parameters
-        }
+        return self.args[0]
 
 class InterfaceNotFound(VarlinkError):
     def __init__(self, interface):
-        self.name = 'org.varlink.service.InterfaceNotFound'
-        self.parameters = {
-            'interface': interface
-        }
+        VarlinkError.__init__(self, 'org.varlink.service.InterfaceNotFound', {'interface': interface})
 
 class MethodNotFound(VarlinkError):
     def __init__(self, method):
-        self.name = 'org.varlink.service.MethodNotFound'
-        self.parameters = {
-            'method': method
-        }
+        VarlinkError.__init__(self, 'org.varlink.service.MethodNotFound', {'method': method})
 
 class MethodNotImplemented(VarlinkError):
     def __init__(self, method):
-        self.name = 'org.varlink.service.MethodNotImplemented'
-        self.parameters = {
-            'method': method
-        }
+        VarlinkError.__init__(self, 'org.varlink.service.MethodNotImplemented', {'method': method})
 
 class InvalidParameter(VarlinkError):
     def __init__(self, name):
-        self.name = 'org.varlink.service.InvalidParameter'
-        self.parameters = {
-            'parameter': name
-        }
+        VarlinkError.__init__(self, 'org.varlink.service.InvalidParameter', {'parameter': name})
 
 class Client(dict):
     def __init__(self, address):
