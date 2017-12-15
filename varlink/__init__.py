@@ -7,6 +7,7 @@ import re
 import select
 import socket
 import traceback
+from types import SimpleNamespace as Namespace
 
 class Scanner:
     def __init__(self, string):
@@ -317,9 +318,9 @@ class Client(dict):
         s.connect(address)
         self.socket = s
         info = self["org.varlink.service"].GetInfo()
-        for iface in info['interfaces']:
+        for iface in info.interfaces:
             desc = self["org.varlink.service"].GetInterfaceDescription(iface)
-            interface = Interface(desc['description'])
+            interface = Interface(desc.description)
             interface.handler = self
             self[interface.name] = interface
 
@@ -335,17 +336,12 @@ class Client(dict):
 
         message, _, data = data.rpartition(b'\0')
         if message:
-            ret = json.loads(message)
-            if "error" in ret:
+            ret = json.loads(message, object_hook=lambda d: Namespace(**d))
+            if hasattr(ret, "error"):
                 # FIXME: error handling
-                if "parameters" in ret:
-                    parms = ret["parameters"]
-                else:
-                    parms = {}
-
-                raise VarlinkError(ret["error"], **parms)
+                raise VarlinkError(ret.error, hasattr(ret, "parameters") and ret.parameters or None)
             else:
-                return ret['parameters']
+                return ret.parameters
         raise ConnectionError
 
     def add_interface(self, filename, handler):
