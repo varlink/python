@@ -287,10 +287,19 @@ class InvalidParameter(VarlinkError):
         VarlinkError.__init__(self, 'org.varlink.service.InvalidParameter', {'parameter': name})
 
 class Client(dict):
-    def __init__(self, address):
+    def __init__(self, address=None, interface=None, resolver=None):
         dict.__init__(self)
+
+        def _resolve_interface(interface, resolver):
+            _iface = Client(resolver)['org.varlink.resolver']
+            _r = _iface.Resolve(interface)
+            return _r.address
+
         directory = os.path.dirname(__file__)
         self.add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
+
+        if address is None and not (interface is None):
+            address = _resolve_interface(interface, resolver or "unix:/run/org.varlink.resolver")
 
         if address.startswith("unix:"):
             address = address[5:]
