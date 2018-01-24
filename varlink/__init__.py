@@ -364,7 +364,6 @@ class Client(dict):
         # FIXME: send until all sent
         self.socket.send(out_buffer)
         for message in self.recv():
-            print(message)
             ret = json.loads(message, object_hook=lambda d: Namespace(**d))
             if hasattr(ret, "error"):
                 # FIXME: error handling
