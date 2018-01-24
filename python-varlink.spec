@@ -1,5 +1,5 @@
 Name:           python-varlink
-Version:        2
+Version:        3
 Release:        1%{?dist}
 Summary:        Python implementation of Varlink
 License:        ASL2.0

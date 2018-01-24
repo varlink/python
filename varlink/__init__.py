@@ -3,6 +3,7 @@
 import collections
 import json
 import os
+import sys
 import re
 import select
 import socket
@@ -55,7 +56,6 @@ class Scanner:
 
         return self.pos >= len(self.string)
 
-
 class Struct:
     def __init__(self, fields):
         self.fields = collections.OrderedDict(fields)
@@ -101,7 +101,10 @@ class Interface:
 
     def _add_method(self, method):
         def _wrapped(*args, **kwds):
-            return self._call(method.name, *args, **kwds)
+            if "more" in kwds and kwds.pop("more"):
+                return self._call_more(method.name, *args, **kwds)
+            else:
+                return self._call(method.name, *args, **kwds)
         _wrapped.__name__ = method.name
         # FIXME: add comments
         _wrapped.__doc__ = "Varlink call: " + method.signature
@@ -114,8 +117,16 @@ class Interface:
 
         sparam = self._filter_params(method.in_type, args, kwargs)
         send = {'method' : self.name + "." + method_name, 'parameters' : sparam}
-        reply = self.handler.send(send)
-        return reply
+        return self.handler.send(send).__next__()
+
+    def _call_more(self, method_name, *args, **kwargs):
+        method = self._get_method(method_name)
+        if not method:
+            raise MethodNotFound(method_name)
+
+        sparam = self._filter_params(method.in_type, args, kwargs)
+        send = {'method' : self.name + "." + method_name, 'more' : True, 'parameters' : sparam}
+        return self.handler.send(send)
 
     def _get_method(self, name):
         method = self.members.get(name)
@@ -318,6 +329,8 @@ class Client(dict):
 
         s.connect(address)
         self.socket = s
+        #self.socket.setblocking(0)
+        self.in_buffer = b''
         info = self["org.varlink.service"].GetInfo()
         for iface in info.interfaces:
             desc = self["org.varlink.service"].GetInterfaceDescription(iface)
@@ -325,24 +338,48 @@ class Client(dict):
             interface.handler = self
             self[interface.name] = interface
 
+    def recv(self):
+        epoll = select.epoll()
+        epoll.register(self.socket, select.EPOLLIN)
+        while True:
+            for fd, events in epoll.poll():
+                if not (events & select.EPOLLIN):
+                    continue
+
+                data = self.socket.recv(8192)
+                if len(data) == 0:
+                    raise StopIteration
+                    continue
+
+                self.in_buffer += data
+                message, _, self.in_buffer = self.in_buffer.rpartition(b'\0')
+                if message:
+                    yield message
+                else:
+                    continue
+            
     def send(self, out):
         out_buffer = json.dumps(out).encode('utf-8')
         out_buffer += b'\0'
         # FIXME: send until all sent
         self.socket.send(out_buffer)
-        # FIXME: receive until b'\0'
-        data = self.socket.recv(8192)
-        if len(data) == 0:
-            raise ConnectionError
-
-        message, _, data = data.rpartition(b'\0')
-        if message:
+        for message in self.recv():
+            print(message)
             ret = json.loads(message, object_hook=lambda d: Namespace(**d))
             if hasattr(ret, "error"):
                 # FIXME: error handling
                 raise VarlinkError(ret.error, hasattr(ret, "parameters") and ret.parameters or None)
             else:
-                return ret.parameters
+                if hasattr(ret, "continues"):
+                    continues = ret.continues
+                else:
+                    continues = False
+
+                yield ret.parameters
+
+                if (continues != True):
+                    raise StopIteration
+
         raise ConnectionError
 
     def add_interface(self, filename, handler):

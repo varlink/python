@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name = "varlink",
     packages = ["varlink"],
-    version = "2",
+    version = "3",
     description = "Varlink",
     author = "Lars Karlitski",
     author_email = "lars@karlitski.net",
