@@ -20,8 +20,13 @@ $ varlink help
 from varlink import Client    
 iface = Client(interface='io.systemd.journal')["io.systemd.journal"]
 
-iface.Monitor(initial_lines=1)
+m = iface.Monitor(initial_lines=10)
+for e in m.entries:
+    print("%s: %s" % (e.time, e.message))
 
+print("\n\n\n")
+
+# _more=True gives returns a never ending stream of return values
 for m in iface.Monitor(initial_lines=10, _more=True):
     for e in m.entries:
         print("%s: %s" % (e.time, e.message))
