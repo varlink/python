@@ -27,6 +27,7 @@ for e in m.entries:
 print("\n\n\n")
 
 # "_more=True" turns on the monitor mode, which gives a never ending stream of return values
+# if the server method supports this
 for m in iface.Monitor(initial_lines=10, _more=True):
     for e in m.entries:
         print("%s: %s" % (e.time, e.message))
