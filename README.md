@@ -14,6 +14,8 @@ $ varlink help
 
 ## python client example usage
 
+### Example 1: io.systemd.journal
+
 ```python
 from varlink import Client    
 iface = Client(interface='io.systemd.journal')["io.systemd.journal"]
@@ -25,13 +27,23 @@ for m in iface.Monitor(initial_lines=10, _more=True):
         print("%s: %s" % (e.time, e.message))
 ```
 
+### Example 2: org.varlink.resolver
+
 ```python
 from varlink import Client
 
 resolver = Client(address="unix:/run/org.varlink.resolver")['org.varlink.resolver']
 ret = resolver.GetInfo()
 print(ret.interfaces, "\n\n")
+```
+outputs:
+```
+['com.redhat.system.accounts', 'io.systemd.devices', 'io.systemd.journal', 'io.systemd.network', 'io.systemd.sysinfo', 'org.kernel.kmod', 'org.varlink.activator', 'org.varlink.resolver'] 
+```
 
+### Example 3: com.redhat.system.accounts
+```python
+from varlink import Client
 ifaces = Client(interface='com.redhat.system.accounts')
 print(ifaces['com.redhat.system.accounts'].description)
 accounts = ifaces['com.redhat.system.accounts']
@@ -43,9 +55,6 @@ print(ret.account.shell)
 ```
 outputs:
 ```
-['com.redhat.system.accounts', 'io.systemd.devices', 'io.systemd.journal', 'io.systemd.network', 'io.systemd.sysinfo', 'org.kernel.kmod', 'org.varlink.activator', 'org.varlink.resolver'] 
-
-
 # Manage System Accounts
 interface com.redhat.system.accounts
 
