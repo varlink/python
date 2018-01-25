@@ -12,7 +12,7 @@ $ sudo systemctl enable --now org.varlink.resolver.socket
 $ varlink help
 ```
 
-## python example usage
+## python client example usage
 
 ```python
 from varlink import Client    
@@ -24,3 +24,6 @@ for m in iface.Monitor(initial_lines=10, _more=True):
     for e in m.entries:
         print("%s: %s" % (e.time, e.message))
 ```
+
+## python server example
+See https://github.com/varlink/com.redhat.system/blob/master/accounts/accounts.py
