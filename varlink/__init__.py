@@ -101,7 +101,7 @@ class Interface:
 
     def _add_method(self, method):
         def _wrapped(*args, **kwds):
-            if "more" in kwds and kwds.pop("more"):
+            if "_more" in kwds and kwds.pop("_more"):
                 return self._call_more(method.name, *args, **kwds)
             else:
                 return self._call(method.name, *args, **kwds)
