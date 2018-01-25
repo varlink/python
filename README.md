@@ -25,5 +25,60 @@ for m in iface.Monitor(initial_lines=10, _more=True):
         print("%s: %s" % (e.time, e.message))
 ```
 
+```python
+from varlink import Client
+
+resolver = Client(address="unix:/run/org.varlink.resolver")['org.varlink.resolver']
+ret = resolver.GetInfo()
+print(ret.interfaces, "\n\n")
+
+ifaces = Client(interface='com.redhat.system.accounts')
+print(ifaces['com.redhat.system.accounts'].description)
+accounts = ifaces['com.redhat.system.accounts']
+ret = accounts.GetByName("root")
+print(ret)
+print(ret.account.full_name)
+print(ret.account.home)
+print(ret.account.shell)
+```
+outputs:
+```
+['com.redhat.system.accounts', 'io.systemd.devices', 'io.systemd.journal', 'io.systemd.network', 'io.systemd.sysinfo', 'org.kernel.kmod', 'org.varlink.activator', 'org.varlink.resolver'] 
+
+
+# Manage System Accounts
+interface com.redhat.system.accounts
+
+type Account (
+  name: string,
+  uid: int,
+  gid: int,
+  full_name: string,
+  home: string,
+  shell: string
+)
+
+# Retrieve a list of account information for all known accounts
+method GetAll() -> (accounts: Account[])
+
+# Retrieve the account information for a specific user ID
+method GetByUid(uid: int) -> (account: Account)
+
+# Retrieve the account information
+method GetByName(name: string) -> (account: Account)
+
+# Add new account
+method Add(account: Account) -> (account: Account)
+
+error NotFound ()
+
+error CreationFailed (field: string)
+
+namespace(account=namespace(full_name='root', gid=0, home='/root', name='root', shell='/bin/bash', uid=0))
+root
+/root
+/bin/bash
+```
+
 ## python server example
 See https://github.com/varlink/com.redhat.system/blob/master/accounts/accounts.py
