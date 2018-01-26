@@ -87,15 +87,15 @@ class Error:
 
 class Interface:
     def __init__(self, description):
-        self.description = description
+        self._description = description
 
         scanner = Scanner(description)
         scanner.expect('interface')
-        self.name = scanner.expect('interface-name')
-        self.members = collections.OrderedDict()
+        self._name = scanner.expect('interface-name')
+        self._members = collections.OrderedDict()
         while not scanner.end():
             member = read_member(scanner)
-            self.members[member.name] = member
+            self._members[member.name] = member
             if isinstance(member, Method):
                 self._add_method(member)
 
@@ -116,8 +116,8 @@ class Interface:
             raise MethodNotFound(method_name)
 
         sparam = self._filter_params(method.in_type, args, kwargs)
-        send = {'method' : self.name + "." + method_name, 'parameters' : sparam}
-        return self.handler.send(send).__next__()
+        send = {'method' : self._name + "." + method_name, 'parameters' : sparam}
+        return self._handler.send(send).__next__()
 
     def _call_more(self, method_name, *args, **kwargs):
         method = self._get_method(method_name)
@@ -125,17 +125,17 @@ class Interface:
             raise MethodNotFound(method_name)
 
         sparam = self._filter_params(method.in_type, args, kwargs)
-        send = {'method' : self.name + "." + method_name, 'more' : True, 'parameters' : sparam}
-        return self.handler.send(send)
+        send = {'method' : self._name + "." + method_name, 'more' : True, 'parameters' : sparam}
+        return self._handler.send(send)
 
     def _get_method(self, name):
-        method = self.members.get(name)
+        method = self._members.get(name)
         if method and isinstance(method, Method):
             return method
 
     def _filter_params(self, types, args, kwargs):
         if isinstance(types, CustomType):
-            types = self.members.get(types.name)
+            types = self._members.get(types.name)
 
         if isinstance(types, Alias):
             types = types.type
@@ -334,8 +334,8 @@ class Client(dict):
         for iface in info.interfaces:
             desc = self["org.varlink.service"].GetInterfaceDescription(iface)
             interface = Interface(desc.description)
-            interface.handler = self
-            self[interface.name] = interface
+            interface._handler = self
+            self[interface._name] = interface
 
     def recv(self):
         epoll = select.epoll()
@@ -386,8 +386,8 @@ class Client(dict):
 
         with open(filename) as f:
             interface = Interface(f.read())
-            interface.handler = handler
-            self[interface.name] = interface
+            interface._handler = handler
+            self[interface._name] = interface
 
 class Service:
     def __init__(self, vendor='', product='', version='', interface_dir='.'):
@@ -417,7 +417,7 @@ class Service:
         except KeyError:
             raise InterfaceNotFound(interface)
 
-        return {'description': i.description}
+        return {'description': i._description}
 
     def serve(self, address, listen_fd=None):
         if listen_fd:
@@ -484,7 +484,7 @@ class Service:
             if name not in method.in_type.fields:
                 raise InvalidParameter(name)
 
-        func = getattr(interface.handler, method_name, None)
+        func = getattr(interface._handler, method_name, None)
         if not func or not callable(func):
             raise MethodNotImplemented(method_name)
 
@@ -497,8 +497,8 @@ class Service:
 
         with open(filename) as f:
             interface = Interface(f.read())
-            interface.handler = handler
-            self.interfaces[interface.name] = interface
+            interface._handler = handler
+            self.interfaces[interface._name] = interface
 
     def interface(self, filename):
         def decorator(interface_class):
