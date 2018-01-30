@@ -18,7 +18,8 @@ $ varlink help
 
 ```python
 from varlink import Client    
-iface = Client(interface='io.systemd.journal')["io.systemd.journal"]
+client = Client(resolve_interface='io.systemd.journal')
+iface = client.open("io.systemd.journal")
 
 m = iface.Monitor(initial_lines=10)
 for e in m.entries:
@@ -38,7 +39,7 @@ for m in iface.Monitor(initial_lines=10, _more=True):
 ```python
 from varlink import Client
 
-resolver = Client(address="unix:/run/org.varlink.resolver")['org.varlink.resolver']
+resolver = Client(address="unix:/run/org.varlink.resolver").open('org.varlink.resolver')
 ret = resolver.GetInfo()
 print(ret.interfaces, "\n\n")
 ```
@@ -50,9 +51,9 @@ outputs:
 ### Example 3: com.redhat.system.accounts
 ```python
 from varlink import Client
-ifaces = Client(interface='com.redhat.system.accounts')
-print(ifaces['com.redhat.system.accounts'].description)
-accounts = ifaces['com.redhat.system.accounts']
+client = Client(resolve_interface='com.redhat.system.accounts')
+print(client.get_interfaces()['com.redhat.system.accounts'].get_description())
+accounts = client.open('com.redhat.system.accounts')
 ret = accounts.GetByName("root")
 print(ret)
 print(ret.account.full_name)
