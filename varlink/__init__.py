@@ -612,7 +612,7 @@ class Service:
         out = func(**parameters)
         return {'parameters': out or {}}
 
-    def add_interface(self, filename, handler):
+    def _add_interface(self, filename, handler):
         if not os.path.isabs(filename):
             filename = os.path.join(self.interface_dir, filename + '.varlink')
 
@@ -623,7 +623,7 @@ class Service:
 
     def interface(self, filename):
         def decorator(interface_class):
-            self.add_interface(filename, interface_class())
+            self._add_interface(filename, interface_class())
             return interface_class
 
         return decorator
