@@ -521,7 +521,7 @@ class Service:
         self.interface_dir = interface_dir
 
         directory = os.path.dirname(__file__)
-        self.add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
+        self._add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
 
     def GetInfo(self):
         return {
