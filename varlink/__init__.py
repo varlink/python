@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
-"""
-Language bindings for the varlink protocol.
+"""An implementation of the varlink protocol
+
+See http://varlink.org for more information about the varlink protocol and interface definition files.
+
+For service implementations use the Server() class, for client implementations use the Client() class.
 """
 
 import collections
