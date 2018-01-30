@@ -430,6 +430,33 @@ class Client:
                 address = address[:mode]
             if address[0] == '@':
                 address = address.replace('@', '\0', 1)
+        elif address.startswith("exec:"):
+            executable = address[5:]
+            s = socket.socket(socket.AF_UNIX)
+            s.setblocking(0)
+            s.bind("")
+            s.listen()
+            address = s.getsockname().decode('ascii')
+
+            pid = os.fork()
+            if pid == 0:
+                # child
+                n = s.fileno()
+                if n == 3:
+                    # without dup() the socket is closed with the python destructor
+                    n = os.dup(3)
+                    del s
+                else:
+                    try:
+                        os.close(3)
+                    except OSError:
+                        pass
+
+                os.dup2(n, 3)
+                address = address.replace('\0', '@', 1)
+                os.execlp(executable, executable, address)
+            # parent
+            s.close()
         else:
             # FIXME: also accept other transports
             raise ConnectionError
@@ -460,8 +487,8 @@ class Client:
 
         try:
             s = socket.socket(socket.AF_UNIX)
-            s.connect(self.address)
             s.setblocking(0)
+            s.connect(self.address)
         except:
             raise ConnectionError
 
