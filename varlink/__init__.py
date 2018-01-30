@@ -454,6 +454,7 @@ class Client:
 
                 os.dup2(n, 3)
                 address = address.replace('\0', '@', 1)
+                address = "unix:%s;mode=0600" % address
                 os.execlp(executable, executable, address)
             # parent
             s.close()
