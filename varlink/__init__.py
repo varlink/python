@@ -10,7 +10,6 @@ For service implementations use the Server() class, for client implementations u
 import collections
 import json
 import os
-import sys
 import re
 import select
 import socket
@@ -62,6 +61,59 @@ class _Scanner:
             self.pos = m.end()
 
         return self.pos >= len(self.string)
+
+    def read_type(self):
+        if self.get('bool'):
+            t = bool()
+        elif self.get('int'):
+            t = int()
+        elif self.get('float'):
+            t = float()
+        elif self.get('string'):
+            t = str()
+        else:
+            name = self.get('member-name')
+            if name:
+                t = _CustomType(name)
+            else:
+                t = self.read_struct()
+
+        if self.get('[]'):
+            t = _Array(t)
+
+        return t
+
+    def read_struct(self):
+        self.expect('(')
+        fields = collections.OrderedDict()
+        if not self.get(')'):
+            while True:
+                name = self.expect('identifier')
+                self.expect(':')
+                fields[name] = self.read_type()
+                if not self.get(','):
+                    break
+            self.expect(')')
+
+        return _Struct(fields)
+
+    def read_member(self):
+        if self.get('type'):
+            return _Alias(self.expect('member-name'), self.read_type())
+        elif self.get('method'):
+            name = self.expect('member-name')
+            # FIXME
+            sig = self.method_signature.match(self.string, self.pos)
+            if sig:
+                sig = name + sig.group(0)
+            in_type = self.read_struct()
+            self.expect('->')
+            out_type = self.read_struct()
+            return _Method(name, in_type, out_type, sig)
+        elif self.get('error'):
+            return _Error(self.expect('member-name'), self.read_type())
+        else:
+            raise SyntaxError('expected type, method, or error')
 
 class _Struct:
     def __init__(self, fields):
@@ -144,7 +196,7 @@ class Interface:
         self._name = scanner.expect('interface-name')
         self._members = collections.OrderedDict()
         while not scanner.end():
-            member = _read_member(scanner)
+            member = scanner.read_member()
             self._members[member.name] = member
 
     def get_description(self):
@@ -202,60 +254,6 @@ class Interface:
                     pass
 
         return out
-
-def _read_type(scanner):
-    if scanner.get('bool'):
-        t = bool()
-    elif scanner.get('int'):
-        t = int()
-    elif scanner.get('float'):
-        t = float()
-    elif scanner.get('string'):
-        t = str()
-    else:
-        name = scanner.get('member-name')
-        if name:
-            t = _CustomType(name)
-        else:
-            t = _read_struct(scanner)
-
-    if scanner.get('[]'):
-        t = _Array(t)
-
-    return t
-
-def _read_struct(scanner):
-    scanner.expect('(')
-    fields = collections.OrderedDict()
-    if not scanner.get(')'):
-        while True:
-            name = scanner.expect('identifier')
-            scanner.expect(':')
-            fields[name] = _read_type(scanner)
-            if not scanner.get(','):
-                break
-        scanner.expect(')')
-
-    return _Struct(fields)
-
-def _read_member(scanner):
-    if scanner.get('type'):
-        return _Alias(scanner.expect('member-name'), _read_type(scanner))
-    elif scanner.get('method'):
-        name = scanner.expect('member-name')
-        # FIXME
-        sig = scanner.method_signature.match(scanner.string, scanner.pos)
-        if sig:
-            sig = name + sig.group(0)
-        in_type = _read_struct(scanner)
-        scanner.expect('->')
-        out_type = _read_struct(scanner)
-        return _Method(name, in_type, out_type, sig)
-    elif scanner.get('error'):
-        return _Error(scanner.expect('member-name'), _read_type(scanner))
-    else:
-        raise SyntaxError('expected type, method, or error')
-
 
 class _Connection:
     def __init__(self, _socket):
