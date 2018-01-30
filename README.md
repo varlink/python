@@ -50,18 +50,9 @@ outputs:
 
 ### Example 3: com.redhat.system.accounts
 ```python
-from varlink import Client
-client = Client(resolve_interface='com.redhat.system.accounts')
-print(client.get_interfaces()['com.redhat.system.accounts'].get_description())
-accounts = client.open('com.redhat.system.accounts')
-ret = accounts.GetByName("root")
-print(ret)
-print(ret.account.full_name)
-print(ret.account.home)
-print(ret.account.shell)
-```
-outputs:
-```
+>>> from varlink import Client
+>>> client = Client(resolve_interface='com.redhat.system.accounts')
+>>> print(client.get_interfaces()['com.redhat.system.accounts'].get_description())
 # Manage System Accounts
 interface com.redhat.system.accounts
 
@@ -90,10 +81,17 @@ error NotFound ()
 
 error CreationFailed (field: string)
 
+>>> accounts = client.open('com.redhat.system.accounts')
+>>> ret = accounts.GetByName("root")
+>>> print(ret)
 namespace(account=namespace(full_name='root', gid=0, home='/root', name='root', shell='/bin/bash', uid=0))
+>>> print(ret.account.full_name)
 root
+>>> print(ret.account.home)
 /root
+>>> print(ret.account.shell)
 /bin/bash
+>>> 
 ```
 
 ## python server example
