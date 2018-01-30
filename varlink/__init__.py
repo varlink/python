@@ -352,7 +352,7 @@ class Client:
     """Varlink client class.
 
     >>> from varlink import Client
-    >>> client = Client(interface='io.systemd.journal')
+    >>> client = Client(resolve_interface='io.systemd.journal')
     >>> print(client.get_interfaces()['io.systemd.journal'].get_description())
     # Query and monitor the log messages of a system.
     interface io.systemd.journal
@@ -390,7 +390,7 @@ class Client:
     2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: new request (6 scripts)
     2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...
 
-    "_more" is special to this python varlink binding. If "_more=True" the method call does
+    "_more" is special to this python varlink binding. If "_more=True", then the method call does
     not return a normal namespace wrapped varlink return value, but a generator,
     which yields the return values and waits (blocks) for the service to return more return values
     in the generator's .__next__() call.
@@ -400,7 +400,7 @@ class Client:
 
         Keyword arguments:
         address -- the exact address like "unix:/run/org.varlink.resolver"
-        interface -- an interface name, which is resolved with the system wide resolver
+        resolve_interface -- an interface name, which is resolved with the system wide resolver
         resolver -- the exact address of the resolver to be used to resolve the interface name
 
         Exceptions:
