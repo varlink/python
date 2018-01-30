@@ -174,7 +174,8 @@ class _ClientInterfaceHandler:
         try:
             return self._connection.send_and_recv(send).__next__()
         except StopIteration:
-            raise ConnectionError
+            pass
+        raise ConnectionError
 
     def _call_more(self, method_name, *args, **kwargs):
         method = self._interface._get_method(method_name)
@@ -270,14 +271,15 @@ class _Connection:
         return events
 
     def dispatch(self, events):
+        if events & select.EPOLLOUT:
+            n = self.socket.send(self.out_buffer[:8192])
+            self.out_buffer = self.out_buffer[n:]
+
         if events & select.EPOLLIN:
             data = self.socket.recv(8192)
             if len(data) == 0:
                 raise ConnectionError
             self.in_buffer += data
-        elif events & select.EPOLLOUT:
-            n = self.socket.send(self.out_buffer[:8192])
-            self.out_buffer = self.out_buffer[n:]
 
     def read(self):
         while True:
