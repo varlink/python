@@ -14,6 +14,7 @@ import re
 import select
 import socket
 import traceback
+import types
 from types import SimpleNamespace as Namespace
 
 class _Scanner:
@@ -172,7 +173,11 @@ class _ClientInterfaceHandler:
         sparam = self._interface._filter_params(method.in_type, args, kwargs)
         send = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
         try:
-            return self._connection.send_and_recv(send).__next__()
+            (ret, more) = next(self._connection.send_and_recv(send))
+            if more:
+                self._connection.close()
+                raise ConnectionError
+            return ret
         except StopIteration:
             pass
         raise ConnectionError
@@ -184,7 +189,11 @@ class _ClientInterfaceHandler:
 
         sparam = self._interface._filter_params(method.in_type, args, kwargs)
         send = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
-        return self._connection.send_and_recv(send, trymore=True)
+        more = True
+        for (ret, more) in self._connection.send_and_recv(send):
+            yield ret
+            if not more:
+                break
 
 class Interface:
     """Class for a parsed varlink interface definition."""
@@ -258,70 +267,77 @@ class Interface:
 
 class _Connection:
     def __init__(self, _socket):
-        self.socket = _socket
-        self.in_buffer = b''
-        self.out_buffer = b''
+        self._socket = _socket
+        self._in_buffer = b''
+        self._out_buffer = b''
+
+    def close(self):
+        self._socket.close()
 
     def events(self):
         events = 0
-        if len(self.in_buffer) < 8 * 1024 * 1024:
+        if len(self._in_buffer) < 8 * 1024 * 1024:
             events |= select.EPOLLIN
-        if self.out_buffer:
+        if self._out_buffer:
             events |= select.EPOLLOUT
         return events
 
     def dispatch(self, events):
         if events & select.EPOLLOUT:
-            n = self.socket.send(self.out_buffer[:8192])
-            self.out_buffer = self.out_buffer[n:]
+            n = self._socket.send(self._out_buffer[:8192])
+            self._out_buffer = self._out_buffer[n:]
 
         if events & select.EPOLLIN:
-            data = self.socket.recv(8192)
+            data = self._socket.recv(8192)
             if len(data) == 0:
                 raise ConnectionError
-            self.in_buffer += data
+            self._in_buffer += data
 
     def read(self):
         while True:
-            message, _, self.in_buffer = self.in_buffer.rpartition(b'\0')
+            message, _, self._in_buffer = self._in_buffer.partition(b'\0')
             if message:
                 yield json.loads(message)
             else:
                 break
 
     def write(self, message):
-        self.out_buffer += json.dumps(message).encode('utf-8')
-        self.out_buffer += b'\0'
+        self._out_buffer += json.dumps(message).encode('utf-8')
+        self._out_buffer += b'\0'
 
     def read_namespace(self):
         while True:
-            message, _, self.in_buffer = self.in_buffer.rpartition(b'\0')
+            message, _, self._in_buffer = self._in_buffer.partition(b'\0')
             if message:
                 yield json.loads(message, object_hook=lambda d: Namespace(**d))
             else:
                 break
 
-    def send_and_recv(self, out, trymore=False):
+    def send_and_recv(self, out):
         self.write(out)
         epoll = select.epoll()
-        epoll.register(self.socket, self.events())
+        epoll.register(self._socket, self.events())
         while True:
             for fd, events in epoll.poll():
                 try:
                     self.dispatch(events)
                 except ConnectionError:
-                    self.socket.close()
+                    self._socket.close()
                     return
 
                 for message in self.read_namespace():
                     if hasattr(message, "error"):
                         # FIXME: error handling
                         raise VarlinkError(message.error, hasattr(message, "parameters") and message.parameters or None)
-                    yield message.parameters
-                    if (trymore == False) or (not hasattr(message, "continues")):
-                        break
+
+                    yield (message.parameters, hasattr(message, "continues") and getattr(message, "continues"))
 
                 epoll.modify(fd, self.events())
+
+
+class ConnectionError(Exception):
+    def __init__(self):
+        super().__init__()
 
 class VarlinkError(Exception):
     def __init__(self, error, parameters):
@@ -518,6 +534,7 @@ class Service:
         self.url = None
         self.interfaces = {}
         self.connections = {}
+        self._more = {}
         self.interface_dir = interface_dir
 
         directory = os.path.dirname(__file__)
@@ -567,20 +584,45 @@ class Service:
                     connection = self.connections.get(fd)
                     try:
                         connection.dispatch(events)
-                    except ConnectionError:
-                        connection.socket.close()
+                    except Exception as e:
+                        connection.close()
+                        if fd in self._more:
+                            try:
+                                self._more[fd].throw(ConnectionError())
+                            except StopIteration:
+                                pass
+                            del self._more[fd]
                         continue
 
-                    for message in connection.read():
+                    if not fd in self._more:
+                        for message in connection.read():
+                            try:
+                                it = iter(self._handle(connection, message))
+                                self._more[fd] = it
+                                break
+                            except VarlinkError as error:
+                                reply = error.json()
+                                connection.write(reply)
+                            except Exception as error:
+                                traceback.print_exception(type(error), error, error.__traceback__)
+                                reply = {'error': 'InternalError'}
+                                connection.write(reply)
+
+                    if fd in self._more:
                         try:
-                            reply = self._handle(connection, message)
+                            reply = next(self._more[fd])
+                            connection.write(reply)
                         except VarlinkError as error:
                             reply = error.json()
+                            connection.write(reply)
+                            del self._more[fd]
+                        except StopIteration:
+                            del self._more[fd]
                         except Exception as error:
                             traceback.print_exception(type(error), error, error.__traceback__)
                             reply = {'error': 'InternalError'}
-
-                        connection.write(reply)
+                            connection.write(reply)
+                            del self._more[fd]
 
                     epoll.modify(fd, connection.events())
 
@@ -609,8 +651,31 @@ class Service:
         if not func or not callable(func):
             raise MethodNotImplemented(method_name)
 
+        if message.get('more', False):
+            parameters["_more"] = True
+
+        if message.get('oneway', False):
+            parameters["_oneway"] = True
+
+        if message.get('upgrade', False):
+            parameters["_upgrade"] = True
+
         out = func(**parameters)
-        return {'parameters': out or {}}
+        if isinstance(out, types.GeneratorType):
+            try:
+                for o in out:
+                    cont = True
+                    if '_continues' in o:
+                        cont = o['_continues']
+                        del o['_continues']
+
+                    yield { 'continues': bool(cont), 'parameters': o or {}}
+                    if not cont:
+                        return
+            except ConnectionError as e:
+                out.throw(e)
+        else:
+            yield {'parameters': out or {}}
 
     def _add_interface(self, filename, handler):
         if not os.path.isabs(filename):
