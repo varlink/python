@@ -15,7 +15,9 @@ import select
 import socket
 import traceback
 import types
+import sys
 from types import SimpleNamespace as Namespace
+from inspect import signature
 
 class _Scanner:
     def __init__(self, string):
@@ -149,6 +151,7 @@ class _ClientInterfaceHandler:
     def __init__(self, interface, connection):
         self._interface = interface
         self._connection = connection
+        self._in_use = False
 
         for member in interface._members.values():
             if isinstance(member, _Method):
@@ -166,6 +169,9 @@ class _ClientInterfaceHandler:
         setattr(self, method.name, _wrapped)
 
     def _call(self, method_name, *args, **kwargs):
+        if self._in_use:
+            raise ConnectionError
+
         method = self._interface._get_method(method_name)
         if not method:
             raise MethodNotFound(method_name)
@@ -173,16 +179,23 @@ class _ClientInterfaceHandler:
         sparam = self._interface._filter_params(method.in_type, args, kwargs)
         send = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
         try:
+            self._in_use = True
             (ret, more) = next(self._connection.send_and_recv(send))
             if more:
                 self._connection.close()
+                self._in_use = False
                 raise ConnectionError
+            self._in_use = False
             return ret
         except StopIteration:
             pass
+
+        self._in_use = False
         raise ConnectionError
 
     def _call_more(self, method_name, *args, **kwargs):
+        if self._in_use:
+            raise ConnectionError
         method = self._interface._get_method(method_name)
         if not method:
             raise MethodNotFound(method_name)
@@ -190,10 +203,12 @@ class _ClientInterfaceHandler:
         sparam = self._interface._filter_params(method.in_type, args, kwargs)
         send = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
         more = True
+        self._in_use = True
         for (ret, more) in self._connection.send_and_recv(send):
             yield ret
             if not more:
                 break
+        self._in_use = False
 
 class Interface:
     """Class for a parsed varlink interface definition."""
@@ -276,7 +291,7 @@ class _Connection:
 
     def events(self):
         events = 0
-        if len(self._in_buffer) < 8 * 1024 * 1024:
+        if len(self._in_buffer) < (32 * 1024 * 1024):
             events |= select.EPOLLIN
         if self._out_buffer:
             events |= select.EPOLLOUT
@@ -316,7 +331,7 @@ class _Connection:
     def send_and_recv(self, out):
         self.write(out)
         epoll = select.epoll()
-        epoll.register(self._socket, self.events())
+        epoll.register(self._socket.fileno(), select.EPOLLOUT | select.EPOLLIN)
         while True:
             for fd, events in epoll.poll():
                 try:
@@ -332,8 +347,8 @@ class _Connection:
 
                     yield (message.parameters, hasattr(message, "continues") and getattr(message, "continues"))
 
-                epoll.modify(fd, self.events())
-
+                ev = self.events()
+                epoll.modify(fd, ev)
 
 class ConnectionError(Exception):
     def __init__(self):
@@ -611,7 +626,8 @@ class Service:
                     if fd in self._more:
                         try:
                             reply = next(self._more[fd])
-                            connection.write(reply)
+                            if reply != None:
+                                connection.write(reply)
                         except VarlinkError as error:
                             reply = error.json()
                             connection.write(reply)
@@ -651,25 +667,37 @@ class Service:
         if not func or not callable(func):
             raise MethodNotImplemented(method_name)
 
-        if message.get('more', False):
-            parameters["_more"] = True
+        kwargs = {}
+        if message.get('more', False) or message.get('oneway', False) or message.get('upgrade', False):
+            sig = signature(func)
+            if message.get('more', False) and '_more' in sig.parameters:
+                kwargs["_more"] = True
 
-        if message.get('oneway', False):
-            parameters["_oneway"] = True
+            if message.get('oneway', False) and '_oneway' in sig.parameters:
+                kwargs["_oneway"] = True
 
-        if message.get('upgrade', False):
-            parameters["_upgrade"] = True
+            if message.get('upgrade', False) and '_upgrade' in sig.parameters:
+                kwargs["_upgrade"] = True
 
-        out = func(**parameters)
+        out = func(**parameters, **kwargs)
+
         if isinstance(out, types.GeneratorType):
             try:
                 for o in out:
+                    if isinstance(o, Exception):
+                        raise o
+
+                    if kwargs.get("_oneway", False):
+                        return
+
                     cont = True
                     if '_continues' in o:
                         cont = o['_continues']
                         del o['_continues']
+                        yield { 'continues': bool(cont), 'parameters': o or {}}
+                    else:
+                        yield { 'parameters': o or {}}
 
-                    yield { 'continues': bool(cont), 'parameters': o or {}}
                     if not cont:
                         return
             except ConnectionError as e:
