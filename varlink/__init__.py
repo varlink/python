@@ -536,7 +536,7 @@ class Client:
 
         self._interfaces[interface._name] = interface
 
-class Service:
+class SimpleService:
     def __init__(self, vendor='', product='', version='', interface_dir='.'):
         self.vendor = vendor
         self.product = product
