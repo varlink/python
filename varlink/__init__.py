@@ -145,65 +145,6 @@ class _Error:
         self.name = name
         self.type = varlink_type
 
-class _ClientInterfaceHandler:
-    def __init__(self, interface, connection):
-        self._interface = interface
-        self._connection = connection
-        self._in_use = False
-
-        for member in interface._members.values():
-            if isinstance(member, _Method):
-                self._add_method(member)
-
-    def _add_method(self, method):
-        def _wrapped(*args, **kwds):
-            if "_more" in kwds and kwds.pop("_more"):
-                return self._call_more(method.name, *args, **kwds)
-            else:
-                return self._call(method.name, *args, **kwds)
-        _wrapped.__name__ = method.name
-        # FIXME: add comments
-        _wrapped.__doc__ = "Varlink call: " + method.signature
-        setattr(self, method.name, _wrapped)
-
-    def _call(self, method_name, *args, **kwargs):
-        if self._in_use:
-            raise ConnectionError
-
-        method = self._interface.get_method(method_name)
-
-        sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        send = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
-        try:
-            self._in_use = True
-            (ret, more) = next(self._connection.send_and_recv(send))
-            if more:
-                self._connection.close()
-                self._in_use = False
-                raise ConnectionError
-            self._in_use = False
-            return ret
-        except StopIteration:
-            pass
-
-        self._in_use = False
-        raise ConnectionError
-
-    def _call_more(self, method_name, *args, **kwargs):
-        if self._in_use:
-            raise ConnectionError
-        method = self._interface.get_method(method_name)
-
-        sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        send = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
-        more = True
-        self._in_use = True
-        for (ret, more) in self._connection.send_and_recv(send):
-            yield ret
-            if not more:
-                break
-        self._in_use = False
-
 class Interface:
     """Class for a parsed varlink interface definition."""
     def __init__(self, description):
@@ -376,6 +317,65 @@ class MethodNotImplemented(VarlinkError):
 class InvalidParameter(VarlinkError):
     def __init__(self, name):
         VarlinkError.__init__(self, 'org.varlink.service.InvalidParameter', {'parameter': name})
+
+class _ClientInterfaceHandler:
+    def __init__(self, interface, connection):
+        self._interface = interface
+        self._connection = connection
+        self._in_use = False
+
+        for member in interface._members.values():
+            if isinstance(member, _Method):
+                self._add_method(member)
+
+    def _add_method(self, method):
+        def _wrapped(*args, **kwds):
+            if "_more" in kwds and kwds.pop("_more"):
+                return self._call_more(method.name, *args, **kwds)
+            else:
+                return self._call(method.name, *args, **kwds)
+        _wrapped.__name__ = method.name
+        # FIXME: add comments
+        _wrapped.__doc__ = "Varlink call: " + method.signature
+        setattr(self, method.name, _wrapped)
+
+    def _call(self, method_name, *args, **kwargs):
+        if self._in_use:
+            raise ConnectionError
+
+        method = self._interface.get_method(method_name)
+
+        sparam = self._interface.filter_params(method.in_type, args, kwargs)
+        send = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
+        try:
+            self._in_use = True
+            (ret, more) = next(self._connection.send_and_recv(send))
+            if more:
+                self._connection.close()
+                self._in_use = False
+                raise ConnectionError
+            self._in_use = False
+            return ret
+        except StopIteration:
+            pass
+
+        self._in_use = False
+        raise ConnectionError
+
+    def _call_more(self, method_name, *args, **kwargs):
+        if self._in_use:
+            raise ConnectionError
+        method = self._interface.get_method(method_name)
+
+        sparam = self._interface.filter_params(method.in_type, args, kwargs)
+        send = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
+        more = True
+        self._in_use = True
+        for (ret, more) in self._connection.send_and_recv(send):
+            yield ret
+            if not more:
+                break
+        self._in_use = False
 
 class Client:
     """Varlink client class.
