@@ -14,9 +14,7 @@ import re
 import select
 import socket
 import traceback
-import types
-import sys
-from types import SimpleNamespace as Namespace
+from types import (SimpleNamespace, GeneratorType)
 from inspect import signature
 
 class _Scanner:
@@ -324,7 +322,7 @@ class _Connection:
         while True:
             message, _, self._in_buffer = self._in_buffer.partition(b'\0')
             if message:
-                yield json.loads(message, object_hook=lambda d: Namespace(**d))
+                yield json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
             else:
                 break
 
@@ -359,7 +357,7 @@ class VarlinkError(Exception):
         super().__init__({"error" : error, "parameters" : parameters})
         self.error = error
         if isinstance(parameters, dict):
-            self.parameters = Namespace(**parameters)
+            self.parameters = SimpleNamespace(**parameters)
         else:
             self.parameters = parameters
 
@@ -681,7 +679,7 @@ class Service:
 
         out = func(**parameters, **kwargs)
 
-        if isinstance(out, types.GeneratorType):
+        if isinstance(out, GeneratorType):
             try:
                 for o in out:
                     if isinstance(o, Exception):
