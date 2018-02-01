@@ -17,7 +17,7 @@ import traceback
 from types import (SimpleNamespace, GeneratorType)
 from inspect import signature
 
-class _Scanner:
+class Scanner:
     def __init__(self, string):
         self.whitespace = re.compile(r'([ \t\n]|#.*$)+', re.ASCII | re.MULTILINE)
         # FIXME: nested ()
@@ -170,11 +170,9 @@ class _ClientInterfaceHandler:
         if self._in_use:
             raise ConnectionError
 
-        method = self._interface._get_method(method_name)
-        if not method:
-            raise MethodNotFound(method_name)
+        method = self._interface.get_method(method_name)
 
-        sparam = self._interface._filter_params(method.in_type, args, kwargs)
+        sparam = self._interface.filter_params(method.in_type, args, kwargs)
         send = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
         try:
             self._in_use = True
@@ -194,11 +192,9 @@ class _ClientInterfaceHandler:
     def _call_more(self, method_name, *args, **kwargs):
         if self._in_use:
             raise ConnectionError
-        method = self._interface._get_method(method_name)
-        if not method:
-            raise MethodNotFound(method_name)
+        method = self._interface.get_method(method_name)
 
-        sparam = self._interface._filter_params(method.in_type, args, kwargs)
+        sparam = self._interface.filter_params(method.in_type, args, kwargs)
         send = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
         more = True
         self._in_use = True
@@ -214,7 +210,7 @@ class Interface:
         """description -- description string in varlink interface definition language"""
         self._description = description
 
-        scanner = _Scanner(description)
+        scanner = Scanner(description)
         scanner.expect('interface')
         self._name = scanner.expect('interface-name')
         self._members = collections.OrderedDict()
@@ -226,22 +222,23 @@ class Interface:
         """return the description string in varlink interface definition language"""
         return self._description
 
-    def _get_method(self, name):
+    def get_method(self, name):
         method = self._members.get(name)
         if method and isinstance(method, _Method):
             return method
+        raise MethodNotFound(name)
 
-    def _filter_params(self, types, args, kwargs):
-        if isinstance(types, _CustomType):
-            types = self._members.get(types.name)
+    def filter_params(self, vtype, args, kwargs):
+        if isinstance(vtype, _CustomType):
+            return self.filter_params(self._members.get(vtype.name), args, kwargs)
 
-        if isinstance(types, _Alias):
-            types = types.type
+        if isinstance(vtype, _Alias):
+            return self.filter_params(self._members.get(vtype.type), args, kwargs)
 
-        if isinstance(types, _Array):
-            return [self._filter_params(types.element_type, x, None) for x in args]
+        if isinstance(vtype, _Array):
+            return [self.filter_params(vtype.element_type, x, None) for x in args]
 
-        if not isinstance(types, _Struct):
+        if not isinstance(vtype, _Struct):
             return args
 
         out = {}
@@ -251,7 +248,7 @@ class Interface:
             mystruct = args
             args = None
 
-        for name in types.fields:
+        for name in vtype.fields:
             if isinstance(args, tuple):
                 if args:
                     val = args[0]
@@ -259,11 +256,11 @@ class Interface:
                         args = args[1:]
                     else:
                         args = None
-                    out[name] = self._filter_params(types.fields[name], val, None)
+                    out[name] = self.filter_params(vtype.fields[name], val, None)
                     continue
                 else:
                     if name in kwargs:
-                        out[name] = self._filter_params(types.fields[name], kwargs[name], None)
+                        out[name] = self.filter_params(vtype.fields[name], kwargs[name], None)
                         continue
 
             if mystruct:
@@ -272,7 +269,7 @@ class Interface:
                         val = mystruct[name]
                     else:
                         val = getattr(mystruct, name)
-                    out[name] = self._filter_params(types.fields[name], val, None)
+                    out[name] = self.filter_params(vtype.fields[name], val, None)
                 except:
                     pass
 
@@ -652,9 +649,7 @@ class Service:
         if not interface:
             raise InterfaceNotFound(interface_name)
 
-        method = interface._get_method(method_name)
-        if not method:
-            raise MethodNotFound(method_name)
+        method = interface.get_method(method_name)
 
         parameters = message.get('parameters', {})
         for name in parameters:
