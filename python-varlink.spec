@@ -6,13 +6,22 @@ License:        ASL 2.0
 URL:            https://github.com/varlink/%{name}
 Source0:        https://github.com/varlink/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
-BuildRequires:  pkgconfig(python3) python3-rpm-macros
+BuildRequires:  pkgconfig(python3)
+BuildRequires:  python3-rpm-macros
 
-%description
+%global _description \
 An python module for Varlink with client and server support.
 
+%description %_description
+
+%package -n python3-varlink
+Summary:       %summary
+%{python_provide python3-varlink}
+
+%description -n python3-varlink %_description
+
 %prep
-%setup -q
+%autosetup
 
 %build
 %py3_build
@@ -23,7 +32,7 @@ CFLAGS="%{optflags}" %{__python3} %{py_setup} %{?py_setup_args} check
 %install
 %py3_install
 
-%files
+%files -n python3-varlink
 %license LICENSE
 %doc README.md
 %{python3_sitelib}/*
