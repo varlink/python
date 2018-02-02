@@ -6,7 +6,7 @@ License:        ASL 2.0
 URL:            https://github.com/varlink/%{name}
 Source0:        https://github.com/varlink/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
-BuildRequires:  pkgconfig(python3)
+BuildRequires:  python3-devel
 BuildRequires:  python3-rpm-macros
 
 %global _description \
@@ -16,7 +16,7 @@ An python module for Varlink with client and server support.
 
 %package -n python3-varlink
 Summary:       %summary
-%{python_provide python3-varlink}
+%{?python_provide:%python_provide python3-varlink}
 
 %description -n python3-varlink %_description
 
