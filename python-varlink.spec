@@ -2,14 +2,14 @@ Name:           python-varlink
 Version:        3
 Release:        1%{?dist}
 Summary:        Python implementation of Varlink
-License:        ASL2.0
+License:        ASL 2.0
 URL:            https://github.com/varlink/%{name}
-Source0:        https://github.com/varlink/%{name}/archive/%{name}-%{version}.tar.gz
+Source0:        https://github.com/varlink/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  pkgconfig(python3) python3-rpm-macros
 
 %description
-An python module for Varlink.
+An python module for Varlink with client and server support.
 
 %prep
 %setup -q
@@ -26,6 +26,9 @@ An python module for Varlink.
 %{python3_sitelib}/*
 
 %changelog
+* Fri Feb  2 2018 Harald Hoyer <harald@redhat.com> - 3-1
+- python-varlink 3
+
 * Thu Dec 14 2017 Harald Hoyer <harald@redhat.com> - 2-1
 - python-varlink 2
 
