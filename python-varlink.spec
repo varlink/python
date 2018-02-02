@@ -17,6 +17,9 @@ An python module for Varlink with client and server support.
 %build
 %py3_build
 
+%check
+CFLAGS="%{optflags}" %{__python3} %{py_setup} %{?py_setup_args} check
+
 %install
 %py3_install
 
