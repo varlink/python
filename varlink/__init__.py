@@ -388,7 +388,7 @@ class Service:
             message = message[:-1]
 
         for out in self._handle(json.loads(message)):
-            yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8') + b'\0'
+            yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
 
     def _add_interface(self, filename, handler):
         if not os.path.isabs(filename):
@@ -828,7 +828,7 @@ class SimpleServer:
                                 reply = next(self._more[fd])
                                 if reply != None:
                                     # write any reply pending
-                                    connection.write(reply)
+                                    connection.write(reply + b'\0')
                             except StopIteration:
                                 del self._more[fd]
                     except ConnectionError as e:
