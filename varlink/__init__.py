@@ -70,9 +70,9 @@ class InvalidParameter(VarlinkError):
         VarlinkError.__init__(self, {'error': 'org.varlink.service.InvalidParameter', 'parameters': {'parameter': name}})
 
 class ClientInterfaceHandler:
-    """A varlink client for an interface doing send/write and receive/read on a socket or file stream"""
+    """Base class for varlink client, which wraps varlink methods of an interface to the class"""
     def __init__(self, interface, namespaced = False):
-        """Creates an object with the varlink methods of an interface installed.
+        """Base class for varlink client, which wraps varlink methods of an interface.
 
         The object allows to talk to a varlink service, which implements the specified interface
         transparently by calling the methods. The call blocks until enough messages are received.
