@@ -198,6 +198,7 @@ if __name__ == '__main__':
     else:
         address='exec:./server-twisted.py'
 
+    print('Connecting to %s\n' % address)
     address = varlink_to_twisted_address(address)
 
     task.react(main, [ address ])
