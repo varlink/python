@@ -1,5 +1,5 @@
 Name:           python-varlink
-Version:        3
+Version:        8
 Release:        1%{?dist}
 Summary:        Python implementation of Varlink
 License:        ASL 2.0
@@ -38,11 +38,3 @@ CFLAGS="%{optflags}" %{__python3} %{py_setup} %{?py_setup_args} check
 %{python3_sitelib}/*
 
 %changelog
-* Fri Feb  2 2018 Harald Hoyer <harald@redhat.com> - 3-1
-- python-varlink 3
-
-* Thu Dec 14 2017 Harald Hoyer <harald@redhat.com> - 2-1
-- python-varlink 2
-
-* Tue Aug 29 2017 <info@varlink.org> 1-1
-- python-varlink 1
