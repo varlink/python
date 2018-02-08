@@ -170,7 +170,7 @@ class ClientInterfaceHandler:
         self._in_use = True
         (ret, more) = self._nextVarlinkMessage()
         if more:
-            self._connection.close()
+            self.close()
             self._in_use = False
             raise ConnectionError
         self._in_use = False
@@ -235,7 +235,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, _type, _value, _traceback):
         self.close()
 
     def close(self):
@@ -330,6 +330,7 @@ class Client:
 
         def _resolve_interface(interface, resolver):
             _iface = Client(resolver).open('org.varlink.resolver')
+            # noinspection PyUnresolvedReferences
             _r = _iface.Resolve(interface)
             return _r['address']
 
@@ -382,9 +383,11 @@ class Client:
 
         self.address = address
         siface = self.open("org.varlink.service")
+        # noinspection PyUnresolvedReferences
         info = siface.GetInfo()
 
         for iface in info['interfaces']:
+            # noinspection PyUnresolvedReferences
             desc = siface.GetInterfaceDescription(iface)
             interface = Interface(desc['description'])
             self._interfaces[interface._name] = interface
@@ -671,14 +674,12 @@ class Interface:
                         continue
 
             if mystruct:
-                try:
-                    if isinstance(mystruct, dict):
-                        val = mystruct[name]
-                    else:
-                        val = getattr(mystruct, name)
+                if isinstance(mystruct, dict):
+                    val = mystruct[name]
                     out[name] = self.filter_params(vtype.fields[name], val, None)
-                except:
-                    pass
+                elif hasattr(mystruct, name):
+                    val = getattr(mystruct, name)
+                    out[name] = self.filter_params(vtype.fields[name], val, None)
 
         return out
 
@@ -876,12 +877,16 @@ class SimpleServer:
         self.connections = {}
         self._more = {}
         self.removefile = None
+        self.domainloop = True
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         os.remove(self.removefile)
+
+    def stop(self):
+        self.domainloop = False
 
     def serve(self, address, listen_fd=None):
         if listen_fd:
@@ -901,11 +906,13 @@ class SimpleServer:
             s.setblocking(0)
             s.bind(address)
             s.listen()
+        else:
+            raise ConnectionError
 
         epoll = select.epoll()
         epoll.register(s, select.EPOLLIN)
 
-        while True:
+        while self.domainloop:
             for fd, events in epoll.poll():
                 if fd == s.fileno():
                     sock, _ = s.accept()
@@ -930,7 +937,7 @@ class SimpleServer:
                         if fd in self._more:
                             try:
                                 reply = next(self._more[fd])
-                                if reply != None:
+                                if not reply:
                                     # write any reply pending
                                     connection.write(reply + b'\0')
                             except StopIteration:
@@ -947,9 +954,13 @@ class SimpleServer:
                         continue
                     except Exception as error:
                         traceback.print_exception(type(error), error, error.__traceback__)
+                        s.close()
+                        epoll.close()
+
                         sys.exit(1)
 
                     epoll.modify(fd, connection.events())
 
         s.close()
         epoll.close()
+

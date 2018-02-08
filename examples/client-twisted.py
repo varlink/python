@@ -25,6 +25,9 @@ class VarlinkReceiver(LineReceiver):
 
 
 class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
+    def _sendMessage(self, out):
+        self.sendLine(out)
+
     def __init__(self):
         self.whenDisconnected = Deferred()
         super().__init__(INTERFACE_org_varlink_example_more, namespaced=True)
@@ -37,7 +40,7 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
     def connectionMade(self):
         pass
 
-    def connectionLost(self, reason):
+    def connectionLost(self, _):
         self.whenDisconnected.callback(None)
 
     @inlineCallbacks
@@ -59,13 +62,13 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
             if hasattr(message, "error"):
                 raise varlink.VarlinkError(message, self._namespaced)
             else:
-                return (message.parameters, hasattr(message, "continues") and message.continues)
+                return message.parameters, hasattr(message, "continues") and message.continues
         else:
             message = json.loads(message)
             if 'error' in message:
                 raise varlink.VarlinkError(message, self._namespaced)
             else:
-                return (message['parameters'], ('continues' in message) and message['continues'])
+                return message['parameters'], ('continues' in message) and message['continues']
 
     @inlineCallbacks
     def reply(self):
