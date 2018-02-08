@@ -837,13 +837,27 @@ class SimpleServer:
         self._service = service
         self.connections = {}
         self._more = {}
+        self.removefile = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self ,type, value, traceback):
+        os.remove(self.removefile)
 
     def serve(self, address, listen_fd=None):
         if listen_fd:
             s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
-        else:
+        elif address.startswith("unix:"):
+            address = address[5:]
+            mode = address.rfind(';mode=')
+            if mode != -1:
+                address = address[:mode]
+
             if address[0] == '@':
                 address = address.replace('@', '\0', 1)
+            else:
+                self.removefile = address
 
             s = socket.socket(socket.AF_UNIX)
             s.setblocking(0)
