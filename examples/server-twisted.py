@@ -121,4 +121,5 @@ if __name__ == '__main__':
         endpoint = serverFromString(reactor, address)
         endpoint.listen(VarlinkServerFactory())
 
+    print("Listening on", sys.argv[1])
     reactor.run()

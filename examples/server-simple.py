@@ -58,4 +58,5 @@ except OSError:
     pass
 
 with varlink.SimpleServer(service) as s:
+    print("Listening on", sys.argv[1])
     s.serve(sys.argv[1], listen_fd=listen_fd)
