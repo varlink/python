@@ -33,7 +33,7 @@ CFLAGS="%{optflags}" %{__python3} %{py_setup} %{?py_setup_args} check
 %py3_install
 
 %files -n python3-varlink
-%license LICENSE
+%license LICENSE.txt
 %doc README.md
 %{python3_sitelib}/*
 
