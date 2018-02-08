@@ -883,7 +883,8 @@ class SimpleServer:
         return self
 
     def __exit__(self, type, value, traceback):
-        os.remove(self.removefile)
+        if self.removefile:
+            os.remove(self.removefile)
 
     def stop(self):
         self.domainloop = False
