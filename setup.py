@@ -1,9 +1,9 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name = "varlink",
     packages = ["varlink"],
-    version = "3",
+    version = "6",
     description = "Varlink",
     author = "Lars Karlitski<lars@karlitski.net>, Harald Hoyer<harald@redhat.com>",
     author_email = "harald@redhat.com",
