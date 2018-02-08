@@ -5,6 +5,7 @@ setup(
     packages = ["varlink"],
     version = "6",
     description = "Varlink",
+    long_description = "Python implementation of the varlink protocol http://varlink.org",
     author = "Lars Karlitski<lars@karlitski.net>, Harald Hoyer<harald@redhat.com>",
     author_email = "harald@redhat.com",
     url = "https://github.com/varlink/python-varlink",
