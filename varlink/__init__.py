@@ -5,7 +5,6 @@
 See http://varlink.org for more information about the varlink protocol and interface definition files.
 
 For service implementations use the SimpleServer() class, for client implementations use the Client() class.
-
 """
 
 import collections
@@ -117,6 +116,8 @@ class Client:
     which yields the return values and waits (blocks) for the service to return more return values
     in the generator's .__next__() call.
     """
+    handler=SimpleClientInterfaceHandler
+
     def __init__(self, address=None, resolve_interface=None, resolver=None):
         """Get the interface descriptions from a varlink service.
 
@@ -182,7 +183,6 @@ class Client:
             # FIXME: also accept other transports
             raise ConnectionError
 
-        self._childpid
         self.address = address
         siface = self.open("org.varlink.service")
         info = siface.GetInfo()
@@ -191,9 +191,13 @@ class Client:
             desc = siface.GetInterfaceDescription(iface)
             interface = Interface(desc['description'])
             self._interfaces[interface._name] = interface
+        siface.close()
 
-    def __del__(self):
-        if hasattr(self, '_childpid') and self._childpid != 0:
+    def __enter__(self):
+        return self
+
+    def __exit__(self ,type, value, traceback):
+        if hasattr(self, "_childpid") and self._childpid != 0:
             try:
                 os.kill(self._childpid, signal.SIGTERM)
             except OSError:
@@ -222,7 +226,7 @@ class Client:
         except:
             raise ConnectionError
 
-        return ClientInterfaceProxy(self._interfaces[interface_name], s, namespaced = namespaced)
+        return Client.handler(self._interfaces[interface_name], s, namespaced = namespaced)
 
     def get_interfaces(self):
         """Returns the a list of Interface objects the service implements."""
@@ -330,7 +334,6 @@ class Service:
             if not func or not callable(func):
                 raise MethodNotImplemented(method_name)
 
-
             kwargs = {}
             if message.get('more', False) or message.get('oneway', False) or message.get('upgrade', False):
                 sig = signature(func)
@@ -370,10 +373,10 @@ class Service:
                 yield {'parameters': out or {}}
 
         except VarlinkError as error:
-            return error
+            yield error
         except Exception as error:
             traceback.print_exception(type(error), error, error.__traceback__)
-            return {'error': 'InternalError'}
+            yield {'error': 'InternalError'}
 
     def handle(self,  message):
         """This generator function handles any incoming message. Write any returned bytes to the output stream.
@@ -606,7 +609,117 @@ class _Error:
         self.name = name
         self.type = varlink_type
 
-class ClientInterfaceProxy:
+class ClientInterfaceHandler:
+    """A varlink client for an interface doing send/write and receive/read on a socket or file stream"""
+    def __init__(self, interface, namespaced = False):
+        """Creates an object with the varlink methods of an interface installed.
+
+        The object allows to talk to a varlink service, which implements the specified interface
+        transparently by calling the methods. The call blocks until enough messages are received.
+
+        For monitor calls with '_more=True' a generator object is returned.
+
+        Arguments:
+        interface - an Interface object
+        namespaced - if True, varlink methods return SimpleNamespace objects instead of dictionaries
+        """
+        if not isinstance(interface,  Interface):
+            raise TypeError
+
+        self._interface = interface
+        self._namespaced = namespaced
+        self._in_use = False
+
+        for member in interface._members.values():
+            if isinstance(member, _Method):
+                self._add_method(member)
+
+    def close(self):
+        """To be implemented."""
+        raise NotImplementedError
+
+    def _sendMessage(self, out):
+        """To be implemented.
+
+        This should send a varlink message to the varlink service adding a trailing zero byte.
+        """
+        raise NotImplementedError
+
+    def _nextMessage(self):
+        """To be implemented.
+
+        This must be a generator yielding the next received varlink message without the trailing zero byte.
+        """
+        raise NotImplementedError
+
+    def _add_method(self, method):
+        def _wrapped(*args, **kwds):
+            if "_more" in kwds and kwds.pop("_more"):
+                return self._call_more(method.name, *args, **kwds)
+            else:
+                return self._call(method.name, *args, **kwds)
+        _wrapped.__name__ = method.name
+        # FIXME: add comments
+        _wrapped.__doc__ = "Varlink call: " + method.signature
+        setattr(self, method.name, _wrapped)
+
+    def _nextVarlinkMessage(self):
+        message = next(self._nextMessage())
+
+        if self._namespaced:
+            message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
+            if hasattr(message, "error"):
+                raise VarlinkError(message, self._namespaced)
+            else:
+                return (message.parameters, hasattr(message, "continues") and message.continues)
+        else:
+            message = json.loads(message)
+            if 'error' in message:
+                raise VarlinkError(message, self._namespaced)
+            else:
+                return (message['parameters'], ('continues' in message) and message['continues'])
+
+    def _call(self, method_name, *args, **kwargs):
+        if self._in_use:
+            raise ConnectionError
+
+        method = self._interface.get_method(method_name)
+
+        sparam = self._interface.filter_params(method.in_type, args, kwargs)
+        out = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
+
+        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8') )
+
+        self._in_use = True
+        (ret, more) = self._nextVarlinkMessage()
+        if more:
+            self._connection.close()
+            self._in_use = False
+            raise ConnectionError
+        self._in_use = False
+        return ret
+
+    def _call_more(self, method_name, *args, **kwargs):
+        if self._in_use:
+            raise ConnectionError
+
+        method = self._interface.get_method(method_name)
+
+        sparam = self._interface.filter_params(method.in_type, args, kwargs)
+        out = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
+
+        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8') )
+
+        more = True
+        self._in_use = True
+        while True:
+            (ret, more) = self._nextVarlinkMessage()
+            yield ret
+            if not more:
+                break
+        self._in_use = False
+
+class SimpleClientInterfaceHandler(ClientInterfaceHandler):
     """A varlink client for an interface doing send/write and receive/read on a socket or file stream"""
     def __init__(self, interface, file_or_socket, namespaced = False):
         """Creates an object with the varlink methods of an interface installed.
@@ -621,7 +734,7 @@ class ClientInterfaceProxy:
         file_or_socket - an open socket or io stream
         namespaced - if True, varlink methods return SimpleNamespace objects instead of dictionaries
         """
-        self._interface = interface
+        super().__init__(interface,  namespaced = namespaced)
         self._connection = file_or_socket
 
         if hasattr(self._connection,  'sendall'):
@@ -638,37 +751,30 @@ class ClientInterfaceProxy:
                 raise TypeError
             self._recv = False
 
-        self._in_use = False
         self._in_buffer = b''
 
-        self._namespaced = namespaced
+    def __enter__(self):
+        return self
 
-        for member in interface._members.values():
-            if isinstance(member, _Method):
-                self._add_method(member)
+    def __exit__(self ,type, value, traceback):
+        self.close()
 
-    def _add_method(self, method):
-        def _wrapped(*args, **kwds):
-            if "_more" in kwds and kwds.pop("_more"):
-                return self._call_more(method.name, *args, **kwds)
-            else:
-                return self._call(method.name, *args, **kwds)
-        _wrapped.__name__ = method.name
-        # FIXME: add comments
-        _wrapped.__doc__ = "Varlink call: " + method.signature
-        setattr(self, method.name, _wrapped)
+    def close(self):
+        if hasattr(self._connection,  'shutdown'):
+            self._connection.shutdown(socket.SHUT_RDWR)
+        self._connection.close()
 
-    def _send(self, out):
+    def _sendMessage(self, out):
         if self._sendall:
-            self._connection.sendall(json.dumps(out, cls=VarlinkEncoder).encode('utf-8') + b'\0')
+            self._connection.sendall(out + b'\0')
         elif hasattr:
-            self._connection.write(json.dumps(out, cls=VarlinkEncoder).encode('utf-8') + b'\0')
+            self._connection.write(out + b'\0')
 
-    def _next(self):
+    def _nextMessage(self):
         while True:
             message, _, self._in_buffer = self._in_buffer.partition(b'\0')
             if message:
-                return message
+                yield message
 
             if self._recv:
                 data = self._connection.recv(8192)
@@ -678,60 +784,6 @@ class ClientInterfaceProxy:
             if len(data) == 0:
                 raise ConnectionError
             self._in_buffer += data
-
-    def _nextMessage(self):
-        message = self._next()
-        if self._namespaced:
-            message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
-            if hasattr(message, "error"):
-                raise VarlinkError(message, self._namespaced)
-            else:
-                return (message.parameters, hasattr(message, "continues") and message.continues)
-        else:
-            message = json.loads(message)
-            if 'error' in message:
-                raise VarlinkError(message, self._namespaced)
-            else:
-                return (message['parameters'], ('continues' in message) and message['continues'])
-
-
-    def _call(self, method_name, *args, **kwargs):
-        if self._in_use:
-            raise ConnectionError
-
-        method = self._interface.get_method(method_name)
-
-        sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        out = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
-        self._send(out)
-
-        self._in_use = True
-        (ret, more) = self._nextMessage()
-        if more:
-            self._connection.close()
-            self._in_use = False
-            raise ConnectionError
-        self._in_use = False
-        return ret
-
-    def _call_more(self, method_name, *args, **kwargs):
-        if self._in_use:
-            raise ConnectionError
-
-        method = self._interface.get_method(method_name)
-
-        sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        out = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
-        self._send(out)
-
-        more = True
-        self._in_use = True
-        while True:
-            (ret, more) = self._nextMessage()
-            yield ret
-            if not more:
-                break
-        self._in_use = False
 
 # Used by the SimpleServer
 class _Connection:
