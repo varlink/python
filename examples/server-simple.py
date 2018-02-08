@@ -13,11 +13,13 @@ service = varlink.Service(
     interface_dir=os.path.dirname(__file__)
 )
 
+
 class ActionFailed(varlink.VarlinkError):
     def __init__(self, reason):
         varlink.VarlinkError.__init__(self,
-            {'error': 'org.varlink.example.more.ActionFailed',
-              'parameters': {'field': reason }})
+                                      {'error': 'org.varlink.example.more.ActionFailed',
+                                       'parameters': {'field': reason}})
+
 
 @service.interface('org.varlink.example.more')
 class Example:
@@ -26,21 +28,22 @@ class Example:
             if not _more:
                 yield varlink.InvalidParameter('more')
 
-            yield { 'state' : { 'start' : True } , '_continues' : True }
+            yield {'state': {'start': True}, '_continues': True}
 
             for i in range(0, n):
-                yield { 'state' : { 'progress' : int(i * 100 / n) } , '_continues' : True }
+                yield {'state': {'progress': int(i * 100 / n)}, '_continues': True}
                 time.sleep(1)
 
-            yield { 'state' : { 'progress' : 100 } , '_continues' : True }
+            yield {'state': {'progress': 100}, '_continues': True}
 
-            yield { 'state' : { 'end' : True }, '_continues' : False }
+            yield {'state': {'end': True}, '_continues': False}
         except Exception as error:
-            print("ERROR", error,  file=sys.stderr)
+            print("ERROR", error, file=sys.stderr)
             self.close()
 
     def Ping(self, ping):
-        return { 'pong' : ping }
+        return {'pong': ping}
+
 
 if len(sys.argv) < 2:
     print('missing address parameter')

@@ -11,21 +11,23 @@ import signal
 from twisted.internet import task
 from twisted.internet.defer import Deferred, DeferredQueue, inlineCallbacks
 from twisted.internet.protocol import Factory
-from twisted.internet.endpoints import  clientFromString
+from twisted.internet.endpoints import clientFromString
 from twisted.protocols.basic import LineReceiver
 from types import SimpleNamespace
 
 with open(os.path.join(os.path.dirname(__file__), 'org.varlink.example.more.varlink')) as f:
     INTERFACE_org_varlink_example_more = varlink.Interface(f.read())
 
-class VarlinkReceiver(LineReceiver):
-     delimiter = b'\0'
-     MAX_LENGTH = 8 * 1024 * 1024
 
-class VarlinkClient(VarlinkReceiver,  varlink.ClientInterfaceHandler):
+class VarlinkReceiver(LineReceiver):
+    delimiter = b'\0'
+    MAX_LENGTH = 8 * 1024 * 1024
+
+
+class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
     def __init__(self):
         self.whenDisconnected = Deferred()
-        super().__init__(INTERFACE_org_varlink_example_more, namespaced = True)
+        super().__init__(INTERFACE_org_varlink_example_more, namespaced=True)
         self._lock = threading.Lock()
         self.queue = DeferredQueue()
 
@@ -76,81 +78,85 @@ class VarlinkClient(VarlinkReceiver,  varlink.ClientInterfaceHandler):
             sparam = self._interface.filter_params(method.in_type, args, kwargs)
 
             if "_more" in kwargs and kwargs.pop("_more"):
-                out = {'method' : self._interface._name + "." + method.name, 'more' : True, 'parameters' : sparam}
+                out = {'method': self._interface._name + "." + method.name, 'more': True, 'parameters': sparam}
             else:
-                out = {'method' : self._interface._name + "." + method.name, 'parameters' : sparam}
-            yield self.sendLine(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8') )
+                out = {'method': self._interface._name + "." + method.name, 'parameters': sparam}
+            yield self.sendLine(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8'))
 
         _wrapped.__name__ = method.name
         _wrapped.__doc__ = "Varlink call: " + method.signature
         setattr(self, method.name, _wrapped)
 
+
 CHILDPID = 0
 
-def sigterm_handler(signum,  frame):
+
+def sigterm_handler(signum, frame):
     global CHILDPID
     if signum == signal.SIGTERM and CHILDPID:
-            try:
-                os.kill(CHILDPID, signal.SIGTERM)
-            except OSError:
-                pass
-            os.waitpid(CHILDPID, 0)
-            CHILDPID=0
+        try:
+            os.kill(CHILDPID, signal.SIGTERM)
+        except OSError:
+            pass
+        os.waitpid(CHILDPID, 0)
+        CHILDPID = 0
+
 
 def varlink_to_twisted_address(address):
-        global CHILDPID
+    global CHILDPID
 
-        if address.startswith("unix:"):
-            address.replace(';mode=',  ':mode=')
-        elif address.startswith("ip:"):
-            address = address[3:]
-            p = address.rfind(":")
-            port = address[p+1:]
-            address = address[:p]
-            address="tcp:%s:interface=%s" % (port,  address)
-        elif address.startswith("exec:"):
-            executable = address[5:]
-            s = socket.socket(socket.AF_UNIX)
-            s.setblocking(0)
-            s.bind("")
-            s.listen()
-            address = s.getsockname().decode('ascii')
+    if address.startswith("unix:"):
+        address.replace(';mode=', ':mode=')
+    elif address.startswith("ip:"):
+        address = address[3:]
+        p = address.rfind(":")
+        port = address[p + 1:]
+        address = address[:p]
+        address = "tcp:%s:interface=%s" % (port, address)
+    elif address.startswith("exec:"):
+        executable = address[5:]
+        s = socket.socket(socket.AF_UNIX)
+        s.setblocking(0)
+        s.bind("")
+        s.listen()
+        address = s.getsockname().decode('ascii')
 
-            CHILDPID = os.fork()
-            if CHILDPID == 0:
-                # child
-                n = s.fileno()
-                if n == 3:
-                    # without dup() the socket is closed with the python destructor
-                    n = os.dup(3)
-                    del s
-                else:
-                    try:
-                        os.close(3)
-                    except OSError:
-                        pass
+        CHILDPID = os.fork()
+        if CHILDPID == 0:
+            # child
+            n = s.fileno()
+            if n == 3:
+                # without dup() the socket is closed with the python destructor
+                n = os.dup(3)
+                del s
+            else:
+                try:
+                    os.close(3)
+                except OSError:
+                    pass
 
-                os.dup2(n, 3)
-                address = address.replace('\0', '@', 1)
-                address = "unix:%s;mode=0600" % address
-                os.execlp(executable, executable, address)
-                sys.exit(1)
-            # parent
-            s.close()
+            os.dup2(n, 3)
+            address = address.replace('\0', '@', 1)
+            address = "unix:%s;mode=0600" % address
+            os.execlp(executable, executable, address)
+            sys.exit(1)
+        # parent
+        s.close()
 
-            signal.signal(signal.SIGALRM, sigterm_handler)
-            address = "unix:%s" % address
+        signal.signal(signal.SIGALRM, sigterm_handler)
+        address = "unix:%s" % address
 
-        else:
-            raise Exception("Invalid address '%s'" % address)
+    else:
+        raise Exception("Invalid address '%s'" % address)
 
-        return address
+    return address
+
 
 @inlineCallbacks
 def main(reactor, address):
     factory = Factory.forProtocol(VarlinkClient)
-    endpoint1 = clientFromString(reactor,  address)
-    endpoint2 = clientFromString(reactor,  address)
+    endpoint1 = clientFromString(reactor, address)
+    endpoint2 = clientFromString(reactor, address)
 
     try:
         con1 = yield endpoint1.connect(factory)
@@ -190,18 +196,19 @@ def main(reactor, address):
         print(e.parameters(), file=sys.stderr)
         raise e
 
+
 if __name__ == '__main__':
     listen_fd = None
 
     if len(sys.argv) == 2:
-        address=sys.argv[1]
+        address = sys.argv[1]
     else:
-        address='exec:./server-twisted.py'
+        address = 'exec:./server-twisted.py'
 
     print('Connecting to %s\n' % address)
     address = varlink_to_twisted_address(address)
 
-    task.react(main, [ address ])
+    task.react(main, [address])
 
     if CHILDPID != 0:
         try:

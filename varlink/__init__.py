@@ -19,17 +19,20 @@ from types import (SimpleNamespace, GeneratorType)
 from inspect import signature
 import sys
 
+
 class VarlinkEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, SimpleNamespace):
             return o.__dict__
-        if isinstance(o,  VarlinkError):
+        if isinstance(o, VarlinkError):
             return o.as_dict()
         return json.JSONEncoder.default(self, o)
 
+
 class VarlinkError(Exception):
     """The base class for varlink error exceptions"""
-    def __init__(self, message, namespaced = False):
+
+    def __init__(self, message, namespaced=False):
         if not namespaced and not isinstance(message, dict):
             raise TypeError
         # normalize to dictionary
@@ -39,7 +42,7 @@ class VarlinkError(Exception):
         """returns the exception varlink error name"""
         return self.args[0]['error']
 
-    def parameters(self, namespaced = False):
+    def parameters(self, namespaced=False):
         """returns the exception varlink error parameters"""
         if namespaced:
             return json.loads(json.dumps(self.args[0]['parameters']), object_hook=lambda d: SimpleNamespace(**d))
@@ -49,29 +52,42 @@ class VarlinkError(Exception):
     def as_dict(self):
         return self.args[0]
 
+
 class InterfaceNotFound(VarlinkError):
     """The standardized varlink InterfaceNotFound error as a python exception"""
+
     def __init__(self, interface):
-        VarlinkError.__init__(self, {'error': 'org.varlink.service.InterfaceNotFound', 'parameters': {'interface': interface}})
+        VarlinkError.__init__(self, {'error': 'org.varlink.service.InterfaceNotFound',
+                                     'parameters': {'interface': interface}})
+
 
 class MethodNotFound(VarlinkError):
     """The standardized varlink MethodNotFound error as a python exception"""
+
     def __init__(self, method):
         VarlinkError.__init__(self, {'error': 'org.varlink.service.MethodNotFound', 'parameters': {'method': method}})
 
+
 class MethodNotImplemented(VarlinkError):
     """The standardized varlink MethodNotImplemented error as a python exception"""
+
     def __init__(self, method):
-        VarlinkError.__init__(self, {'error': 'org.varlink.service.MethodNotImplemented', 'parameters': {'method': method}})
+        VarlinkError.__init__(self,
+                              {'error': 'org.varlink.service.MethodNotImplemented', 'parameters': {'method': method}})
+
 
 class InvalidParameter(VarlinkError):
     """The standardized varlink InvalidParameter error as a python exception"""
+
     def __init__(self, name):
-        VarlinkError.__init__(self, {'error': 'org.varlink.service.InvalidParameter', 'parameters': {'parameter': name}})
+        VarlinkError.__init__(self,
+                              {'error': 'org.varlink.service.InvalidParameter', 'parameters': {'parameter': name}})
+
 
 class ClientInterfaceHandler:
     """Base class for varlink client, which wraps varlink methods of an interface to the class"""
-    def __init__(self, interface, namespaced = False):
+
+    def __init__(self, interface, namespaced=False):
         """Base class for varlink client, which wraps varlink methods of an interface.
 
         The object allows to talk to a varlink service, which implements the specified interface
@@ -83,7 +99,7 @@ class ClientInterfaceHandler:
         interface - an Interface object
         namespaced - if True, varlink methods return SimpleNamespace objects instead of dictionaries
         """
-        if not isinstance(interface,  Interface):
+        if not isinstance(interface, Interface):
             raise TypeError
 
         self._interface = interface
@@ -118,6 +134,7 @@ class ClientInterfaceHandler:
                 return self._call_more(method.name, *args, **kwds)
             else:
                 return self._call(method.name, *args, **kwds)
+
         _wrapped.__name__ = method.name
         # FIXME: add comments
         _wrapped.__doc__ = "Varlink call: " + method.signature
@@ -146,9 +163,9 @@ class ClientInterfaceHandler:
         method = self._interface.get_method(method_name)
 
         sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        out = {'method' : self._interface._name + "." + method_name, 'parameters' : sparam}
+        out = {'method': self._interface._name + "." + method_name, 'parameters': sparam}
 
-        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8') )
+        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
 
         self._in_use = True
         (ret, more) = self._nextVarlinkMessage()
@@ -166,9 +183,9 @@ class ClientInterfaceHandler:
         method = self._interface.get_method(method_name)
 
         sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        out = {'method' : self._interface._name + "." + method_name, 'more' : True, 'parameters' : sparam}
+        out = {'method': self._interface._name + "." + method_name, 'more': True, 'parameters': sparam}
 
-        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8') )
+        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
 
         more = True
         self._in_use = True
@@ -179,9 +196,11 @@ class ClientInterfaceHandler:
                 break
         self._in_use = False
 
+
 class SimpleClientInterfaceHandler(ClientInterfaceHandler):
     """A varlink client for an interface doing send/write and receive/read on a socket or file stream"""
-    def __init__(self, interface, file_or_socket, namespaced = False):
+
+    def __init__(self, interface, file_or_socket, namespaced=False):
         """Creates an object with the varlink methods of an interface installed.
 
         The object allows to talk to a varlink service, which implements the specified interface
@@ -194,20 +213,20 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         file_or_socket - an open socket or io stream
         namespaced - if True, varlink methods return SimpleNamespace objects instead of dictionaries
         """
-        super().__init__(interface,  namespaced = namespaced)
+        super().__init__(interface, namespaced=namespaced)
         self._connection = file_or_socket
 
-        if hasattr(self._connection,  'sendall'):
+        if hasattr(self._connection, 'sendall'):
             self._sendall = True
         else:
-            if not hasattr(self._connection,  'write'):
+            if not hasattr(self._connection, 'write'):
                 raise TypeError
             self._sendall = False
 
-        if hasattr(self._connection,  'recv'):
+        if hasattr(self._connection, 'recv'):
             self._recv = True
         else:
-            if not hasattr(self._connection,  'read'):
+            if not hasattr(self._connection, 'read'):
                 raise TypeError
             self._recv = False
 
@@ -216,11 +235,11 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
     def __enter__(self):
         return self
 
-    def __exit__(self ,type, value, traceback):
+    def __exit__(self, type, value, traceback):
         self.close()
 
     def close(self):
-        if hasattr(self._connection,  'shutdown'):
+        if hasattr(self._connection, 'shutdown'):
             self._connection.shutdown(socket.SHUT_RDWR)
         self._connection.close()
 
@@ -244,6 +263,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
             if len(data) == 0:
                 raise ConnectionError
             self._in_buffer += data
+
 
 class Client:
     """Varlink client class.
@@ -292,7 +312,7 @@ class Client:
     which yields the return values and waits (blocks) for the service to return more return values
     in the generator's .__next__() call.
     """
-    handler=SimpleClientInterfaceHandler
+    handler = SimpleClientInterfaceHandler
 
     def __init__(self, address=None, resolve_interface=None, resolver=None):
         """Get the interface descriptions from a varlink service.
@@ -307,6 +327,7 @@ class Client:
         """
         self._interfaces = {}
         self._childpid = 0
+
         def _resolve_interface(interface, resolver):
             _iface = Client(resolver).open('org.varlink.resolver')
             _r = _iface.Resolve(interface)
@@ -372,7 +393,7 @@ class Client:
     def __enter__(self):
         return self
 
-    def __exit__(self ,type, value, traceback):
+    def __exit__(self, type, value, traceback):
         if hasattr(self, "_childpid") and self._childpid != 0:
             try:
                 os.kill(self._childpid, signal.SIGTERM)
@@ -380,7 +401,7 @@ class Client:
                 pass
             os.waitpid(self._childpid, 0)
 
-    def open(self, interface_name, namespaced = False):
+    def open(self, interface_name, namespaced=False):
         """Open a new connection and get a client interface handle with the varlink methods installed.
 
         Arguments:
@@ -402,7 +423,7 @@ class Client:
         except:
             raise ConnectionError
 
-        return self.handler(self._interfaces[interface_name], s, namespaced = namespaced)
+        return self.handler(self._interfaces[interface_name], s, namespaced=namespaced)
 
     def get_interfaces(self):
         """Returns the a list of Interface objects the service implements."""
@@ -418,6 +439,7 @@ class Client:
             raise TypeError
 
         self._interfaces[interface._name] = interface
+
 
 class Service:
     """Varlink service server handler
@@ -451,6 +473,7 @@ class Service:
     Note: varlink only handles one method call at a time on one connection.
 
     """
+
     def __init__(self, vendor='', product='', version='', interface_dir='.', namespaced=False):
         """Initialize the service with the data org.varlink.service.GetInfo() returns
 
@@ -504,7 +527,8 @@ class Service:
                 if name not in method.in_type.fields:
                     raise InvalidParameter(name)
                 if self._namespaced:
-                    parameters[name] = json.loads(json.dumps(parameters[name]), object_hook=lambda d: SimpleNamespace(**d))
+                    parameters[name] = json.loads(json.dumps(parameters[name]),
+                                                  object_hook=lambda d: SimpleNamespace(**d))
 
             func = getattr(interface._handler, method_name, None)
             if not func or not callable(func):
@@ -537,9 +561,9 @@ class Service:
                         if '_continues' in o:
                             cont = o['_continues']
                             del o['_continues']
-                            yield { 'continues': bool(cont), 'parameters': o or {}}
+                            yield {'continues': bool(cont), 'parameters': o or {}}
                         else:
-                            yield { 'parameters': o or {}}
+                            yield {'parameters': o or {}}
 
                         if not cont:
                             return
@@ -554,7 +578,7 @@ class Service:
             traceback.print_exception(type(error), error, error.__traceback__)
             yield {'error': 'InternalError'}
 
-    def handle(self,  message):
+    def handle(self, message):
         """This generator function handles any incoming message. Write any returned bytes to the output stream.
 
         for outgoing_message in service.handle(incoming_message):
@@ -585,8 +609,10 @@ class Service:
 
         return decorator
 
+
 class Interface:
     """Class for a parsed varlink interface definition."""
+
     def __init__(self, description):
         """description -- description string in varlink interface definition language"""
         self._description = description
@@ -656,12 +682,15 @@ class Interface:
 
         return out
 
+
 class Scanner:
     """Class for scanning a varlink interface definition."""
+
     def __init__(self, string):
         self.whitespace = re.compile(r'([ \t\n]|#.*$)+', re.ASCII | re.MULTILINE)
         # FIXME: nested ()
-        self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))', re.ASCII | re.MULTILINE)
+        self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
+                                           re.ASCII | re.MULTILINE)
 
         self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]', re.ASCII)
         self.patterns = {
@@ -756,22 +785,27 @@ class Scanner:
         else:
             raise SyntaxError('expected type, method, or error')
 
+
 class _Struct:
     def __init__(self, fields):
         self.fields = collections.OrderedDict(fields)
+
 
 class _Array:
     def __init__(self, element_type):
         self.element_type = element_type
 
+
 class _CustomType:
     def __init__(self, name):
         self.name = name
+
 
 class _Alias:
     def __init__(self, name, varlink_type):
         self.name = name
         self.type = varlink_type
+
 
 class _Method:
     def __init__(self, name, in_type, out_type, signature):
@@ -780,10 +814,12 @@ class _Method:
         self.out_type = out_type
         self.signature = signature
 
+
 class _Error:
     def __init__(self, name, varlink_type):
         self.name = name
         self.type = varlink_type
+
 
 # Used by the SimpleServer
 class _Connection:
@@ -825,6 +861,7 @@ class _Connection:
     def write(self, message):
         self._out_buffer += message
 
+
 class SimpleServer:
     """A simple single threaded unix domain socket server
 
@@ -833,7 +870,8 @@ class SimpleServer:
 
     Better use a framework like twisted to serve.
     """
-    def __init__(self,  service):
+
+    def __init__(self, service):
         self._service = service
         self.connections = {}
         self._more = {}
@@ -842,7 +880,7 @@ class SimpleServer:
     def __enter__(self):
         return self
 
-    def __exit__(self ,type, value, traceback):
+    def __exit__(self, type, value, traceback):
         os.remove(self.removefile)
 
     def serve(self, address, listen_fd=None):
@@ -882,12 +920,12 @@ class SimpleServer:
 
                         if not fd in self._more:
                             for message in connection.read():
-                                    # Let the varlink service handle this
-                                    it = iter(self._service.handle(message))
-                                    if isinstance(it, GeneratorType):
-                                        self._more[fd] = it
-                                    else:
-                                        raise TypeError
+                                # Let the varlink service handle this
+                                it = iter(self._service.handle(message))
+                                if isinstance(it, GeneratorType):
+                                    self._more[fd] = it
+                                else:
+                                    raise TypeError
 
                         if fd in self._more:
                             try:
@@ -915,4 +953,3 @@ class SimpleServer:
 
         s.close()
         epoll.close()
-

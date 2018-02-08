@@ -11,7 +11,7 @@ import socket
 from twisted.internet import reactor
 from twisted.internet.threads import deferToThread
 from twisted.internet.protocol import ServerFactory
-from twisted.internet.endpoints import  serverFromString
+from twisted.internet.endpoints import serverFromString
 from twisted.protocols.basic import LineReceiver
 
 service = varlink.Service(
@@ -21,11 +21,13 @@ service = varlink.Service(
     interface_dir=os.path.dirname(__file__)
 )
 
+
 class ActionFailed(varlink.VarlinkError):
     def __init__(self, reason):
         varlink.VarlinkError.__init__(self,
-            {'error': 'org.varlink.example.more.ActionFailed',
-              'parameters': {'field': reason }})
+                                      {'error': 'org.varlink.example.more.ActionFailed',
+                                       'parameters': {'field': reason}})
+
 
 @service.interface('org.varlink.example.more')
 class Example:
@@ -34,24 +36,26 @@ class Example:
             if not _more:
                 yield varlink.InvalidParameter('more')
 
-            yield { 'state' : { 'start' : True } , '_continues' : True }
+            yield {'state': {'start': True}, '_continues': True}
 
             for i in range(0, n):
-                yield { 'state' : { 'progress' : int(i * 100 / n) } , '_continues' : True }
+                yield {'state': {'progress': int(i * 100 / n)}, '_continues': True}
                 time.sleep(1)
 
-            yield { 'state' : { 'progress' : 100 } , '_continues' : True }
+            yield {'state': {'progress': 100}, '_continues': True}
 
-            yield { 'state' : { 'end' : True }, '_continues' : False }
+            yield {'state': {'end': True}, '_continues': False}
         except Exception as error:
-            print("ERROR", type(error),  file=sys.stderr)
+            print("ERROR", type(error), file=sys.stderr)
 
     def Ping(self, ping):
-        return { 'pong' : ping }
+        return {'pong': ping}
+
 
 class VarlinkReceiver(LineReceiver):
-     delimiter = b'\0'
-     MAX_LENGTH = 8 * 1024 * 1024
+    delimiter = b'\0'
+    MAX_LENGTH = 8 * 1024 * 1024
+
 
 class VarlinkServer(VarlinkReceiver):
     def __init__(self, service):
@@ -76,24 +80,27 @@ class VarlinkServer(VarlinkReceiver):
     def lineReceived(self, incoming_message):
         deferToThread(self.sendMessages, self._service.handle(incoming_message))
 
+
 class VarlinkServerFactory(ServerFactory):
     def protocol(self):
         return VarlinkServer(service)
 
-def varlink_to_twisted_address(address):
-        if address.startswith("unix:"):
-            address = address.replace('@', '\0', 1)
-            address = address.replace(';mode=',  ':mode=')
-        elif address.startswith("ip:"):
-            address = address[3:]
-            p = address.rfind(":")
-            port = address[p+1:]
-            address = address[:p]
-            address="tcp:%s:interface=%s" % (port,  address)
-        else:
-            raise Exception("Invalid address '%s'" % address)
 
-        return address
+def varlink_to_twisted_address(address):
+    if address.startswith("unix:"):
+        address = address.replace('@', '\0', 1)
+        address = address.replace(';mode=', ':mode=')
+    elif address.startswith("ip:"):
+        address = address[3:]
+        p = address.rfind(":")
+        port = address[p + 1:]
+        address = address[:p]
+        address = "tcp:%s:interface=%s" % (port, address)
+    else:
+        raise Exception("Invalid address '%s'" % address)
+
+    return address
+
 
 if __name__ == '__main__':
     listen_fd = None
@@ -111,7 +118,7 @@ if __name__ == '__main__':
         reactor.adoptStreamPort(listen_fd, socket.AF_UNIX, VarlinkServerFactory())
     else:
         address = varlink_to_twisted_address(sys.argv[1])
-        endpoint = serverFromString(reactor,  address)
+        endpoint = serverFromString(reactor, address)
         endpoint.listen(VarlinkServerFactory())
 
     reactor.run()

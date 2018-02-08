@@ -4,15 +4,15 @@ from varlink import (Client, VarlinkError)
 import sys
 
 if len(sys.argv) == 2:
-    address=sys.argv[1]
+    address = sys.argv[1]
 else:
-    address='exec:./server-simple.py'
+    address = 'exec:./server-simple.py'
 
 print('Connecting to %s\n' % address)
 try:
     with Client(address=address) as client, \
-            client.open('org.varlink.example.more', namespaced = True) as con1, \
-            client.open('org.varlink.example.more', namespaced = True) as con2:
+            client.open('org.varlink.example.more', namespaced=True) as con1, \
+            client.open('org.varlink.example.more', namespaced=True) as con2:
         for m in con1.TestMore(10, _more=True):
             if hasattr(m.state, 'start'):
                 if m.state.start:
