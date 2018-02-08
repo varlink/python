@@ -938,7 +938,7 @@ class SimpleServer:
                         if fd in self._more:
                             try:
                                 reply = next(self._more[fd])
-                                if not reply:
+                                if reply:
                                     # write any reply pending
                                     connection.write(reply + b'\0')
                             except StopIteration:
