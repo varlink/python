@@ -83,7 +83,7 @@ class VarlinkServerFactory(ServerFactory):
 def varlink_to_twisted_address(address):
         if address.startswith("unix:"):
             address = address.replace('@', '\0', 1)
-            address.replace(';mode=',  ':mode=')
+            address = address.replace(';mode=',  ':mode=')
         elif address.startswith("ip:"):
             address = address[3:]
             p = address.rfind(":")
