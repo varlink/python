@@ -52,4 +52,5 @@ try:
 except OSError:
     listen_fd = None
 
-varlink.SimpleServer(service).serve(sys.argv[1], listen_fd=listen_fd)
+with varlink.SimpleServer(service) as s:
+    s.serve(sys.argv[1], listen_fd=listen_fd)
