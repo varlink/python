@@ -697,7 +697,7 @@ class Scanner:
         self.patterns = {
             'interface-name': re.compile(r'[a-z]+(\.[a-z0-9][a-z0-9-]*)+'),
             'member-name': re.compile(r'\b[A-Z][A-Za-z0-9_]*\b', re.ASCII),
-            'identifier': re.compile(r'\b[A-Za-z0-9_]+\b', re.ASCII),
+            'identifier': re.compile(r'\b[a-z][A-Za-z0-9_]*\b', re.ASCII),
         }
 
         self.string = string
