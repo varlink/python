@@ -124,3 +124,9 @@ Ping:  Test
 --- End ---
 ```
 
+You can also start the clients and server with URLs following the varlink URL standard.
+E.g.
+- unix:@anonuds
+- unix:/run/myserver/socketfile
+- ip:127.0.0.1:12345
+- ip:[::1]:12345
