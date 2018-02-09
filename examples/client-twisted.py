@@ -25,7 +25,7 @@ class VarlinkReceiver(LineReceiver):
 
 
 class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
-    def _sendMessage(self, out):
+    def _send_message(self, out):
         self.sendLine(out)
 
     def __init__(self):
@@ -48,7 +48,7 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
         yield self.transport.loseConnection()
 
     @inlineCallbacks
-    def _nextMessage(self):
+    def _next_message(self):
         self.resumeProducing()
         msg = yield self.queue.get()
         self.pauseProducing()
@@ -56,7 +56,7 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
 
     @inlineCallbacks
     def replyMore(self):
-        message = yield self._nextMessage()
+        message = yield self._next_message()
         if self._namespaced:
             message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
             if hasattr(message, "error"):
@@ -78,12 +78,12 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
     def _add_method(self, method):
         @inlineCallbacks
         def _wrapped(*args, **kwargs):
-            sparam = self._interface.filter_params(method.in_type, args, kwargs)
+            parameters = self._interface.filter_params(method.in_type, args, kwargs)
 
             if "_more" in kwargs and kwargs.pop("_more"):
-                out = {'method': self._interface._name + "." + method.name, 'more': True, 'parameters': sparam}
+                out = {'method': self._interface.name + "." + method.name, 'more': True, 'parameters': parameters}
             else:
-                out = {'method': self._interface._name + "." + method.name, 'parameters': sparam}
+                out = {'method': self._interface.name + "." + method.name, 'parameters': parameters}
             yield self.sendLine(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8'))
 
         _wrapped.__name__ = method.name
@@ -91,22 +91,22 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
         setattr(self, method.name, _wrapped)
 
 
-CHILDPID = 0
+CHILD_PID = 0
 
 
-def sigterm_handler(signum, frame):
-    global CHILDPID
-    if signum == signal.SIGTERM and CHILDPID:
+def sigterm_handler(signum, _):
+    global CHILD_PID
+    if signum == signal.SIGTERM and CHILD_PID:
         try:
-            os.kill(CHILDPID, signal.SIGTERM)
+            os.kill(CHILD_PID, signal.SIGTERM)
         except OSError:
             pass
-        os.waitpid(CHILDPID, 0)
-        CHILDPID = 0
+        os.waitpid(CHILD_PID, 0)
+        CHILD_PID = 0
 
 
 def varlink_to_twisted_address(address):
-    global CHILDPID
+    global CHILD_PID
 
     if address.startswith("unix:"):
         address.replace(';mode=', ':mode=')
@@ -124,8 +124,8 @@ def varlink_to_twisted_address(address):
         s.listen()
         address = s.getsockname().decode('ascii')
 
-        CHILDPID = os.fork()
-        if CHILDPID == 0:
+        CHILD_PID = os.fork()
+        if CHILD_PID == 0:
             # child
             n = s.fileno()
             if n == 3:
@@ -204,18 +204,18 @@ if __name__ == '__main__':
     listen_fd = None
 
     if len(sys.argv) == 2:
-        address = sys.argv[1]
+        connect_address = sys.argv[1]
     else:
-        address = 'exec:./server-twisted.py'
+        connect_address = 'exec:./server-twisted.py'
 
-    print('Connecting to %s\n' % address)
-    address = varlink_to_twisted_address(address)
+    print('Connecting to %s\n' % connect_address)
+    connect_address = varlink_to_twisted_address(connect_address)
 
-    task.react(main, [address])
+    task.react(main, [connect_address])
 
-    if CHILDPID != 0:
+    if CHILD_PID != 0:
         try:
-            os.kill(CHILDPID, signal.SIGTERM)
+            os.kill(CHILD_PID, signal.SIGTERM)
         except OSError:
             pass
-        os.waitpid(CHILDPID, 0)
+        os.waitpid(CHILD_PID, 0)

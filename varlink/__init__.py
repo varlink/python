@@ -106,7 +106,7 @@ class ClientInterfaceHandler:
         self._namespaced = namespaced
         self._in_use = False
 
-        for member in interface._members.values():
+        for member in interface.members.values():
             if isinstance(member, _Method):
                 self._add_method(member)
 
@@ -114,14 +114,14 @@ class ClientInterfaceHandler:
         """To be implemented."""
         raise NotImplementedError
 
-    def _sendMessage(self, out):
+    def _send_message(self, out):
         """To be implemented.
 
         This should send a varlink message to the varlink service adding a trailing zero byte.
         """
         raise NotImplementedError
 
-    def _nextMessage(self):
+    def _next_message(self):
         """To be implemented.
 
         This must be a generator yielding the next received varlink message without the trailing zero byte.
@@ -129,32 +129,32 @@ class ClientInterfaceHandler:
         raise NotImplementedError
 
     def _add_method(self, method):
-        def _wrapped(*args, **kwds):
-            if "_more" in kwds and kwds.pop("_more"):
-                return self._call_more(method.name, *args, **kwds)
+        def _wrapped(*args, **kwargs):
+            if "_more" in kwargs and kwargs.pop("_more"):
+                return self._call_more(method.name, *args, **kwargs)
             else:
-                return self._call(method.name, *args, **kwds)
+                return self._call(method.name, *args, **kwargs)
 
         _wrapped.__name__ = method.name
         # FIXME: add comments
         _wrapped.__doc__ = "Varlink call: " + method.signature
         setattr(self, method.name, _wrapped)
 
-    def _nextVarlinkMessage(self):
-        message = next(self._nextMessage())
+    def _next_varlink_message(self):
+        message = next(self._next_message())
 
         if self._namespaced:
             message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
             if hasattr(message, "error"):
                 raise VarlinkError(message, self._namespaced)
             else:
-                return (message.parameters, hasattr(message, "continues") and message.continues)
+                return message.parameters, hasattr(message, "continues") and message.continues
         else:
             message = json.loads(message)
             if 'error' in message:
                 raise VarlinkError(message, self._namespaced)
             else:
-                return (message['parameters'], ('continues' in message) and message['continues'])
+                return message['parameters'], ('continues' in message) and message['continues']
 
     def _call(self, method_name, *args, **kwargs):
         if self._in_use:
@@ -162,13 +162,13 @@ class ClientInterfaceHandler:
 
         method = self._interface.get_method(method_name)
 
-        sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        out = {'method': self._interface._name + "." + method_name, 'parameters': sparam}
+        parameters = self._interface.filter_params(method.in_type, args, kwargs)
+        out = {'method': self._interface.name + "." + method_name, 'parameters': parameters}
 
-        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
+        self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
 
         self._in_use = True
-        (ret, more) = self._nextVarlinkMessage()
+        (ret, more) = self._next_varlink_message()
         if more:
             self.close()
             self._in_use = False
@@ -182,18 +182,16 @@ class ClientInterfaceHandler:
 
         method = self._interface.get_method(method_name)
 
-        sparam = self._interface.filter_params(method.in_type, args, kwargs)
-        out = {'method': self._interface._name + "." + method_name, 'more': True, 'parameters': sparam}
+        parameters = self._interface.filter_params(method.in_type, args, kwargs)
+        out = {'method': self._interface.name + "." + method_name, 'more': True, 'parameters': parameters}
 
-        self._sendMessage(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
+        self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
 
         more = True
         self._in_use = True
-        while True:
-            (ret, more) = self._nextVarlinkMessage()
+        while more:
+            (ret, more) = self._next_varlink_message()
             yield ret
-            if not more:
-                break
         self._in_use = False
 
 
@@ -243,13 +241,13 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
             self._connection.shutdown(socket.SHUT_RDWR)
         self._connection.close()
 
-    def _sendMessage(self, out):
+    def _send_message(self, out):
         if self._sendall:
             self._connection.sendall(out + b'\0')
         elif hasattr:
             self._connection.write(out + b'\0')
 
-    def _nextMessage(self):
+    def _next_message(self):
         while True:
             message, _, self._in_buffer = self._in_buffer.partition(b'\0')
             if message:
@@ -280,13 +278,13 @@ class Client:
     # first reply and then continuously replies when new entries are available.
     method Monitor(initial_lines: int) -> (entries: Entry[])
     >>>
-    >>> iface = client.open("io.systemd.journal")
+    >>> connection = client.open("io.systemd.journal")
 
-    iface now holds an object with all the varlink methods available.
+    connection now holds an object with all the varlink methods available.
 
     Do varlink method call with varlink arguments and a
-    single varlink return struct wrapped in a namespace class:
-    >>> ret = iface.Monitor(initial_lines=1)
+    single varlink return structure wrapped in a namespace class:
+    >>> ret = connection.Monitor(initial_lines=1)
     >>> ret
     namespace(entries=[namespace(cursor='s=[…]',
        message="req:1 'dhcp4-change' [wlp3s0][…]", priority='critical',
@@ -296,7 +294,7 @@ class Client:
 
     Do varlink method call with varlink arguments and a
     multiple return values in monitor mode, using the "_more" keyword:
-    >>> for m in iface.Monitor(_more=True):
+    >>> for m in connection.Monitor(_more=True):
     >>>     for e in m.entries:
     >>>         print("%s: %s" % (e.time, e.message))
     2018-01-29 12:19:59Z: [system] Activating via systemd: service name='[…]
@@ -326,12 +324,12 @@ class Client:
         ConnectionError - could not connect to the service or resolver
         """
         self._interfaces = {}
-        self._childpid = 0
+        self._child_pid = 0
 
-        def _resolve_interface(interface, resolver):
-            _iface = Client(resolver).open('org.varlink.resolver')
+        def _resolve_interface(_interface, _resolver):
+            resolver_connection = Client(_resolver).open('org.varlink.resolver')
             # noinspection PyUnresolvedReferences
-            _r = _iface.Resolve(interface)
+            _r = resolver_connection.Resolve(_interface)
             return _r['address']
 
         with open(os.path.join(os.path.dirname(__file__), 'org.varlink.service.varlink')) as f:
@@ -356,8 +354,8 @@ class Client:
             s.listen()
             address = s.getsockname().decode('ascii')
 
-            self._childpid = os.fork()
-            if self._childpid == 0:
+            self._child_pid = os.fork()
+            if self._child_pid == 0:
                 # child
                 n = s.fileno()
                 if n == 3:
@@ -382,27 +380,27 @@ class Client:
             raise ConnectionError
 
         self.address = address
-        siface = self.open("org.varlink.service")
+        _connection = self.open("org.varlink.service")
         # noinspection PyUnresolvedReferences
-        info = siface.GetInfo()
+        info = _connection.GetInfo()
 
-        for iface in info['interfaces']:
+        for interface_name in info['interfaces']:
             # noinspection PyUnresolvedReferences
-            desc = siface.GetInterfaceDescription(iface)
+            desc = _connection.GetInterfaceDescription(interface_name)
             interface = Interface(desc['description'])
-            self._interfaces[interface._name] = interface
-        siface.close()
+            self._interfaces[interface.name] = interface
+        _connection.close()
 
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
-        if hasattr(self, "_childpid") and self._childpid != 0:
+    def __exit__(self, _type, value, _traceback):
+        if hasattr(self, "_child_pid") and self._child_pid != 0:
             try:
-                os.kill(self._childpid, signal.SIGTERM)
+                os.kill(self._child_pid, signal.SIGTERM)
             except OSError:
                 pass
-            os.waitpid(self._childpid, 0)
+            os.waitpid(self._child_pid, 0)
 
     def open(self, interface_name, namespaced=False):
         """Open a new connection and get a client interface handle with the varlink methods installed.
@@ -413,18 +411,15 @@ class Client:
 
         Exceptions:
         InterfaceNotFound -- if the interface is not found
-        ConnectionError   -- could not connect to the service
+        anything socket.connect() throws
         """
 
-        if not interface_name in self._interfaces:
+        if interface_name not in self._interfaces:
             raise InterfaceNotFound(interface_name)
 
-        try:
-            s = socket.socket(socket.AF_UNIX)
-            s.setblocking(1)
-            s.connect(self.address)
-        except:
-            raise ConnectionError
+        s = socket.socket(socket.AF_UNIX)
+        s.setblocking(1)
+        s.connect(self.address)
 
         return self.handler(self._interfaces[interface_name], s, namespaced=namespaced)
 
@@ -441,19 +436,19 @@ class Client:
         if not isinstance(interface, Interface):
             raise TypeError
 
-        self._interfaces[interface._name] = interface
+        self._interfaces[interface.name] = interface
 
 
 class Service:
     """Varlink service server handler
 
     To use the Service, a global object is instantiated:
-    service = varlink.Service(
-       vendor='Red Hat',
-       product='Manage System Accounts',
-       version='1',
-       interface_dir=os.path.dirname(__file__)
-    )
+    >>> service = Service(
+    >>>    vendor='Red Hat',
+    >>>    product='Manage System Accounts',
+    >>>    version='1',
+    >>>    interface_dir=os.path.dirname(__file__)
+    >>> )
 
 
     For the class implementing the methods of a specific varlink interface
@@ -491,6 +486,7 @@ class Service:
 
         self.url = None
         self.interfaces = {}
+        self.interfaces_handlers = {}
         directory = os.path.dirname(__file__)
         self._add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
 
@@ -511,7 +507,7 @@ class Service:
         except KeyError:
             raise InterfaceNotFound(interface)
 
-        return {'description': i._description}
+        return {'description': i.description}
 
     def _handle(self, message):
         try:
@@ -533,7 +529,7 @@ class Service:
                     parameters[name] = json.loads(json.dumps(parameters[name]),
                                                   object_hook=lambda d: SimpleNamespace(**d))
 
-            func = getattr(interface._handler, method_name, None)
+            func = getattr(self.interfaces_handlers[interface.name], method_name, None)
             if not func or not callable(func):
                 raise MethodNotImplemented(method_name)
 
@@ -602,8 +598,8 @@ class Service:
 
         with open(filename) as f:
             interface = Interface(f.read())
-            interface._handler = handler
-            self.interfaces[interface._name] = interface
+            self.interfaces[interface.name] = interface
+            self.interfaces_handlers[interface.name] = handler
 
     def interface(self, filename):
         def decorator(interface_class):
@@ -618,47 +614,47 @@ class Interface:
 
     def __init__(self, description):
         """description -- description string in varlink interface definition language"""
-        self._description = description
+        self.description = description
 
         scanner = Scanner(description)
         scanner.expect('interface')
-        self._name = scanner.expect('interface-name')
-        self._members = collections.OrderedDict()
+        self.name = scanner.expect('interface-name')
+        self.members = collections.OrderedDict()
         while not scanner.end():
             member = scanner.read_member()
-            self._members[member.name] = member
+            self.members[member.name] = member
 
     def get_description(self):
         """return the description string in varlink interface definition language"""
-        return self._description
+        return self.description
 
     def get_method(self, name):
-        method = self._members.get(name)
+        method = self.members.get(name)
         if method and isinstance(method, _Method):
             return method
         raise MethodNotFound(name)
 
-    def filter_params(self, vtype, args, kwargs):
-        if isinstance(vtype, _CustomType):
-            return self.filter_params(self._members.get(vtype.name), args, kwargs)
+    def filter_params(self, varlink_type, args, kwargs):
+        if isinstance(varlink_type, _CustomType):
+            return self.filter_params(self.members.get(varlink_type.name), args, kwargs)
 
-        if isinstance(vtype, _Alias):
-            return self.filter_params(self._members.get(vtype.type), args, kwargs)
+        if isinstance(varlink_type, _Alias):
+            return self.filter_params(self.members.get(varlink_type.type), args, kwargs)
 
-        if isinstance(vtype, _Array):
-            return [self.filter_params(vtype.element_type, x, None) for x in args]
+        if isinstance(varlink_type, _Array):
+            return [self.filter_params(varlink_type.element_type, x, None) for x in args]
 
-        if not isinstance(vtype, _Struct):
+        if not isinstance(varlink_type, _Struct):
             return args
 
         out = {}
 
-        mystruct = None
+        varlink_struct = None
         if not isinstance(args, tuple):
-            mystruct = args
+            varlink_struct = args
             args = None
 
-        for name in vtype.fields:
+        for name in varlink_type.fields:
             if isinstance(args, tuple):
                 if args:
                     val = args[0]
@@ -666,20 +662,20 @@ class Interface:
                         args = args[1:]
                     else:
                         args = None
-                    out[name] = self.filter_params(vtype.fields[name], val, None)
+                    out[name] = self.filter_params(varlink_type.fields[name], val, None)
                     continue
                 else:
                     if name in kwargs:
-                        out[name] = self.filter_params(vtype.fields[name], kwargs[name], None)
+                        out[name] = self.filter_params(varlink_type.fields[name], kwargs[name], None)
                         continue
 
-            if mystruct:
-                if isinstance(mystruct, dict):
-                    val = mystruct[name]
-                    out[name] = self.filter_params(vtype.fields[name], val, None)
-                elif hasattr(mystruct, name):
-                    val = getattr(mystruct, name)
-                    out[name] = self.filter_params(vtype.fields[name], val, None)
+            if varlink_struct:
+                if isinstance(varlink_struct, dict):
+                    val = varlink_struct[name]
+                    out[name] = self.filter_params(varlink_type.fields[name], val, None)
+                elif hasattr(varlink_struct, name):
+                    val = getattr(varlink_struct, name)
+                    out[name] = self.filter_params(varlink_type.fields[name], val, None)
 
         return out
 
@@ -809,11 +805,11 @@ class _Alias:
 
 
 class _Method:
-    def __init__(self, name, in_type, out_type, signature):
+    def __init__(self, name, in_type, out_type, _signature):
         self.name = name
         self.in_type = in_type
         self.out_type = out_type
-        self.signature = signature
+        self.signature = _signature
 
 
 class _Error:
@@ -876,18 +872,18 @@ class SimpleServer:
         self._service = service
         self.connections = {}
         self._more = {}
-        self.removefile = None
-        self.domainloop = True
+        self.remove_file = None
+        self.do_main_loop = True
 
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
-        if self.removefile:
-            os.remove(self.removefile)
+    def __exit__(self, _type, _value, _traceback):
+        if self.remove_file:
+            os.remove(self.remove_file)
 
     def stop(self):
-        self.domainloop = False
+        self.do_main_loop = False
 
     def serve(self, address, listen_fd=None):
         if listen_fd:
@@ -901,7 +897,7 @@ class SimpleServer:
             if address[0] == '@':
                 address = address.replace('@', '\0', 1)
             else:
-                self.removefile = address
+                self.remove_file = address
 
             s = socket.socket(socket.AF_UNIX)
             s.setblocking(0)
@@ -913,7 +909,7 @@ class SimpleServer:
         epoll = select.epoll()
         epoll.register(s, select.EPOLLIN)
 
-        while self.domainloop:
+        while self.do_main_loop:
             for fd, events in epoll.poll():
                 if fd == s.fileno():
                     sock, _ = s.accept()
@@ -926,7 +922,7 @@ class SimpleServer:
                     try:
                         connection.dispatch(events)
 
-                        if not fd in self._more:
+                        if fd not in self._more:
                             for message in connection.read():
                                 # Let the varlink service handle this
                                 it = iter(self._service.handle(message))
@@ -943,7 +939,7 @@ class SimpleServer:
                                     connection.write(reply + b'\0')
                             except StopIteration:
                                 del self._more[fd]
-                    except ConnectionError as e:
+                    except ConnectionError:
                         epoll.unregister(fd)
                         connection.close()
                         if fd in self._more:

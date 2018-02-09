@@ -58,12 +58,12 @@ class VarlinkReceiver(LineReceiver):
 
 
 class VarlinkServer(VarlinkReceiver):
-    def __init__(self, service):
-        self._service = service
+    def __init__(self, _service):
+        self._service = _service
         self._lock = threading.Lock()
         self._disconnected = False
 
-    def connectionLost(self, reason):
+    def connectionLost(self, _):
         self._disconnected = True
 
     def sendMessages(self, out):
@@ -74,7 +74,7 @@ class VarlinkServer(VarlinkReceiver):
                 return
             self.sendLine(o)
 
-    def messagesSent(self, result):
+    def messagesSent(self, _):
         self.resumeProducing()
 
     def lineReceived(self, incoming_message):
@@ -117,8 +117,8 @@ if __name__ == '__main__':
     if listen_fd:
         reactor.adoptStreamPort(listen_fd, socket.AF_UNIX, VarlinkServerFactory())
     else:
-        address = varlink_to_twisted_address(sys.argv[1])
-        endpoint = serverFromString(reactor, address)
+        connect_address = varlink_to_twisted_address(sys.argv[1])
+        endpoint = serverFromString(reactor, connect_address)
         endpoint.listen(VarlinkServerFactory())
 
     print("Listening on", sys.argv[1])
