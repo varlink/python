@@ -4,10 +4,6 @@ set -e
 
 cp examples/* .
 
-# test exec:
-./client-simple.py
-./client-twisted.py
-
 # test unix:
 ./server-simple.py unix:@test &
 sleep 1
@@ -41,5 +37,6 @@ sleep 1
 ./client-simple-stop.py 'ip:[::1]:25645'
 wait
 
-
-
+# test exec:
+./client-simple.py
+./client-twisted.py
