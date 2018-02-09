@@ -45,6 +45,7 @@ class Example:
         return {'pong': ping}
 
     def StopServing(self):
+        yield {}
         print("Server ends.")
         sys.exit(0)
 
@@ -67,3 +68,4 @@ with varlink.SimpleServer(service) as s:
         s.serve(sys.argv[1], listen_fd=listen_fd)
     except KeyboardInterrupt:
         pass
+sys.exit(0)
