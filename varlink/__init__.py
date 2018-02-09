@@ -916,7 +916,7 @@ class SimpleServer:
             s.setblocking(0)
             s.bind(address)
             if mode:
-                os.chmod(address, mode)
+                os.chmod(address, mode=int(mode, 8))
             s.listen()
         else:
             raise ConnectionError
