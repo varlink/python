@@ -6,6 +6,6 @@ install:
     - pip3 install -r requirements.txt
 script:
     - pytest
-    - cp examples/* .
+    - cp examples/* .; pwd
     - ./client-simple.py
     - ./client-twisted.py
