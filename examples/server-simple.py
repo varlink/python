@@ -39,11 +39,13 @@ class Example:
             yield {'state': {'end': True}, '_continues': False}
         except Exception as error:
             print("ERROR", error, file=sys.stderr)
-            self.close()
 
     def Ping(self, ping):
         return {'pong': ping}
 
+    def StopServing(self):
+        print("Server ends.")
+        sys.exit(0)
 
 if len(sys.argv) < 2:
     print('missing address parameter')

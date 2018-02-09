@@ -16,5 +16,8 @@ method Ping(ping : string) -> (pong: string)
 # n: number of progress steps
 method TestMore(n : int) -> (state: State)
 
+# Stop serving
+method StopServing() -> ()
+
 # Something failed
 error ActionFailed (reason: string)

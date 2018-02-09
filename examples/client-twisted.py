@@ -188,6 +188,9 @@ def main(reactor, address):
 
             if not more:
                 break
+        yield con1.StopServing()
+        _ = yield con1.reply()
+
         yield con1.close()
         yield con2.close()
         reactor.stop()

@@ -51,6 +51,10 @@ class Example:
     def Ping(self, ping):
         return {'pong': ping}
 
+    def StopServing(self):
+        print("Server ends.")
+        reactor.stop()
+
 
 class VarlinkReceiver(LineReceiver):
     delimiter = b'\0'
