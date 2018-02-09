@@ -7,5 +7,5 @@ install:
 script:
     - pytest
     - cp examples/* .; pwd
-    - ./client-simple.py
-    - ./client-twisted.py
+    - python client-simple.py
+    - python client-twisted.py
