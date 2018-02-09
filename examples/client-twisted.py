@@ -106,6 +106,43 @@ def sigterm_handler(signum, _):
         CHILD_PID = 0
 
 
+def varlink_filter_exec_address(address):
+    if address.startswith("exec:"):
+        executable = address[5:]
+        s = socket.socket(socket.AF_UNIX)
+        s.setblocking(0)
+        s.bind("")
+        s.listen()
+        address = s.getsockname().decode('ascii')
+
+        CHILD_PID = os.fork()
+        if CHILD_PID == 0:
+            # child
+            n = s.fileno()
+            if n == 3:
+                # without dup() the socket is closed with the python destructor
+                n = os.dup(3)
+                del s
+            else:
+                try:
+                    os.close(3)
+                except OSError:
+                    pass
+
+            os.dup2(n, 3)
+            address = address.replace('\0', '@', 1)
+            address = "unix:%s;mode=0600" % address
+            os.execlp(executable, executable, address)
+            sys.exit(1)
+        # parent
+        s.close()
+        signal.signal(signal.SIGALRM, sigterm_handler)
+        address = "unix:%s" % address
+        address = address.replace('\0', '@', 1)
+
+    return address
+
+
 def varlink_to_twisted_endpoint(reactor, address):
     global CHILD_PID
 
@@ -213,6 +250,7 @@ if __name__ == '__main__':
         connect_address = 'exec:./server-twisted.py'
 
     print('Connecting to %s\n' % connect_address)
+    connect_address = varlink_filter_exec_address(connect_address)
 
     task.react(main, [connect_address])
 
