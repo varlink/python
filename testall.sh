@@ -5,14 +5,14 @@ set -e
 cp examples/* .
 
 # test unix:
-./server-simple.py unix:@test &
+./server-simple.py unix:@varlink$$ &
 sleep 1
-./client-simple-stop.py unix:@test
+./client-simple-stop.py unix:@varlink$$
 wait %1
 
-./server-twisted.py unix:@test &
+./server-twisted.py unix:@varlink$$ &
 sleep 1
-./client-simple-stop.py unix:@test
+./client-simple-stop.py unix:@varlink$$
 wait %1
 
 # test ip: IPv4
