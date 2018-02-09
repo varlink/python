@@ -161,8 +161,8 @@ def varlink_to_twisted_endpoint(reactor, address):
 @inlineCallbacks
 def main(reactor, address):
     factory = Factory.forProtocol(VarlinkClient)
-    endpoint1 = varlink_to_twisted_endpoint(reactor, connect_address)
-    endpoint2 = varlink_to_twisted_endpoint(reactor, connect_address)
+    endpoint1 = varlink_to_twisted_endpoint(reactor, address)
+    endpoint2 = varlink_to_twisted_endpoint(reactor, address)
 
     try:
         con1 = yield endpoint1.connect(factory)
