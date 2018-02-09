@@ -40,14 +40,14 @@ class VarlinkError(Exception):
 
     def error(self):
         """returns the exception varlink error name"""
-        return self.args[0]['error']
+        return self.args[0].get('error')
 
     def parameters(self, namespaced=False):
         """returns the exception varlink error parameters"""
         if namespaced:
             return json.loads(json.dumps(self.args[0]['parameters']), object_hook=lambda d: SimpleNamespace(**d))
         else:
-            return self.args[0]['parameters']
+            return self.args[0].get('parameters')
 
     def as_dict(self):
         return self.args[0]
