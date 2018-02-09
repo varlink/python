@@ -950,7 +950,12 @@ class SimpleServer:
             s = socket.socket(af, socktype, proto)
             s.setblocking(0)
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind(sa)
+            try:
+                s.bind(sa)
+            except OSError as e:
+                print("Cannot bind to:", sa, e, file=sys.stderr)
+                raise e
+
             s.listen()
         else:
             raise ConnectionError("Invalid address '%s'" % address)
