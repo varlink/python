@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/varlink/python-varlink.svg?branch=master)](https://travis-ci.org/varlink/python-varlink)
+
 # python-varlink
 
 A [varlink](http://varlink.org) implementation for Python.
