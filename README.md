@@ -21,9 +21,9 @@ $ pip3 install --user 'twisted>17'
 See the [examples](https://github.com/varlink/python-varlink/tree/master/examples) directory.
 
 ```bash
-$ python3 server-simple.py 'unix:/tmp/tt;mode=0666' &
+$ python3 server-simple.py 'unix:@test' &
 [1] 6434
-$ varlink help unix:/tmp/tt/org.varlink.example.more
+$ varlink help unix:@test/org.varlink.example.more
 # Example Varlink service
 interface org.varlink.example.more
 
