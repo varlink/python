@@ -16,10 +16,10 @@ try:
         connection.StopServing()
 
 except ConnectionError as e:
-    print(e)
+    print("ConnectionError", e)
     sys.exit(1)
 except VarlinkError as e:
-    print(e)
+    print("VarlinkError", e)
     print(e.error())
     print(e.parameters())
     sys.exit(1)
