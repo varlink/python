@@ -11,7 +11,7 @@ With Fedora 28/rawhide:
 $ sudo dnf install python-varlink libvarlink-util
 ```
 
-And because Fedora has an old twisted version, which does not handle unix domain sockets:
+If you want to try out the twisted examples, you have to locally install a new twisted version, because Fedora has an old version, which does not handle unix domain sockets:
 ```bash
 $ pip3 install --user 'twisted>17'
 ```
