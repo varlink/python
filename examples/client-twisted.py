@@ -1,19 +1,20 @@
 #!/usr/bin/python3
 
 import json
-import threading
 import os
-import sys
-import varlink
-import socket
 import signal
+import socket
+import sys
+import threading
+from types import SimpleNamespace
 
 from twisted.internet import task
 from twisted.internet.defer import Deferred, DeferredQueue, inlineCallbacks
+from twisted.internet.endpoints import UNIXClientEndpoint, clientFromString
 from twisted.internet.protocol import Factory
-from twisted.internet.endpoints import clientFromString, UNIXClientEndpoint
 from twisted.protocols.basic import LineReceiver
-from types import SimpleNamespace
+
+import varlink
 
 with open(os.path.join(os.path.dirname(__file__), 'org.varlink.example.more.varlink')) as f:
     INTERFACE_org_varlink_example_more = varlink.Interface(f.read())
@@ -120,6 +121,7 @@ def varlink_to_twisted_endpoint(reactor, address):
         port = address[p + 1:]
         address = address[:p]
         address = "tcp:%s:interface=%s" % (port, address)
+        return clientFromString(address)
     elif address.startswith("exec:"):
         executable = address[5:]
         s = socket.socket(socket.AF_UNIX)
@@ -154,8 +156,6 @@ def varlink_to_twisted_endpoint(reactor, address):
         return UNIXClientEndpoint(reactor, address)
     else:
         raise Exception("Invalid address '%s'" % address)
-
-    return address
 
 
 @inlineCallbacks
