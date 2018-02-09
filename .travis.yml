@@ -5,8 +5,6 @@ python:
 install:
     - pip3 install -r requirements.txt
 script:
-    - /usr/bin/python3 --version
-    - which python3
     - pytest
     - cp examples/* .; pwd
     - python client-simple.py
