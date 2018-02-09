@@ -3,8 +3,9 @@
 import os
 import stat
 import sys
-import varlink
 import time
+
+import varlink
 
 service = varlink.Service(
     vendor='Varlink',

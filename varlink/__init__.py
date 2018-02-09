@@ -14,10 +14,10 @@ import re
 import select
 import signal
 import socket
-import traceback
-from types import (SimpleNamespace, GeneratorType)
-from inspect import signature
 import sys
+import traceback
+from inspect import signature
+from types import (SimpleNamespace, GeneratorType)
 
 
 class VarlinkEncoder(json.JSONEncoder):

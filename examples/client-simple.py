@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-from varlink import (Client, VarlinkError)
 import sys
+
+from varlink import (Client, VarlinkError)
 
 if len(sys.argv) == 2:
     address = sys.argv[1]

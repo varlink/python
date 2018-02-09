@@ -1,18 +1,19 @@
 #!/usr/bin/python3
 
-import threading
 import os
+import socket
 import stat
 import sys
-import varlink
+import threading
 import time
-import socket
 
 from twisted.internet import reactor
-from twisted.internet.threads import deferToThread
-from twisted.internet.protocol import ServerFactory
 from twisted.internet.endpoints import serverFromString, UNIXServerEndpoint
+from twisted.internet.protocol import ServerFactory
+from twisted.internet.threads import deferToThread
 from twisted.protocols.basic import LineReceiver
+
+import varlink
 
 service = varlink.Service(
     vendor='Varlink',
