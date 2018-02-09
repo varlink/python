@@ -93,7 +93,6 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
 
 CHILD_PID = 0
 
-
 def sigterm_handler(signum, _):
     global CHILD_PID
     if signum == signal.SIGTERM and CHILD_PID:
@@ -188,8 +187,6 @@ def main(reactor, address):
 
             if not more:
                 break
-        yield con1.StopServing()
-        _ = yield con1.reply()
 
         yield con1.close()
         yield con2.close()

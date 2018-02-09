@@ -27,7 +27,6 @@ try:
             if hasattr(m.state, 'end'):
                 if m.state.end:
                     print("--- End ---", file=sys.stderr)
-        con1.StopServing()
 
 except ConnectionError as e:
     print(e)
