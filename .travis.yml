@@ -1,4 +1,6 @@
 language: python
+sudo: false
+dist: trusty
 python:
     - "3.6"
 install:
@@ -6,5 +8,3 @@ install:
 script:
     - python3 -m pytest
     - bash -x testall.sh
-    - python client-simple.py
-    - python client-twisted.py
