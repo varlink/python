@@ -903,7 +903,7 @@ class SimpleServer:
             address = address[5:]
             m = address.rfind(';mode=')
             if m != -1:
-                mode = address[m+6:]
+                mode = address[m + 6:]
                 address = address[:m]
 
             if address[0] == '@':
@@ -975,4 +975,3 @@ class SimpleServer:
 
         s.close()
         epoll.close()
-

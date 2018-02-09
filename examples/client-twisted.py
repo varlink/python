@@ -93,6 +93,7 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
 
 CHILD_PID = 0
 
+
 def sigterm_handler(signum, _):
     global CHILD_PID
     if signum == signal.SIGTERM and CHILD_PID:
