@@ -947,9 +947,9 @@ class SimpleServer:
             res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP,
                                      flags=socket.AI_NUMERICHOST)
             af, socktype, proto, canonname, sa = res[0]
-            print(res)
             s = socket.socket(af, socktype, proto)
             s.setblocking(0)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(sa)
             s.listen()
         else:
