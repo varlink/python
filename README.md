@@ -40,12 +40,7 @@ error ActionFailed (reason: string)
 
 $ fg
 python3 server-simple.py 'unix:/tmp/tt;mode=0666'
-^CTraceback (most recent call last):
-  File "server-simple.py", line 56, in <module>
-    s.serve(sys.argv[1], listen_fd=listen_fd)
-  File "/home/harald/git/varlink/python-varlink/varlink/__init__.py", line 871, in serve
-    for fd, events in epoll.poll():
-KeyboardInterrupt
+^C
 ```
 
 ```bash
