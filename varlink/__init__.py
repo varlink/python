@@ -567,7 +567,10 @@ class Service:
                         if not cont:
                             return
                 except ConnectionError as e:
-                    out.throw(e)
+                    try:
+                        out.throw(e)
+                    except StopIteration:
+                        pass
             else:
                 yield {'parameters': out or {}}
 
@@ -589,8 +592,15 @@ class Service:
         if message[-1] == 0:
             message = message[:-1]
 
-        for out in self._handle(json.loads(message)):
-            yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
+        handle = self._handle(json.loads(message))
+        for out in handle:
+            try:
+                yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
+            except ConnectionError as e:
+                try:
+                    handle.throw(e)
+                except StopIteration:
+                    pass
 
     def _add_interface(self, filename, handler):
         if not os.path.isabs(filename):
