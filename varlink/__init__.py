@@ -325,6 +325,8 @@ class Client:
         """
         self._interfaces = {}
         self._child_pid = 0
+        self.port = None
+        self.address = None
 
         def _resolve_interface(_interface, _resolver):
             resolver_connection = Client(_resolver).open('org.varlink.resolver')
@@ -375,6 +377,17 @@ class Client:
                 sys.exit(1)
             # parent
             s.close()
+        elif address.startswith("ip:"):
+            address = address[3:]
+            p = address.rfind(':')
+            if p != -1:
+                port = address[p + 1:]
+                address = address[:p]
+            else:
+                raise ConnectionError("Invalid address 'ip:%s'" % address)
+            address = address.replace('[', '')
+            address = address.replace(']', '')
+            self.port = port
         else:
             # FIXME: also accept other transports
             raise ConnectionError
@@ -417,9 +430,12 @@ class Client:
         if interface_name not in self._interfaces:
             raise InterfaceNotFound(interface_name)
 
-        s = socket.socket(socket.AF_UNIX)
-        s.setblocking(1)
-        s.connect(self.address)
+        if self.port:
+            s = socket.create_connection((self.address, self.port))
+        else:
+            s = socket.socket(socket.AF_UNIX)
+            s.setblocking(1)
+            s.connect(self.address)
 
         return self.handler(self._interfaces[interface_name], s, namespaced=namespaced)
 
@@ -918,8 +934,26 @@ class SimpleServer:
             if mode:
                 os.chmod(address, mode=int(mode, 8))
             s.listen()
+        elif address.startswith("ip:"):
+            address = address[3:]
+            p = address.rfind(':')
+            if p != -1:
+                port = address[p + 1:]
+                address = address[:p]
+            else:
+                raise ConnectionError("Invalid address 'ip:%s'" % address)
+            address = address.replace('[', '')
+            address = address.replace(']', '')
+            res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP,
+                                     flags=socket.AI_NUMERICHOST)
+            af, socktype, proto, canonname, sa = res[0]
+            print(res)
+            s = socket.socket(af, socktype, proto)
+            s.setblocking(0)
+            s.bind(sa)
+            s.listen()
         else:
-            raise ConnectionError
+            raise ConnectionError("Invalid address '%s'" % address)
 
         epoll = select.epoll()
         epoll.register(s, select.EPOLLIN)

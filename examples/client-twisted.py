@@ -107,6 +107,7 @@ def sigterm_handler(signum, _):
 
 
 def varlink_filter_exec_address(address):
+    global CHILD_PID
     if address.startswith("exec:"):
         executable = address[5:]
         s = socket.socket(socket.AF_UNIX)
@@ -143,56 +144,30 @@ def varlink_filter_exec_address(address):
     return address
 
 
-def varlink_to_twisted_endpoint(reactor, address):
+def varlink_to_twisted_endpoint(reactor, _address):
     global CHILD_PID
 
-    if address.startswith("unix:"):
-        address = address[5:]
+    if _address.startswith("unix:"):
+        address = _address[5:]
         address = address.replace(';mode=', ':mode=')
         address = address.replace('@', '\0', 1)
         # serverFromString() doesn't handle the zero byte
         return UNIXClientEndpoint(reactor, address)
-    elif address.startswith("ip:"):
-        address = address[3:]
-        p = address.rfind(":")
-        port = address[p + 1:]
-        address = address[:p]
-        address = "tcp:%s:interface=%s" % (port, address)
-        return clientFromString(address)
-    elif address.startswith("exec:"):
-        executable = address[5:]
-        s = socket.socket(socket.AF_UNIX)
-        s.setblocking(0)
-        s.bind("")
-        s.listen()
-        address = s.getsockname().decode('ascii')
-
-        CHILD_PID = os.fork()
-        if CHILD_PID == 0:
-            # child
-            n = s.fileno()
-            if n == 3:
-                # without dup() the socket is closed with the python destructor
-                n = os.dup(3)
-                del s
-            else:
-                try:
-                    os.close(3)
-                except OSError:
-                    pass
-
-            os.dup2(n, 3)
-            address = address.replace('\0', '@', 1)
-            address = "unix:%s;mode=0600" % address
-            os.execlp(executable, executable, address)
-            sys.exit(1)
-        # parent
-        s.close()
-
-        signal.signal(signal.SIGALRM, sigterm_handler)
-        return UNIXClientEndpoint(reactor, address)
+    elif _address.startswith("ip:"):
+        address = _address[3:]
+        p = address.rfind(':')
+        if p != -1:
+            port = address[p + 1:]
+            address = address[:p]
+        else:
+            raise Exception("Invalid address '%s'" % _address)
+        address = address.replace(':', r'\:')
+        address = address.replace('[', '')
+        address = address.replace(']', '')
+        address = "tcp:" + address + ":" + port
+        return clientFromString(reactor, address)
     else:
-        raise Exception("Invalid address '%s'" % address)
+        raise Exception("Invalid address '%s'" % _address)
 
 
 @inlineCallbacks

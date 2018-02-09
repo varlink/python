@@ -114,12 +114,14 @@ def varlink_to_twisted_endpoint(address):
         p = address.rfind(":")
         port = address[p + 1:]
         address = address[:p]
+        address = address.replace(':', r'\:')
+        address = address.replace('[', '')
+        address = address.replace(']', '')
         address = "tcp:%s:interface=%s" % (port, address)
-        return serverFromString(reactor, connect_address)
+        print("ADDRESS", address, file=sys.stderr)
+        return serverFromString(reactor, address)
     else:
         raise Exception("Invalid address '%s'" % address)
-
-    return address
 
 
 if __name__ == '__main__':
