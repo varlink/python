@@ -8,3 +8,4 @@ script:
     - pytest
     - cp examples/* .
     - ./client-simple.py
+    - ./client-twisted.py
