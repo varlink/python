@@ -11,6 +11,11 @@ With Fedora 28/rawhide:
 $ sudo dnf install python-varlink libvarlink-util
 ```
 
+And because Fedora has an old twisted version, which does not handle unix domain sockets:
+```bash
+$ pip3 install --user 'twisted>17'
+```
+
 ## Examples
 
 See the [examples](https://github.com/varlink/python-varlink/tree/master/examples) directory.
