@@ -37,5 +37,7 @@ except VarlinkError as e:
     print(e.error())
     print(e.parameters())
     sys.exit(1)
+except KeyboardInterrupt:
+    sys.exit(1)
 
 sys.exit(0)
