@@ -11,7 +11,7 @@ import signal
 from twisted.internet import task
 from twisted.internet.defer import Deferred, DeferredQueue, inlineCallbacks
 from twisted.internet.protocol import Factory
-from twisted.internet.endpoints import clientFromString
+from twisted.internet.endpoints import clientFromString, UNIXClientEndpoint
 from twisted.protocols.basic import LineReceiver
 from types import SimpleNamespace
 
@@ -105,11 +105,15 @@ def sigterm_handler(signum, _):
         CHILD_PID = 0
 
 
-def varlink_to_twisted_address(address):
+def varlink_to_twisted_endpoint(reactor, address):
     global CHILD_PID
 
     if address.startswith("unix:"):
-        address.replace(';mode=', ':mode=')
+        address = address[5:]
+        address = address.replace(';mode=', ':mode=')
+        address = address.replace('@', '\0', 1)
+        # serverFromString() doesn't handle the zero byte
+        return UNIXClientEndpoint(reactor, address)
     elif address.startswith("ip:"):
         address = address[3:]
         p = address.rfind(":")
@@ -147,8 +151,7 @@ def varlink_to_twisted_address(address):
         s.close()
 
         signal.signal(signal.SIGALRM, sigterm_handler)
-        address = "unix:%s" % address
-
+        return UNIXClientEndpoint(reactor, address)
     else:
         raise Exception("Invalid address '%s'" % address)
 
@@ -158,8 +161,8 @@ def varlink_to_twisted_address(address):
 @inlineCallbacks
 def main(reactor, address):
     factory = Factory.forProtocol(VarlinkClient)
-    endpoint1 = clientFromString(reactor, address)
-    endpoint2 = clientFromString(reactor, address)
+    endpoint1 = varlink_to_twisted_endpoint(reactor, connect_address)
+    endpoint2 = varlink_to_twisted_endpoint(reactor, connect_address)
 
     try:
         con1 = yield endpoint1.connect(factory)
@@ -209,7 +212,6 @@ if __name__ == '__main__':
         connect_address = 'exec:./server-twisted.py'
 
     print('Connecting to %s\n' % connect_address)
-    connect_address = varlink_to_twisted_address(connect_address)
 
     task.react(main, [connect_address])
 

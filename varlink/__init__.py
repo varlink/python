@@ -889,19 +889,24 @@ class SimpleServer:
         if listen_fd:
             s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
         elif address.startswith("unix:"):
+            mode = None
             address = address[5:]
-            mode = address.rfind(';mode=')
-            if mode != -1:
-                address = address[:mode]
+            m = address.rfind(';mode=')
+            if m != -1:
+                mode = address[m+6:]
+                address = address[:m]
 
             if address[0] == '@':
                 address = address.replace('@', '\0', 1)
+                mode = None
             else:
                 self.remove_file = address
 
             s = socket.socket(socket.AF_UNIX)
             s.setblocking(0)
             s.bind(address)
+            if mode:
+                os.chmod(address, mode)
             s.listen()
         else:
             raise ConnectionError

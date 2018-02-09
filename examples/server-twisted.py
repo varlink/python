@@ -11,7 +11,7 @@ import socket
 from twisted.internet import reactor
 from twisted.internet.threads import deferToThread
 from twisted.internet.protocol import ServerFactory
-from twisted.internet.endpoints import serverFromString
+from twisted.internet.endpoints import serverFromString, UNIXServerEndpoint
 from twisted.protocols.basic import LineReceiver
 
 service = varlink.Service(
@@ -86,16 +86,31 @@ class VarlinkServerFactory(ServerFactory):
         return VarlinkServer(service)
 
 
-def varlink_to_twisted_address(address):
+def varlink_to_twisted_endpoint(address):
     if address.startswith("unix:"):
-        address = address.replace('@', '\0', 1)
-        address = address.replace(';mode=', ':mode=')
+        mode = None
+        address = address[5:]
+        m = address.rfind(';mode=')
+        if m != -1:
+            mode = address[m + 6:]
+            address = address[:m]
+
+        if address[0] == '@':
+            # serverFromString() doesn't handle the zero byte
+            address = address.replace('@', '\0', 1)
+            mode = None
+        if mode:
+            return UNIXServerEndpoint(reactor, address, mode=int(mode, 8))
+        else:
+            return UNIXServerEndpoint(reactor, address)
+
     elif address.startswith("ip:"):
         address = address[3:]
         p = address.rfind(":")
         port = address[p + 1:]
         address = address[:p]
         address = "tcp:%s:interface=%s" % (port, address)
+        return serverFromString(reactor, connect_address)
     else:
         raise Exception("Invalid address '%s'" % address)
 
@@ -116,10 +131,10 @@ if __name__ == '__main__':
 
     if listen_fd:
         reactor.adoptStreamPort(listen_fd, socket.AF_UNIX, VarlinkServerFactory())
+        print("Listening on", sys.argv[1])
     else:
-        connect_address = varlink_to_twisted_address(sys.argv[1])
-        endpoint = serverFromString(reactor, connect_address)
+        endpoint = varlink_to_twisted_endpoint(sys.argv[1])
         endpoint.listen(VarlinkServerFactory())
+        print("Listening on", sys.argv[1])
 
-    print("Listening on", sys.argv[1])
     reactor.run()
