@@ -47,6 +47,7 @@ class Example:
         print("Server ends.")
         sys.exit(0)
 
+
 if len(sys.argv) < 2:
     print('missing address parameter')
     sys.exit(1)
@@ -61,4 +62,7 @@ except OSError:
 
 with varlink.SimpleServer(service) as s:
     print("Listening on", sys.argv[1])
-    s.serve(sys.argv[1], listen_fd=listen_fd)
+    try:
+        s.serve(sys.argv[1], listen_fd=listen_fd)
+    except KeyboardInterrupt:
+        pass
