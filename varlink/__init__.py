@@ -745,7 +745,7 @@ class Scanner:
     def expect(self, expected):
         value = self.get(expected)
         if not value:
-            raise SyntaxError('expected {}'.format(expected))
+            raise SyntaxError("expected '{}'".format(expected))
         return value
 
     def end(self):
@@ -777,22 +777,64 @@ class Scanner:
         return t
 
     def read_struct(self):
+        _isunion = None
         self.expect('(')
         fields = collections.OrderedDict()
         if not self.get(')'):
             while True:
                 name = self.expect('identifier')
-                self.expect(':')
-                fields[name] = self.read_type()
+                if _isunion == None:
+                    if self.get(':'):
+                        _isunion = False
+                        fields[name] = self.read_type()
+                        if not self.get(','):
+                            break
+                        continue
+                    elif self.get(','):
+                        _isunion = True
+                        fields[name] = True
+                        continue
+                    else:
+                        raise SyntaxError("after '{}'".format(name))
+                elif not _isunion:
+                    try:
+                        self.expect(':')
+                        fields[name] = self.read_type()
+                    except SyntaxError as e:
+                        raise SyntaxError("after '{}': {}".format(name, e))
+                else:
+                    fields[name] = True
+
                 if not self.get(','):
                     break
             self.expect(')')
-
-        return _Struct(fields)
+        if _isunion:
+            return _Union(fields.keys())
+        else:
+            return _Struct(fields)
 
     def read_member(self):
         if self.get('type'):
-            return _Alias(self.expect('member-name'), self.read_type())
+            try:
+                _name = self.expect('member-name')
+            except SyntaxError:
+                m = self.whitespace.match(self.string, self.pos)
+                if m:
+                    start = m.end()
+                else:
+                    start = self.pos
+                m = self.whitespace.search(self.string, start)
+                if m:
+                    stop = m.start()
+                else:
+                    stop = start
+
+                raise SyntaxError("'{}' not a valid type name.".format(self.string[start:stop]))
+            try:
+                _type = self.read_type()
+            except SyntaxError as e:
+                raise SyntaxError("in '{}': {}".format(_name, e))
+            return _Alias(_name, _type)
         elif self.get('method'):
             name = self.expect('member-name')
             # FIXME
@@ -812,6 +854,11 @@ class Scanner:
 class _Struct:
     def __init__(self, fields):
         self.fields = collections.OrderedDict(fields)
+
+
+class _Union:
+    def __init__(self, fields):
+        self.fields = fields
 
 
 class _Array:
