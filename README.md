@@ -124,7 +124,7 @@ Ping:  Test
 --- End ---
 ```
 
-You can also start the clients and server with URLs following the varlink URL standard.
+You can also start the clients and server with URLs following the [varlink URL standard](https://github.com/varlink/documentation/wiki#address).
 E.g.
 - unix:@anonuds
 - unix:/run/myserver/socketfile
