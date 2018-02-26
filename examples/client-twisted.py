@@ -153,8 +153,8 @@ def varlink_to_twisted_endpoint(reactor, _address):
         address = address.replace('@', '\0', 1)
         # serverFromString() doesn't handle the zero byte
         return UNIXClientEndpoint(reactor, address)
-    elif _address.startswith("ip:"):
-        address = _address[3:]
+    elif _address.startswith("tcp:"):
+        address = _address[4:]
         p = address.rfind(':')
         if p != -1:
             port = address[p + 1:]

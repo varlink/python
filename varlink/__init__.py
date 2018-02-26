@@ -377,14 +377,14 @@ class Client:
                 sys.exit(1)
             # parent
             s.close()
-        elif address.startswith("ip:"):
-            address = address[3:]
+        elif address.startswith("tcp:"):
+            address = address[4:]
             p = address.rfind(':')
             if p != -1:
                 port = address[p + 1:]
                 address = address[:p]
             else:
-                raise ConnectionError("Invalid address 'ip:%s'" % address)
+                raise ConnectionError("Invalid address 'tcp:%s'" % address)
             address = address.replace('[', '')
             address = address.replace(']', '')
             self.port = port
@@ -981,14 +981,14 @@ class SimpleServer:
             if mode:
                 os.chmod(address, mode=int(mode, 8))
             s.listen()
-        elif address.startswith("ip:"):
-            address = address[3:]
+        elif address.startswith("tcp:"):
+            address = address[4:]
             p = address.rfind(':')
             if p != -1:
                 port = address[p + 1:]
                 address = address[:p]
             else:
-                raise ConnectionError("Invalid address 'ip:%s'" % address)
+                raise ConnectionError("Invalid address 'tcp:%s'" % address)
             address = address.replace('[', '')
             address = address.replace(']', '')
             res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP,

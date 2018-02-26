@@ -109,8 +109,8 @@ def varlink_to_twisted_endpoint(address):
         else:
             return UNIXServerEndpoint(reactor, address)
 
-    elif address.startswith("ip:"):
-        address = address[3:]
+    elif address.startswith("tcp:"):
+        address = address[4:]
         p = address.rfind(":")
         port = address[p + 1:]
         address = address[:p]
