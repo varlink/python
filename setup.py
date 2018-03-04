@@ -8,7 +8,7 @@ setup(
     long_description = "Python implementation of the varlink protocol http://varlink.org",
     author = "Lars Karlitski<lars@karlitski.net>, Harald Hoyer<harald@redhat.com>",
     author_email = "harald@redhat.com",
-    url = "https://github.com/varlink/python-varlink",
+    url = "https://github.com/varlink/python",
     license = "ASL 2.0",
     keywords = "ipc varlink rpc",
     python_requires='>=3.5',
