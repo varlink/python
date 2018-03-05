@@ -15,13 +15,15 @@ try:
             client.open('org.example.more', namespaced=True) as con1, \
             client.open('org.example.more', namespaced=True) as con2:
         for m in con1.TestMore(10, _more=True):
-            if hasattr(m.state, 'start') and m.state.start:
-                print("--- Start ---", file=sys.stderr)
+            if hasattr(m.state, 'start'):
+                if m.state.start:
+                    print("--- Start ---", file=sys.stderr)
 
-            elif hasattr(m.state, 'end') and m.state.end:
-                print("--- End ---", file=sys.stderr)
+            if hasattr(m.state, 'end'):
+                if m.state.end:
+                    print("--- End ---", file=sys.stderr)
 
-            elif hasattr(m.state, 'progress'):
+            if hasattr(m.state, 'progress'):
                 print("Progress:", m.state.progress, file=sys.stderr)
                 if m.state.progress > 50:
                     ret = con2.Ping("Test")

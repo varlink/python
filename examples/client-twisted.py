@@ -185,13 +185,15 @@ def main(reactor, address):
         while True:
             (m, more) = yield con1.replyMore()
 
-            if hasattr(m.state, 'start') and m.state.start:
+            if hasattr(m.state, 'start'):
+                if m.state.start:
                     print("--- Start ---", file=sys.stderr)
 
-            elif hasattr(m.state, 'end') and m.state.end:
+            if hasattr(m.state, 'end'):
+                if m.state.end:
                     print("--- End ---", file=sys.stderr)
 
-            elif hasattr(m.state, 'progress'):
+            if hasattr(m.state, 'progress'):
                 print("Progress:", m.state.progress, file=sys.stderr)
                 if m.state.progress > 50:
                     yield con2.Ping("Test")
