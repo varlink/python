@@ -1,5 +1,5 @@
 # Example Varlink service
-interface org.varlink.example.more
+interface org.example.more
 
 # Enum, returning either start, progress or end
 # progress: [0-100]
