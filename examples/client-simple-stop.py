@@ -12,7 +12,7 @@ else:
 print('Connecting to %s\n' % address)
 try:
     with Client(address=address) as client, \
-            client.open('org.varlink.example.more', namespaced=True) as connection:
+            client.open('org.example.more', namespaced=True) as connection:
         connection.StopServing()
 
 except ConnectionError as e:

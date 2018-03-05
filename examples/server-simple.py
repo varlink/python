@@ -16,14 +16,16 @@ service = varlink.Service(
 
 
 class ActionFailed(varlink.VarlinkError):
+
     def __init__(self, reason):
         varlink.VarlinkError.__init__(self,
-                                      {'error': 'org.varlink.example.more.ActionFailed',
+                                      {'error': 'org.example.more.ActionFailed',
                                        'parameters': {'field': reason}})
 
 
-@service.interface('org.varlink.example.more')
+@service.interface('org.example.more')
 class Example:
+
     def TestMore(self, n, _more=True):
         try:
             if not _more:

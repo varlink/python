@@ -16,8 +16,8 @@ from twisted.protocols.basic import LineReceiver
 
 import varlink
 
-with open(os.path.join(os.path.dirname(__file__), 'org.varlink.example.more.varlink')) as f:
-    INTERFACE_org_varlink_example_more = varlink.Interface(f.read())
+with open(os.path.join(os.path.dirname(__file__), 'org.example.more.varlink')) as f:
+    INTERFACE_org.example_more = varlink.Interface(f.read())
 
 
 class VarlinkReceiver(LineReceiver):
@@ -26,12 +26,13 @@ class VarlinkReceiver(LineReceiver):
 
 
 class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
+
     def _send_message(self, out):
         self.sendLine(out)
 
     def __init__(self):
         self.whenDisconnected = Deferred()
-        super().__init__(INTERFACE_org_varlink_example_more, namespaced=True)
+        super().__init__(INTERFACE_org.example_more, namespaced=True)
         self._lock = threading.Lock()
         self.queue = DeferredQueue()
 
@@ -77,6 +78,7 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
         return ret
 
     def _add_method(self, method):
+
         @inlineCallbacks
         def _wrapped(*args, **kwargs):
             parameters = self._interface.filter_params(method.in_type, args, kwargs)
@@ -187,16 +189,16 @@ def main(reactor, address):
                 if m.state.start:
                     print("--- Start ---", file=sys.stderr)
 
-            if hasattr(m.state, 'progress'):
+            elif hasattr(m.state, 'end'):
+                if m.state.end:
+                    print("--- End ---", file=sys.stderr)
+
+            elif hasattr(m.state, 'progress'):
                 print("Progress:", m.state.progress, file=sys.stderr)
                 if m.state.progress > 50:
                     yield con2.Ping("Test")
                     ret = yield con2.reply()
                     print("Ping: ", ret.pong)
-
-            if hasattr(m.state, 'end'):
-                if m.state.end:
-                    print("--- End ---", file=sys.stderr)
 
             if not more:
                 break
