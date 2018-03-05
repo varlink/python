@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/varlink/python-varlink.svg?branch=master)](https://travis-ci.org/varlink/python-varlink)
+[![Build Status](https://travis-ci.org/varlink/python.svg?branch=master)](https://travis-ci.org/varlink/python)
 
 # python-varlink
 
