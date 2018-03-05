@@ -17,7 +17,7 @@ from twisted.protocols.basic import LineReceiver
 import varlink
 
 with open(os.path.join(os.path.dirname(__file__), 'org.example.more.varlink')) as f:
-    INTERFACE_org.example_more = varlink.Interface(f.read())
+    INTERFACE_org_example_more = varlink.Interface(f.read())
 
 
 class VarlinkReceiver(LineReceiver):
@@ -32,7 +32,7 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
 
     def __init__(self):
         self.whenDisconnected = Deferred()
-        super().__init__(INTERFACE_org.example_more, namespaced=True)
+        super().__init__(INTERFACE_org_example_more, namespaced=True)
         self._lock = threading.Lock()
         self.queue = DeferredQueue()
 
@@ -185,12 +185,10 @@ def main(reactor, address):
         while True:
             (m, more) = yield con1.replyMore()
 
-            if hasattr(m.state, 'start'):
-                if m.state.start:
+            if hasattr(m.state, 'start') and m.state.start:
                     print("--- Start ---", file=sys.stderr)
 
-            elif hasattr(m.state, 'end'):
-                if m.state.end:
+            elif hasattr(m.state, 'end') and m.state.end:
                     print("--- End ---", file=sys.stderr)
 
             elif hasattr(m.state, 'progress'):
