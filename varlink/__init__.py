@@ -21,6 +21,7 @@ from types import (SimpleNamespace, GeneratorType)
 
 
 class VarlinkEncoder(json.JSONEncoder):
+
     def default(self, o):
         if isinstance(o, SimpleNamespace):
             return o.__dict__
@@ -129,6 +130,7 @@ class ClientInterfaceHandler:
         raise NotImplementedError
 
     def _add_method(self, method):
+
         def _wrapped(*args, **kwargs):
             if "_more" in kwargs and kwargs.pop("_more"):
                 return self._call_more(method.name, *args, **kwargs)
@@ -145,13 +147,13 @@ class ClientInterfaceHandler:
 
         if self._namespaced:
             message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
-            if hasattr(message, "error"):
+            if hasattr(message, "error") and message.error != None:
                 raise VarlinkError(message, self._namespaced)
             else:
                 return message.parameters, hasattr(message, "continues") and message.continues
         else:
             message = json.loads(message)
-            if 'error' in message:
+            if 'error' in message and message["error"] != None:
                 raise VarlinkError(message, self._namespaced)
             else:
                 return message['parameters'], ('continues' in message) and message['continues']
@@ -628,6 +630,7 @@ class Service:
             self.interfaces_handlers[interface.name] = handler
 
     def interface(self, filename):
+
         def decorator(interface_class):
             self._add_interface(filename, interface_class())
             return interface_class
@@ -852,32 +855,38 @@ class Scanner:
 
 
 class _Struct:
+
     def __init__(self, fields):
         self.fields = collections.OrderedDict(fields)
 
 
 class _Union:
+
     def __init__(self, fields):
         self.fields = fields
 
 
 class _Array:
+
     def __init__(self, element_type):
         self.element_type = element_type
 
 
 class _CustomType:
+
     def __init__(self, name):
         self.name = name
 
 
 class _Alias:
+
     def __init__(self, name, varlink_type):
         self.name = name
         self.type = varlink_type
 
 
 class _Method:
+
     def __init__(self, name, in_type, out_type, _signature):
         self.name = name
         self.in_type = in_type
@@ -886,6 +895,7 @@ class _Method:
 
 
 class _Error:
+
     def __init__(self, name, varlink_type):
         self.name = name
         self.type = varlink_type
@@ -893,6 +903,7 @@ class _Error:
 
 # Used by the SimpleServer
 class _Connection:
+
     def __init__(self, _socket):
         self._socket = _socket
         self._in_buffer = b''

@@ -61,13 +61,13 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
         message = yield self._next_message()
         if self._namespaced:
             message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
-            if hasattr(message, "error"):
+            if hasattr(message, "error") and message.error != None:
                 raise varlink.VarlinkError(message, self._namespaced)
             else:
                 return message.parameters, hasattr(message, "continues") and message.continues
         else:
             message = json.loads(message)
-            if 'error' in message:
+            if 'error' in message and message['error'] != None:
                 raise varlink.VarlinkError(message, self._namespaced)
             else:
                 return message['parameters'], ('continues' in message) and message['continues']
@@ -186,14 +186,14 @@ def main(reactor, address):
             (m, more) = yield con1.replyMore()
 
             if hasattr(m.state, 'start'):
-                if m.state.start:
+                if m.state.start and m.state.start != None:
                     print("--- Start ---", file=sys.stderr)
 
-            if hasattr(m.state, 'end'):
+            if hasattr(m.state, 'end') and m.state.end != None:
                 if m.state.end:
                     print("--- End ---", file=sys.stderr)
 
-            if hasattr(m.state, 'progress'):
+            if hasattr(m.state, 'progress') and m.state.progress != None:
                 print("Progress:", m.state.progress, file=sys.stderr)
                 if m.state.progress > 50:
                     yield con2.Ping("Test")
