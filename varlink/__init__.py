@@ -251,7 +251,12 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
     def _next_message(self):
         while True:
-            message, _, self._in_buffer = self._in_buffer.partition(b'\0')
+            message, sep, self._in_buffer = self._in_buffer.partition(b'\0')
+            if not sep:
+                # No zero byte found
+                self._in_buffer = message
+                message = None
+
             if message:
                 yield message
 
