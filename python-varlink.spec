@@ -1,10 +1,10 @@
 Name:           python-varlink
-Version: 	15
+Version:        15
 Release:        1%{?dist}
 Summary:        Python implementation of Varlink
 License:        ASL 2.0
-URL:            https://github.com/varlink/python
-Source0:        https://github.com/varlink/python/archive/%{version}/%{name}-%{version}.tar.gz
+URL:            https://github.com/varlink/%{name}
+Source0:        https://github.com/varlink/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  python3-devel
 BuildRequires:  python3-rpm-macros
@@ -21,7 +21,7 @@ Summary:       %summary
 %description -n python3-varlink %_description
 
 %prep
-%autosetup
+%autosetup -n python-%{version}
 
 %build
 %py3_build
