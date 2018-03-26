@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import stat
 import sys
 import time
 
@@ -52,22 +51,14 @@ class Example:
         sys.exit(0)
 
 
-if len(sys.argv) < 2:
-    print('missing address parameter')
+if len(sys.argv) < 2 or not sys.argv[1].startswith("--varlink="):
+    print('Usage: %s --varlink=<varlink address>' % sys.argv[0])
     sys.exit(1)
 
-listen_fd = None
-
-try:
-    if stat.S_ISSOCK(os.fstat(3).st_mode):
-        listen_fd = 3
-except OSError:
-    pass
-
 with varlink.SimpleServer(service) as s:
-    print("Listening on", sys.argv[1])
+    print("Listening on", sys.argv[1][10:])
     try:
-        s.serve(sys.argv[1], listen_fd=listen_fd)
+        s.serve(sys.argv[1][10:])
     except KeyboardInterrupt:
         pass
 sys.exit(0)

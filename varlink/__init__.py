@@ -14,6 +14,8 @@ import re
 import select
 import signal
 import socket
+import stat
+import string
 import sys
 import traceback
 from inspect import signature
@@ -379,7 +381,10 @@ class Client:
 
                 os.dup2(n, 3)
                 address = address.replace('\0', '@', 1)
-                address = "unix:%s;mode=0600" % address
+                address = "--varlink=unix:%s;mode=0600" % address
+                os.environ["LISTEN_FDS"] = "1"
+                os.environ["LISTEN_FDNAMES"] = "varlink"
+                os.environ["LISTEN_PID"] = str(os.getpid())
                 os.execlp(executable, executable, address)
                 sys.exit(1)
             # parent
@@ -974,8 +979,10 @@ class SimpleServer:
     def stop(self):
         self.do_main_loop = False
 
-    def serve(self, address, listen_fd=None):
+    def serve(self, address):
+        listen_fd = get_listen_fd()
         if listen_fd:
+            print("ListenFD", listen_fd)
             s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
         elif address.startswith("unix:"):
             mode = None
@@ -1077,3 +1084,47 @@ class SimpleServer:
 
         s.close()
         epoll.close()
+
+
+def get_listen_fd():
+    if "LISTEN_FDS" not in os.environ:
+        return None
+    if "LISTEN_PID" not in os.environ:
+        return None
+    try:
+        if int(os.environ["LISTEN_PID"]) != os.getpid():
+            return None
+    except:
+        return None
+
+    try:
+        fds = int(os.environ["LISTEN_FDS"])
+    except:
+        return None
+
+    if fds < 1:
+        return None
+
+    if fds == 1:
+        try:
+            if stat.S_ISSOCK(os.fstat(3).st_mode):
+                return 3
+            else:
+                return None
+        except OSError:
+            return None
+
+    fields = string.split(os.environ["LISTEN_FDNAMES"], ":")
+
+    if len(fields) != fds:
+        return None
+
+    for i in range(len(fields)):
+        if fields[i] == "varlink":
+            try:
+                if stat.S_ISSOCK(os.fstat(i + 3).st_mode):
+                    return i + 3
+                else:
+                    return None
+            except OSError:
+                return None

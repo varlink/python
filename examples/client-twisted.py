@@ -134,7 +134,10 @@ def varlink_filter_exec_address(address):
 
             os.dup2(n, 3)
             address = address.replace('\0', '@', 1)
-            address = "unix:%s;mode=0600" % address
+            address = "--varlink=unix:%s;mode=0600" % address
+            os.environ["LISTEN_FDS"] = "1"
+            os.environ["LISTEN_FDNAMES"] = "varlink"
+            os.environ["LISTEN_PID"] = str(os.getpid())
             os.execlp(executable, executable, address)
             sys.exit(1)
         # parent

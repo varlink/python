@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import socket
-import stat
 import sys
 import threading
 import time
@@ -128,23 +126,21 @@ def varlink_to_twisted_endpoint(address):
 
 
 if __name__ == '__main__':
-    listen_fd = None
-    if len(sys.argv) < 2:
-        print('missing address parameter', file=sys.stderr)
+    if len(sys.argv) < 2 or not sys.argv[1].startswith("--varlink="):
+        print('Usage: %s --varlink=<varlink address>' % sys.argv[0])
         sys.exit(1)
 
     try:
-        if stat.S_ISSOCK(os.fstat(3).st_mode):
-            listen_fd = 3
-    except OSError:
-        listen_fd = None
+        endpoint = serverFromString(reactor, "systemd:domain=UNIX:index=0")
+    except:
+        endpoint = None
 
-    if listen_fd:
-        reactor.adoptStreamPort(listen_fd, socket.AF_UNIX, VarlinkServerFactory())
-        print("Listening on", sys.argv[1])
-    else:
-        endpoint = varlink_to_twisted_endpoint(sys.argv[1])
+    if endpoint:
         endpoint.listen(VarlinkServerFactory())
-        print("Listening on", sys.argv[1])
+        print("Listening on LISTEN_FDS", sys.argv[1][10:])
+    else:
+        endpoint = varlink_to_twisted_endpoint(sys.argv[1][10:])
+        endpoint.listen(VarlinkServerFactory())
+        print("Listening on", sys.argv[1][10:])
 
     reactor.run()
