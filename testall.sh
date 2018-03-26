@@ -2,7 +2,7 @@
 
 set -e
 
-cp examples/*.py .
+cp examples/*.py examples/*.varlink .
 
 # test unix:
 ./server-simple.py --varlink=unix:@varlink$$ &
