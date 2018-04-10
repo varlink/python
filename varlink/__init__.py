@@ -769,6 +769,12 @@ class Scanner:
         return self.pos >= len(self.string)
 
     def read_type(self):
+        if self.get('?'):
+            return _Maybe(self.read_type())
+
+        if self.get('[]'):
+            return _Array(self.read_type())
+
         if self.get('bool'):
             t = bool()
         elif self.get('int'):
@@ -784,32 +790,29 @@ class Scanner:
             else:
                 t = self.read_struct()
 
-        if self.get('[]'):
-            t = _Array(t)
-
         return t
 
     def read_struct(self):
-        _isunion = None
+        _isenum = None
         self.expect('(')
         fields = collections.OrderedDict()
         if not self.get(')'):
             while True:
                 name = self.expect('identifier')
-                if _isunion == None:
+                if _isenum == None:
                     if self.get(':'):
-                        _isunion = False
+                        _isenum = False
                         fields[name] = self.read_type()
                         if not self.get(','):
                             break
                         continue
                     elif self.get(','):
-                        _isunion = True
+                        _isenum = True
                         fields[name] = True
                         continue
                     else:
                         raise SyntaxError("after '{}'".format(name))
-                elif not _isunion:
+                elif not _isenum:
                     try:
                         self.expect(':')
                         fields[name] = self.read_type()
@@ -821,8 +824,8 @@ class Scanner:
                 if not self.get(','):
                     break
             self.expect(')')
-        if _isunion:
-            return _Union(fields.keys())
+        if _isenum:
+            return _Enum(fields.keys())
         else:
             return _Struct(fields)
 
@@ -870,7 +873,7 @@ class _Struct:
         self.fields = collections.OrderedDict(fields)
 
 
-class _Union:
+class _Enum:
 
     def __init__(self, fields):
         self.fields = fields
@@ -881,6 +884,11 @@ class _Array:
     def __init__(self, element_type):
         self.element_type = element_type
 
+
+class _Maybe:
+
+    def __init__(self, element_type):
+        self.element_type = element_type
 
 class _CustomType:
 
