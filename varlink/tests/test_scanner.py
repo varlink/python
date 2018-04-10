@@ -35,6 +35,16 @@ error ActionFailed (reason: string)
     assert isinstance(interface.members.get("ActionFailed"), varlink._Error)
     assert isinstance(interface.members.get("State"), varlink._Alias)
 
+def test_doubleoption():
+    interface = None
+    try:
+        interface = varlink.Interface("""
+interface org.example.doubleoption
+method Foo(a: ??string) -> ()
+""")
+    except SyntaxError:
+        pass
+    assert interface == None
 
 def test_complex():
     interface = varlink.Interface("""
@@ -46,13 +56,13 @@ type TypeFoo (
     bool: bool,
     int: int,
     float: float,
-    string: string,
-    enum: ( foo, bar, baz )[],
-    type: TypeEnum,
-    anon: ( foo: bool, bar: int, baz: (a: int, b: int)[] )
+    string: ?string,
+    enum: ?[]( foo, bar, baz ),
+    type: ?TypeEnum,
+    anon: ( foo: bool, bar: int, baz: [](a: int, b: int) )
 )
 
-method Foo(a: (b: bool, c: int), foo: TypeFoo) -> (a: (b: bool, c: int)[], foo: TypeFoo)
+method Foo(a: (b: bool, c: int), foo: TypeFoo) -> (a: [](b: bool, c: int), foo: TypeFoo)
 
 error ErrorFoo (a: (b: bool, c: int), foo: TypeFoo)
 """)

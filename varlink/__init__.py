@@ -728,7 +728,7 @@ class Scanner:
         self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
                                            re.ASCII | re.MULTILINE)
 
-        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]', re.ASCII)
+        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?', re.ASCII)
         self.patterns = {
             'interface-name': re.compile(r'[a-z]+(\.[a-z0-9][a-z0-9-]*)+'),
             'member-name': re.compile(r'\b[A-Z][A-Za-z0-9_]*\b', re.ASCII),
@@ -768,9 +768,11 @@ class Scanner:
 
         return self.pos >= len(self.string)
 
-    def read_type(self):
+    def read_type(self, lastmaybe=False):
         if self.get('?'):
-            return _Maybe(self.read_type())
+            if lastmaybe:
+                raise SyntaxError("double '??'")
+            return _Maybe(self.read_type(lastmaybe = True))
 
         if self.get('[]'):
             return _Array(self.read_type())
