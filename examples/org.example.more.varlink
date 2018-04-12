@@ -23,9 +23,5 @@ method TestMore(n: int) -> (state: State)
 # Stop serving
 method StopServing() -> ()
 
-type ErrorChain (
-    description: string,
-    caused_by: ?ErrorChain
-)
-
-error ActionFailed (reason: ?ErrorChain)
+# Something failed in TestMore
+error TestMoreError (reason: string)
