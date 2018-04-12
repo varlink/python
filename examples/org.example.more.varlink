@@ -4,10 +4,14 @@ interface org.example.more
 # Enum, returning either start, progress or end
 # progress: [0-100]
 type State (
-  start: bool,
-  progress: int,
-  end: bool
+  start: ?bool,
+  progress: ?int,
+  end: ?bool
 )
+
+method TestMap(map: [string]string) -> (map: [string](i: int, val: string))
+
+method TestObject(object: object) -> (object: object)
 
 # Returns the same string
 method Ping(ping: string) -> (pong: string)
@@ -19,5 +23,9 @@ method TestMore(n: int) -> (state: State)
 # Stop serving
 method StopServing() -> ()
 
-# Something failed
-error ActionFailed (reason: string)
+type ErrorChain (
+    description: string,
+    caused_by: ?ErrorChain
+)
+
+error ActionFailed (reason: ?ErrorChain)

@@ -10,6 +10,7 @@ service = varlink.Service(
     vendor='Varlink',
     product='Varlink Examples',
     version='1',
+    url='http://varlink.org',
     interface_dir=os.path.dirname(__file__)
 )
 
@@ -49,6 +50,18 @@ class Example:
         yield {}
         print("Server ends.")
         sys.exit(0)
+
+    def TestMap(self, map):
+        i = 1
+        ret = {}
+        for (key, val) in map.items():
+            ret[key] = {"i": i, "val": val}
+            i += 1
+        return {'map': ret}
+
+    def TestObject(self, object):
+        import json
+        return {"object": json.loads(json.dumps(object))}
 
 
 if len(sys.argv) < 2 or not sys.argv[1].startswith("--varlink="):

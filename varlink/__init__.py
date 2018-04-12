@@ -147,18 +147,12 @@ class ClientInterfaceHandler:
     def _next_varlink_message(self):
         message = next(self._next_message())
 
-        if self._namespaced:
-            message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
-            if hasattr(message, "error") and message.error != None:
-                raise VarlinkError(message, self._namespaced)
-            else:
-                return message.parameters, hasattr(message, "continues") and message.continues
+        message = json.loads(message)
+
+        if 'error' in message and message["error"] != None:
+            raise VarlinkError(message, self._namespaced)
         else:
-            message = json.loads(message)
-            if 'error' in message and message["error"] != None:
-                raise VarlinkError(message, self._namespaced)
-            else:
-                return message['parameters'], ('continues' in message) and message['continues']
+            return message['parameters'], ('continues' in message) and message['continues']
 
     def _call(self, method_name, *args, **kwargs):
         if self._in_use:
@@ -166,19 +160,23 @@ class ClientInterfaceHandler:
 
         method = self._interface.get_method(method_name)
 
-        parameters = self._interface.filter_params(method.in_type, args, kwargs)
+        parameters = self._interface.filter_params(method.in_type, False, args, kwargs)
         out = {'method': self._interface.name + "." + method_name, 'parameters': parameters}
 
         self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
 
         self._in_use = True
-        (ret, more) = self._next_varlink_message()
+        (message, more) = self._next_varlink_message()
         if more:
             self.close()
             self._in_use = False
             raise ConnectionError
         self._in_use = False
-        return ret
+
+        if message:
+            message = self._interface.filter_params(method.out_type, self._namespaced, message, None)
+
+        return message
 
     def _call_more(self, method_name, *args, **kwargs):
         if self._in_use:
@@ -186,7 +184,7 @@ class ClientInterfaceHandler:
 
         method = self._interface.get_method(method_name)
 
-        parameters = self._interface.filter_params(method.in_type, args, kwargs)
+        parameters = self._interface.filter_params(method.in_type, False, args, kwargs)
         out = {'method': self._interface.name + "." + method_name, 'more': True, 'parameters': parameters}
 
         self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
@@ -194,8 +192,10 @@ class ClientInterfaceHandler:
         more = True
         self._in_use = True
         while more:
-            (ret, more) = self._next_varlink_message()
-            yield ret
+            (message, more) = self._next_varlink_message()
+            if message:
+                message = self._interface.filter_params(method.out_type, self._namespaced, message, None)
+            yield message
         self._in_use = False
 
 
@@ -500,7 +500,7 @@ class Service:
 
     """
 
-    def __init__(self, vendor='', product='', version='', interface_dir='.', namespaced=False):
+    def __init__(self, vendor='', product='', version='', url='', interface_dir='.', namespaced=False):
         """Initialize the service with the data org.varlink.service.GetInfo() returns
 
         Arguments:
@@ -509,10 +509,10 @@ class Service:
         self.vendor = vendor
         self.product = product
         self.version = version
+        self.url = url
         self.interface_dir = interface_dir
         self._namespaced = namespaced
 
-        self.url = None
         self.interfaces = {}
         self.interfaces_handlers = {}
         directory = os.path.dirname(__file__)
@@ -673,20 +673,60 @@ class Interface:
             return method
         raise MethodNotFound(name)
 
-    def filter_params(self, varlink_type, args, kwargs):
+    def filter_params(self, varlink_type, _namespaced, args, kwargs):
+        # print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs)
+
+        if isinstance(varlink_type, _Maybe):
+            return self.filter_params(varlink_type.element_type, _namespaced, args, kwargs)
+
+        if isinstance(varlink_type, _Dict):
+            if isinstance(args, dict):
+                for (k, v) in args.items():
+                    args[k] = self.filter_params(varlink_type.element_type, _namespaced, v, None)
+                return args
+            else:
+                SyntaxError("Expected dict, got %s", args)
+
         if isinstance(varlink_type, _CustomType):
-            return self.filter_params(self.members.get(varlink_type.name), args, kwargs)
+            # print("CustomType", varlink_type.name)
+            return self.filter_params(self.members.get(varlink_type.name), _namespaced, args, kwargs)
 
         if isinstance(varlink_type, _Alias):
-            return self.filter_params(self.members.get(varlink_type.type), args, kwargs)
+            # print("Alias", varlink_type.name)
+            return self.filter_params(varlink_type.type, _namespaced, args, kwargs)
 
-        if isinstance(varlink_type, _Array):
-            return [self.filter_params(varlink_type.element_type, x, None) for x in args]
-
-        if not isinstance(varlink_type, _Struct):
+        if isinstance(varlink_type, _Object):
             return args
 
-        out = {}
+        if isinstance(varlink_type, _Array):
+            return [self.filter_params(varlink_type.element_type, _namespaced, x, None) for x in args]
+
+        if isinstance(varlink_type, str) and isinstance(args, str):
+            # print("Returned str:", args)
+            return args
+
+        if isinstance(varlink_type, float) and isinstance(args, float):
+            # print("Returned float:", args)
+            return args
+
+        if isinstance(varlink_type, bool) and isinstance(args, bool):
+            # print("Returned bool:", args)
+            return args
+
+        if isinstance(varlink_type, int) and isinstance(args, int):
+            # print("Returned int:", args)
+            return args
+
+        if not isinstance(varlink_type, _Struct):
+            if _maybe and args == None:
+                return None
+            else:
+                raise SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
+                                                                                args))
+        if _namespaced:
+            out = SimpleNamespace()
+        else:
+            out = {}
 
         varlink_struct = None
         if not isinstance(args, tuple):
@@ -701,20 +741,54 @@ class Interface:
                         args = args[1:]
                     else:
                         args = None
-                    out[name] = self.filter_params(varlink_type.fields[name], val, None)
+                    ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
+                    if ret != None:
+                        # print("SetOUT:", name)
+                        if _namespaced:
+                            setattr(out, name, ret)
+                        else:
+                            out[name] = ret
                     continue
                 else:
                     if name in kwargs:
-                        out[name] = self.filter_params(varlink_type.fields[name], kwargs[name], None)
+                        ret = self.filter_params(varlink_type.fields[name], _namespaced, kwargs[name], None)
+                        if ret != None:
+                            # print("SetOUT:", name)
+                            if _namespaced:
+                                setattr(out, name, ret)
+                            else:
+                                out[name] = ret
                         continue
 
             if varlink_struct:
                 if isinstance(varlink_struct, dict):
+                    if name not in varlink_struct:
+                        if isinstance(varlink_type.fields[name], _Maybe):
+                            continue
+                        else:
+                            raise SyntaxError("Expected %s in %s" % (name, varlink_struct))
                     val = varlink_struct[name]
-                    out[name] = self.filter_params(varlink_type.fields[name], val, None)
+                    ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
+                    if ret != None:
+                        # print("SetOUT:", name)
+                        if _namespaced:
+                            setattr(out, name, ret)
+                        else:
+                            out[name] = ret
                 elif hasattr(varlink_struct, name):
                     val = getattr(varlink_struct, name)
-                    out[name] = self.filter_params(varlink_type.fields[name], val, None)
+                    ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
+                    if ret != None:
+                        # print("SetOUT:", name)
+                        if _namespaced:
+                            setattr(out, name, ret)
+                        else:
+                            out[name] = ret
+                else:
+                    if isinstance(varlink_type.fields[name], _Maybe):
+                        continue
+                    else:
+                        raise SyntaxError("Expected %s in %s" % (name, varlink_struct))
 
         return out
 
@@ -728,7 +802,7 @@ class Scanner:
         self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
                                            re.ASCII | re.MULTILINE)
 
-        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?', re.ASCII)
+        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]', re.ASCII)
         self.patterns = {
             'interface-name': re.compile(r'[a-z]+(\.[a-z0-9][a-z0-9-]*)+'),
             'member-name': re.compile(r'\b[A-Z][A-Za-z0-9_]*\b', re.ASCII),
@@ -772,10 +846,16 @@ class Scanner:
         if self.get('?'):
             if lastmaybe:
                 raise SyntaxError("double '??'")
-            return _Maybe(self.read_type(lastmaybe = True))
+            return _Maybe(self.read_type(lastmaybe=True))
+
+        if self.get('[string]'):
+            return _Dict(self.read_type())
 
         if self.get('[]'):
             return _Array(self.read_type())
+
+        if self.get('object'):
+            return _Object()
 
         if self.get('bool'):
             t = bool()
@@ -869,6 +949,9 @@ class Scanner:
             raise SyntaxError('expected type, method, or error')
 
 
+class _Object:
+    pass
+
 class _Struct:
 
     def __init__(self, fields):
@@ -891,6 +974,13 @@ class _Maybe:
 
     def __init__(self, element_type):
         self.element_type = element_type
+
+
+class _Dict:
+
+    def __init__(self, element_type):
+        self.element_type = element_type
+
 
 class _CustomType:
 
@@ -992,7 +1082,7 @@ class SimpleServer:
     def serve(self, address):
         listen_fd = get_listen_fd()
         if listen_fd:
-            print("ListenFD", listen_fd)
+            # print("ListenFD", listen_fd)
             s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
         elif address.startswith("unix:"):
             mode = None

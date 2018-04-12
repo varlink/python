@@ -15,6 +15,7 @@ from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
 
 import varlink
+from varlink import VarlinkEncoder
 
 with open(os.path.join(os.path.dirname(__file__), 'org.example.more.varlink')) as f:
     INTERFACE_org_example_more = varlink.Interface(f.read())
@@ -35,6 +36,7 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
         super().__init__(INTERFACE_org_example_more, namespaced=True)
         self._lock = threading.Lock()
         self.queue = DeferredQueue()
+        self._last_method = None
 
     def lineReceived(self, incoming_message):
         self.queue.put(incoming_message)
@@ -58,19 +60,19 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
 
     @inlineCallbacks
     def replyMore(self):
+        if not self._last_method:
+            raise Exception("No call before calling reply()/replyMore()")
+
         message = yield self._next_message()
-        if self._namespaced:
-            message = json.loads(message, object_hook=lambda d: SimpleNamespace(**d))
-            if hasattr(message, "error") and message.error != None:
-                raise varlink.VarlinkError(message, self._namespaced)
-            else:
-                return message.parameters, hasattr(message, "continues") and message.continues
+        message = json.loads(message)
+        if 'error' in message and message['error'] != None:
+            raise varlink.VarlinkError(message, self._namespaced)
         else:
-            message = json.loads(message)
-            if 'error' in message and message['error'] != None:
-                raise varlink.VarlinkError(message, self._namespaced)
-            else:
-                return message['parameters'], ('continues' in message) and message['continues']
+            return self._interface.filter_params(self._last_method.out_type, self._namespaced, message['parameters'],
+                                                 None), \
+                   ('continues' in message) \
+                   and \
+                   message['continues']
 
     @inlineCallbacks
     def reply(self):
@@ -81,7 +83,8 @@ class VarlinkClient(VarlinkReceiver, varlink.ClientInterfaceHandler):
 
         @inlineCallbacks
         def _wrapped(*args, **kwargs):
-            parameters = self._interface.filter_params(method.in_type, args, kwargs)
+            self._last_method = method
+            parameters = self._interface.filter_params(method.in_type, False, args, kwargs)
 
             if "_more" in kwargs and kwargs.pop("_more"):
                 out = {'method': self._interface.name + "." + method.name, 'more': True, 'parameters': parameters}
@@ -184,6 +187,19 @@ def main(reactor, address):
     try:
         con1 = yield endpoint1.connect(factory)
         con2 = yield endpoint2.connect(factory)
+
+        yield con1.TestMap({"one": "one", "two": "two"})
+        ret = yield con1.reply()
+        # print(ret)
+        assert ret.map == {'one': SimpleNamespace(i=1, val='one'), 'two': SimpleNamespace(i=2, val='two')}
+
+        yield con1.TestObject(ret)
+        jret = yield con1.reply()
+
+        jret = json.dumps(jret.object, cls=VarlinkEncoder)
+        jcmp = json.dumps(ret, cls=VarlinkEncoder)
+        assert jcmp == jret
+
         yield con1.TestMore(10, _more=True)
         while True:
             (m, more) = yield con1.replyMore()

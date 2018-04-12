@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
+import json
+import unittest
 
-from varlink import (Client, VarlinkError)
+from varlink import (Client, VarlinkError, VarlinkEncoder)
+from types import SimpleNamespace
 
 if len(sys.argv) == 2:
     address = sys.argv[1]
@@ -14,6 +17,15 @@ try:
     with Client(address=address) as client, \
             client.open('org.example.more', namespaced=True) as con1, \
             client.open('org.example.more', namespaced=True) as con2:
+        ret = con1.TestMap({"one": "one", "two": "two"})
+        # print(ret)
+        assert ret.map == {"one": SimpleNamespace(i=1, val="one"), "two": SimpleNamespace(i=2, val="two")}
+
+        jret = con1.TestObject(ret)
+        jret = json.dumps(jret.object, cls=VarlinkEncoder)
+        jcmp = json.dumps(ret, cls=VarlinkEncoder)
+        assert jcmp == jret
+
         for m in con1.TestMore(10, _more=True):
             if hasattr(m.state, 'start') and m.state.start != None:
                 if m.state.start:
