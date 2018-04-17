@@ -15,6 +15,10 @@ service = varlink.Service(
 )
 
 
+class ServiceRequestHandler(varlink.RequestHandler):
+    service = service
+
+
 class ActionFailed(varlink.VarlinkError):
 
     def __init__(self, reason):
@@ -46,9 +50,11 @@ class Example:
     def Ping(self, ping):
         return {'pong': ping}
 
-    def StopServing(self):
+    def StopServing(self, _server = None):
         yield {}
         print("Server ends.")
+        if _server:
+            _server.shutdown()
         sys.exit(0)
 
     def TestMap(self, map):
@@ -64,14 +70,16 @@ class Example:
         return {"object": json.loads(json.dumps(object))}
 
 
-if len(sys.argv) < 2 or not sys.argv[1].startswith("--varlink="):
-    print('Usage: %s --varlink=<varlink address>' % sys.argv[0])
-    sys.exit(1)
+if __name__ == '__main__':
+    if len(sys.argv) < 2 or not sys.argv[1].startswith("--varlink="):
+        print('Usage: %s --varlink=<varlink address>' % sys.argv[0])
+        sys.exit(1)
 
-with varlink.SimpleServer(service) as s:
-    print("Listening on", sys.argv[1][10:])
-    try:
-        s.serve(sys.argv[1][10:])
-    except KeyboardInterrupt:
-        pass
-sys.exit(0)
+    with varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler) as server:
+        print("Listening on", server.server_address)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+
+    sys.exit(0)

@@ -5,22 +5,35 @@ set -e
 cp examples/*.py examples/*.varlink .
 
 # test exec:
-./client-simple.py
-./client-twisted.py
+if [[ $(uname -s) == "Linux" ]]; then
+    ./client-simple.py
+    ./client-twisted.py
 
-./client-simple.py exec:./server-twisted.py
-./client-twisted.py exec:./server-simple.py
+    ./client-simple.py exec:./server-twisted.py
+    ./client-twisted.py exec:./server-simple.py
 
-# test unix:
-./server-simple.py --varlink=unix:@varlink$(($$+1)) &
-sleep 2
-./client-simple-stop.py unix:@varlink$(($$+1))
-wait %1
+    # test unix:
+    ./server-simple.py --varlink=unix:@varlink$(($$+1)) &
+    sleep 2
+    ./client-simple-stop.py unix:@varlink$(($$+1))
+    wait %1
 
-./server-twisted.py --varlink=unix:@varlink$(($$+2)) &
-sleep 2
-./client-simple-stop.py unix:@varlink$(($$+2))
-wait %1
+    ./server-twisted.py --varlink=unix:@varlink$(($$+2)) &
+    sleep 2
+    ./client-simple-stop.py unix:@varlink$(($$+2))
+    wait %1
+else
+    # test unix:
+    ./server-simple.py --varlink=unix:/tmp/varlink$(($$+1)) &
+    sleep 2
+    ./client-simple-stop.py unix:/tmp/varlink$(($$+1))
+    wait %1
+
+    ./server-twisted.py --varlink=unix:/tmp/varlink$(($$+2)) &
+    sleep 2
+    ./client-simple-stop.py unix:/tmp/varlink$(($$+2))
+    wait %1
+fi
 
 # test tcp: IPv4
 ./server-simple.py --varlink=tcp:0.0.0.0:25645 &

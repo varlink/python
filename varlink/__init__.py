@@ -4,27 +4,30 @@
 
 See http://varlink.org for more information about the varlink protocol and interface definition files.
 
-For service implementations use the SimpleServer() class, for client implementations use the Client() class.
+For service implementations use the Server() class, for client implementations use the Client() class.
 """
 
-import collections
 import json
 import os
 import re
-import select
 import signal
 import socket
 import stat
 import string
 import sys
 import traceback
-from inspect import signature
+from inspect import (signature, Parameter)
+from socketserver import (StreamRequestHandler, TCPServer, ThreadingMixIn, ForkingMixIn)
 from types import (SimpleNamespace, GeneratorType)
+
+import collections
 
 
 class VarlinkEncoder(json.JSONEncoder):
 
     def default(self, o):
+        if isinstance(o, set):
+            return dict.fromkeys(o, {})
         if isinstance(o, SimpleNamespace):
             return o.__dict__
         if isinstance(o, VarlinkError):
@@ -241,8 +244,12 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         self.close()
 
     def close(self):
-        if hasattr(self._connection, 'shutdown'):
-            self._connection.shutdown(socket.SHUT_RDWR)
+        try:
+            if hasattr(self._connection, 'shutdown'):
+                self._connection.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+
         self._connection.close()
 
     def _send_message(self, out):
@@ -253,15 +260,6 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
     def _next_message(self):
         while True:
-            message, sep, self._in_buffer = self._in_buffer.partition(b'\0')
-            if not sep:
-                # No zero byte found
-                self._in_buffer = message
-                message = None
-
-            if message:
-                yield message
-
             if self._recv:
                 data = self._connection.recv(8192)
             else:
@@ -270,6 +268,15 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
             if len(data) == 0:
                 raise ConnectionError
             self._in_buffer += data
+
+            message, sep, self._in_buffer = self._in_buffer.partition(b'\0')
+            if not sep:
+                # No zero byte found
+                self._in_buffer = message
+                message = None
+
+            if message:
+                yield message
 
 
 class Client:
@@ -537,7 +544,7 @@ class Service:
 
         return {'description': i.description}
 
-    def _handle(self, message):
+    def _handle(self, message, raw_message, server = None):
         try:
             interface_name, _, method_name = message.get('method', '').rpartition('.')
             if not interface_name or not method_name:
@@ -550,30 +557,53 @@ class Service:
             method = interface.get_method(method_name)
 
             parameters = message.get('parameters', {})
+            handler = self.interfaces_handlers[interface.name]
+
             for name in parameters:
                 if name not in method.in_type.fields:
                     raise InvalidParameter(name)
-                if self._namespaced:
-                    parameters[name] = json.loads(json.dumps(parameters[name]),
-                                                  object_hook=lambda d: SimpleNamespace(**d))
 
-            func = getattr(self.interfaces_handlers[interface.name], method_name, None)
+            parameters = interface.filter_params(method.in_type, self._namespaced, parameters, None)
+
+            func = getattr(handler, method_name, None)
+
             if not func or not callable(func):
                 raise MethodNotImplemented(method_name)
 
             kwargs = {}
+            sig = signature(func)
+
             if message.get('more', False) or message.get('oneway', False) or message.get('upgrade', False):
-                sig = signature(func)
-                if message.get('more', False) and '_more' in sig.parameters:
+                if message.get('more', False) and '_more' in sig.parameters \
+                        and sig.parameters["_more"].kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
                     kwargs["_more"] = True
 
-                if message.get('oneway', False) and '_oneway' in sig.parameters:
+                if message.get('oneway', False) and '_oneway' in sig.parameters \
+                        and sig.parameters["_oneway"].kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
                     kwargs["_oneway"] = True
 
-                if message.get('upgrade', False) and '_upgrade' in sig.parameters:
+                if message.get('upgrade', False) and '_upgrade' in sig.parameters \
+                        and sig.parameters["_upgrade"].kind in \
+                        (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
                     kwargs["_upgrade"] = True
 
-            out = func(**parameters, **kwargs)
+            if '_raw' in sig.parameters and sig.parameters["_raw"].kind in (
+                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                kwargs["_raw"] = raw_message
+            if '_message' in sig.parameters and sig.parameters["_message"].kind in (
+                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                kwargs["_message"] = message
+            if '_interface' in sig.parameters and sig.parameters["_interface"].kind in (
+                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                kwargs["_interface"] = interface
+            if '_method' in sig.parameters and sig.parameters["_method"].kind in (
+                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                kwargs["_method"] = method
+            if '_server' in sig.parameters and sig.parameters["_server"].kind in (
+                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                kwargs["_server"] = server
+
+            out = func(*(parameters[k] for k in method.in_type.fields.keys()), **kwargs)
 
             if isinstance(out, GeneratorType):
                 try:
@@ -588,9 +618,13 @@ class Service:
                         if '_continues' in o:
                             cont = o['_continues']
                             del o['_continues']
-                            yield {'continues': bool(cont), 'parameters': o or {}}
+                            yield {'continues': bool(cont), 'parameters': interface.filter_params(method.out_type,
+                                                                                                  self._namespaced, o,
+                                                                                                  None) or {}}
                         else:
-                            yield {'parameters': o or {}}
+                            yield {'parameters': interface.filter_params(method.out_type,
+                                                                         self._namespaced, o,
+                                                                         None) or {}}
 
                         if not cont:
                             return
@@ -608,7 +642,7 @@ class Service:
             traceback.print_exception(type(error), error, error.__traceback__)
             yield {'error': 'InternalError'}
 
-    def handle(self, message):
+    def handle(self, message, server = None):
         """This generator function handles any incoming message. Write any returned bytes to the output stream.
 
         for outgoing_message in service.handle(incoming_message):
@@ -620,7 +654,7 @@ class Service:
         if message[-1] == 0:
             message = message[:-1]
 
-        handle = self._handle(json.loads(message))
+        handle = self._handle(json.loads(message), message, server)
         for out in handle:
             try:
                 yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
@@ -677,6 +711,8 @@ class Interface:
         # print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs)
 
         if isinstance(varlink_type, _Maybe):
+            if args == None:
+                return None
             return self.filter_params(varlink_type.element_type, _namespaced, args, kwargs)
 
         if isinstance(varlink_type, _Dict):
@@ -698,8 +734,16 @@ class Interface:
         if isinstance(varlink_type, _Object):
             return args
 
+        if isinstance(varlink_type, _Enum) and isinstance(args, str):
+            # print("Returned str:", args)
+            return args
+
         if isinstance(varlink_type, _Array):
             return [self.filter_params(varlink_type.element_type, _namespaced, x, None) for x in args]
+
+        if isinstance(varlink_type, set):
+            # print("Returned set:", set(args))
+            return set(args)
 
         if isinstance(varlink_type, str) and isinstance(args, str):
             # print("Returned str:", args)
@@ -718,11 +762,8 @@ class Interface:
             return args
 
         if not isinstance(varlink_type, _Struct):
-            if _maybe and args == None:
-                return None
-            else:
-                raise SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
-                                                                                args))
+            raise SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
+                                                                            args))
         if _namespaced:
             out = SimpleNamespace()
         else:
@@ -766,7 +807,7 @@ class Interface:
                         if isinstance(varlink_type.fields[name], _Maybe):
                             continue
                         else:
-                            raise SyntaxError("Expected %s in %s" % (name, varlink_struct))
+                            raise SyntaxError("Expected '%s' in %s" % (name, varlink_struct))
                     val = varlink_struct[name]
                     ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
                     if ret != None:
@@ -802,7 +843,7 @@ class Scanner:
         self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
                                            re.ASCII | re.MULTILINE)
 
-        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]', re.ASCII)
+        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]', re.ASCII)
         self.patterns = {
             'interface-name': re.compile(r'[a-z]+(\.[a-z0-9][a-z0-9-]*)+'),
             'member-name': re.compile(r'\b[A-Z][A-Za-z0-9_]*\b', re.ASCII),
@@ -847,6 +888,9 @@ class Scanner:
             if lastmaybe:
                 raise SyntaxError("double '??'")
             return _Maybe(self.read_type(lastmaybe=True))
+
+        if self.get('[string]()'):
+            return set()
 
         if self.get('[string]'):
             return _Dict(self.read_type())
@@ -952,6 +996,7 @@ class Scanner:
 class _Object:
     pass
 
+
 class _Struct:
 
     def __init__(self, fields):
@@ -1011,181 +1056,6 @@ class _Error:
         self.type = varlink_type
 
 
-# Used by the SimpleServer
-class _Connection:
-
-    def __init__(self, _socket):
-        self._socket = _socket
-        self._in_buffer = b''
-        self._out_buffer = b''
-
-    def close(self):
-        self._socket.close()
-
-    def events(self):
-        events = 0
-        if len(self._in_buffer) < (8 * 1024 * 1024):
-            events |= select.EPOLLIN
-        if self._out_buffer:
-            events |= select.EPOLLOUT
-        return events
-
-    def dispatch(self, events):
-        if events & select.EPOLLOUT:
-            n = self._socket.send(self._out_buffer[:8192])
-            self._out_buffer = self._out_buffer[n:]
-
-        if events & select.EPOLLIN:
-            data = self._socket.recv(8192)
-            if len(data) == 0:
-                raise ConnectionError
-            self._in_buffer += data
-
-    def read(self):
-        while True:
-            message, _, self._in_buffer = self._in_buffer.partition(b'\0')
-            if message:
-                yield message
-            else:
-                break
-
-    def write(self, message):
-        self._out_buffer += message
-
-
-class SimpleServer:
-    """A simple single threaded unix domain socket server
-
-    calls service.handle(message) for every zero byte separated incoming message
-    and writes any return message from this generator function to the outgoing stream.
-
-    Better use a framework like twisted to serve.
-    """
-
-    def __init__(self, service):
-        self._service = service
-        self.connections = {}
-        self._more = {}
-        self.remove_file = None
-        self.do_main_loop = True
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, _type, _value, _traceback):
-        if self.remove_file:
-            os.remove(self.remove_file)
-
-    def stop(self):
-        self.do_main_loop = False
-
-    def serve(self, address):
-        listen_fd = get_listen_fd()
-        if listen_fd:
-            # print("ListenFD", listen_fd)
-            s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
-        elif address.startswith("unix:"):
-            mode = None
-            address = address[5:]
-            m = address.rfind(';mode=')
-            if m != -1:
-                mode = address[m + 6:]
-                address = address[:m]
-
-            if address[0] == '@':
-                address = address.replace('@', '\0', 1)
-                mode = None
-            else:
-                self.remove_file = address
-
-            s = socket.socket(socket.AF_UNIX)
-            s.setblocking(0)
-            s.bind(address)
-            if mode:
-                os.chmod(address, mode=int(mode, 8))
-            s.listen()
-        elif address.startswith("tcp:"):
-            address = address[4:]
-            p = address.rfind(':')
-            if p != -1:
-                port = address[p + 1:]
-                address = address[:p]
-            else:
-                raise ConnectionError("Invalid address 'tcp:%s'" % address)
-            address = address.replace('[', '')
-            address = address.replace(']', '')
-            res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP,
-                                     flags=socket.AI_NUMERICHOST)
-            af, socktype, proto, canonname, sa = res[0]
-            s = socket.socket(af, socktype, proto)
-            s.setblocking(0)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            try:
-                s.bind(sa)
-            except OSError as e:
-                print("Cannot bind to:", sa, e, file=sys.stderr)
-                raise e
-
-            s.listen()
-        else:
-            raise ConnectionError("Invalid address '%s'" % address)
-
-        epoll = select.epoll()
-        epoll.register(s, select.EPOLLIN)
-
-        while self.do_main_loop:
-            for fd, events in epoll.poll():
-                if fd == s.fileno():
-                    sock, _ = s.accept()
-                    sock.setblocking(0)
-                    connection = _Connection(sock)
-                    self.connections[sock.fileno()] = connection
-                    epoll.register(sock.fileno(), select.EPOLLIN)
-                else:
-                    connection = self.connections.get(fd)
-                    try:
-                        connection.dispatch(events)
-
-                        if fd not in self._more:
-                            for message in connection.read():
-                                # Let the varlink service handle this
-                                it = iter(self._service.handle(message))
-                                if isinstance(it, GeneratorType):
-                                    self._more[fd] = it
-                                else:
-                                    raise TypeError
-
-                        if fd in self._more:
-                            try:
-                                reply = next(self._more[fd])
-                                if reply:
-                                    # write any reply pending
-                                    connection.write(reply + b'\0')
-                            except StopIteration:
-                                del self._more[fd]
-                    except ConnectionError:
-                        epoll.unregister(fd)
-                        connection.close()
-                        if fd in self._more:
-                            try:
-                                self._more[fd].throw(ConnectionError())
-                            except StopIteration:
-                                pass
-                            del self._more[fd]
-                        continue
-                    except Exception as error:
-                        traceback.print_exception(type(error), error, error.__traceback__)
-                        s.close()
-                        epoll.close()
-
-                        sys.exit(1)
-
-                    epoll.modify(fd, connection.events())
-
-        s.close()
-        epoll.close()
-
-
 def get_listen_fd():
     if "LISTEN_FDS" not in os.environ:
         return None
@@ -1228,3 +1098,118 @@ def get_listen_fd():
                     return None
             except OSError:
                 return None
+
+
+class RequestHandler(StreamRequestHandler):
+    """Varlink request handler
+
+    To use as an argument for the VarlinkServer constructor.
+    Instantiate your own class and set the class variable service to your global varlink.Service object.
+    """
+    service = None
+
+    def handle(self):
+        message = b''
+
+        self.request.setblocking(True)
+        while not self.rfile.closed:
+            c = self.rfile.read(1)
+            #print("HANDLE", c)
+            if c == b'' or c == None:
+                #print("NULL")
+                break
+
+            if c != b'\0':
+                message += c
+                continue
+
+            #print("GOT:", message)
+            for reply in self.service.handle(message, server = self.server):
+                #print("REPLY:", reply)
+                self.wfile.write(reply + b'\0')
+                self.wfile.flush()
+
+            message = b''
+
+
+class Server(TCPServer):
+    """VarlinkServer
+
+    The same as the standard socketserver.TCPServer, to initialize with a subclass of VarlinkRequestHandler.
+    >>> import varlink
+    >>> service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com', interface_dir=os.path.dirname(__file__))
+    >>> class ServiceRequestHandler(varlink.RequestHandler):
+    >>>    service = service
+    >>> @service.interface('com.example.service')
+    >>> class Example:
+    >>> from varlink import Client
+    >>> server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
+    >>> server.serve_forever()
+    """
+
+    allow_reuse_address = True
+
+    def server_bind(self):
+        self.remove_file = None
+
+        listen_fd = get_listen_fd()
+        if listen_fd:
+            # print("ListenFD", listen_fd)
+            s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
+        elif self.server_address.startswith("unix:"):
+            self.address_family = socket.AF_UNIX
+            mode = None
+            address = self.server_address[5:]
+            m = address.rfind(';mode=')
+            if m != -1:
+                mode = address[m + 6:]
+                address = address[:m]
+
+            if address[0] == '@':
+                address = address.replace('@', '\0', 1)
+                mode = None
+            else:
+                self.remove_file = address
+
+            self.address = address
+            self.socket = socket.socket(self.address_family, self.socket_type)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.setblocking(True)
+            self.socket.bind(address)
+            if mode:
+                os.chmod(address, mode=int(mode, 8))
+            self.server_address = self.socket.getsockname()
+
+        elif self.server_address.startswith("tcp:"):
+            address = self.server_address[4:]
+            p = address.rfind(':')
+            if p != -1:
+                port = address[p + 1:]
+                address = address[:p]
+            else:
+                raise ConnectionError("Invalid address 'tcp:%s'" % address)
+            address = address.replace('[', '')
+            address = address.replace(']', '')
+
+            res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP, flags=socket.AI_NUMERICHOST)
+            af, socktype, proto, canonname, sa = res[0]
+            self.address_family = af
+            self.socket_type = socktype
+            self.socket = socket.socket(self.address_family, self.socket_type)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.setblocking(True)
+            self.socket.bind(sa[0:2])
+            self.server_address = self.socket.getsockname()
+
+        else:
+            raise ConnectionError("Invalid address '%s'" % self.address)
+
+    def server_close(self):
+        if self.remove_file:
+            os.remove(self.remove_file)
+
+
+class ThreadingServer(ThreadingMixIn, Server): pass
+
+
+class ForkingServer(ForkingMixIn, Server): pass

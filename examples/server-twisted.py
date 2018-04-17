@@ -54,7 +54,12 @@ class Example:
         return {'pong': ping}
 
     def StopServing(self):
-        print("Server ends.")
+        print("Reactor Server ends.")
+        yield {}
+        deferToThread(self._doStop)
+
+    def _doStop(self):
+        time.sleep(1)
         reactor.stop()
 
     def TestMap(self, map):
