@@ -260,15 +260,6 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
     def _next_message(self):
         while True:
-            if self._recv:
-                data = self._connection.recv(8192)
-            else:
-                data = self._connection.read(8192)
-
-            if len(data) == 0:
-                raise ConnectionError
-            self._in_buffer += data
-
             message, sep, self._in_buffer = self._in_buffer.partition(b'\0')
             if not sep:
                 # No zero byte found
@@ -277,6 +268,16 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
             if message:
                 yield message
+                continue
+
+            if self._recv:
+                data = self._connection.recv(8192)
+            else:
+                data = self._connection.read(8192)
+
+            if len(data) == 0:
+                raise ConnectionError
+            self._in_buffer += data
 
 
 class Client:
@@ -367,7 +368,7 @@ class Client:
         elif address.startswith("exec:"):
             executable = address[5:]
             s = socket.socket(socket.AF_UNIX)
-            s.setblocking(0)
+            s.setblocking(False)
             s.bind("")
             s.listen()
             address = s.getsockname().decode('ascii')
@@ -453,7 +454,7 @@ class Client:
             s = socket.create_connection((self.address, self.port))
         else:
             s = socket.socket(socket.AF_UNIX)
-            s.setblocking(1)
+            s.setblocking(True)
             s.connect(self.address)
 
         return self.handler(self._interfaces[interface_name], s, namespaced=namespaced)
@@ -1155,7 +1156,13 @@ class Server(TCPServer):
         listen_fd = get_listen_fd()
         if listen_fd:
             # print("ListenFD", listen_fd)
-            s = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
+            self.address_family = socket.AF_UNIX
+            self.socket = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
+            self.address = listen_fd
+            self.socket.setblocking(True)
+            self.server_address = self.socket.getsockname()
+            self.server_address = '@' + self.server_address[1:].decode('utf-8')
+
         elif self.server_address.startswith("unix:"):
             self.address_family = socket.AF_UNIX
             mode = None
@@ -1179,6 +1186,8 @@ class Server(TCPServer):
             if mode:
                 os.chmod(address, mode=int(mode, 8))
             self.server_address = self.socket.getsockname()
+            if self.server_address[0] == 0:
+                self.server_address = '@' + self.server_address[1:].decode('utf-8')
 
         elif self.server_address.startswith("tcp:"):
             address = self.server_address[4:]
