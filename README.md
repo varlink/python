@@ -5,7 +5,7 @@
 
 A [varlink](http://varlink.org) implementation for Python.
 
-## varlink tool installation
+## python varlink installation
 
 From pypi:
 ```bash
@@ -14,8 +14,16 @@ $ pip3 install --user varlink
 
 With Fedora 28/rawhide:
 ```bash
-$ sudo dnf install python-varlink libvarlink-util
+$ sudo dnf install python-varlink
 ```
+
+## varlink tool installation
+
+With Fedora 28/rawhide:
+```bash
+$ sudo dnf install libvarlink-util
+```
+or compile from https://github.com/varlink/libvarlink
 
 ## Examples
 
