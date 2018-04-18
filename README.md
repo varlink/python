@@ -7,6 +7,11 @@ A [varlink](http://varlink.org) implementation for Python.
 
 ## varlink tool installation
 
+From pypi:
+```bash
+$ pip3 install --user varlink
+```
+
 With Fedora 28/rawhide:
 ```bash
 $ sudo dnf install python-varlink libvarlink-util
