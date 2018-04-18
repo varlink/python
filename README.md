@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/varlink/python.svg?branch=master)](https://travis-ci.org/varlink/python)
 [![Coverage Status](https://coveralls.io/repos/github/varlink/python/badge.svg?branch=master)](https://coveralls.io/github/varlink/python?branch=master)
+[![varlink-certified](images/varlink-certified.png)](Certified)
 
 # python-varlink
 
@@ -113,3 +114,15 @@ E.g.
 - unix:/run/myserver/socketfile
 - tcp:127.0.0.1:12345
 - tcp:[::1]:12345
+
+### Varlink Certification Server
+
+```
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_certification.py --varlink=tcp:127.0.0.1:12345
+```
+
+### Varlink Certification Client
+
+```
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_certification.py --varlink=tcp:127.0.0.1:12345 --client
+```
