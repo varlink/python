@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/varlink/python.svg?branch=master)](https://travis-ci.org/varlink/python)
 [![Coverage Status](https://coveralls.io/repos/github/varlink/python/badge.svg?branch=master)](https://coveralls.io/github/varlink/python?branch=master)
-[<img src="https://raw.githubusercontent.com/wiki/varlink/documentation/images/varlink-certified.png" alt="varlink-certified" width="64" height="20">](https://github.com/varlink/documentation/wiki/Language-Bindings)
+[![Varlink Certified](https://img.shields.io/badge/varlink-certified-green.svg)](https://github.com/varlink/documentation/wiki/Language-Bindings)
 
 # python-varlink
 
