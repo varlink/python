@@ -17,7 +17,7 @@ import string
 import sys
 import traceback
 from inspect import (signature, Parameter)
-from socketserver import (StreamRequestHandler, TCPServer, ThreadingMixIn, ForkingMixIn)
+from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
 from types import (SimpleNamespace, GeneratorType)
 
 import collections
@@ -144,13 +144,16 @@ class ClientInterfaceHandler:
 
         _wrapped.__name__ = method.name
         # FIXME: add comments
-        _wrapped.__doc__ = "Varlink call: " + method.signature
+        if method.signature:
+            _wrapped.__doc__ = "Varlink call: " + method.signature
         setattr(self, method.name, _wrapped)
 
     def _next_varlink_message(self):
         message = next(self._next_message())
 
         message = json.loads(message)
+        if not 'parameters' in message:
+            message['parameters'] = {}
 
         if 'error' in message and message["error"] != None:
             raise VarlinkError(message, self._namespaced)
@@ -159,7 +162,7 @@ class ClientInterfaceHandler:
 
     def _call(self, method_name, *args, **kwargs):
         if self._in_use:
-            raise ConnectionError
+            raise ConnectionError("Tried to call a varlink method, while other call still in progress")
 
         method = self._interface.get_method(method_name)
 
@@ -173,7 +176,7 @@ class ClientInterfaceHandler:
         if more:
             self.close()
             self._in_use = False
-            raise ConnectionError
+            raise ConnectionError("Server indicated more varlink messages")
         self._in_use = False
 
         if message:
@@ -183,7 +186,7 @@ class ClientInterfaceHandler:
 
     def _call_more(self, method_name, *args, **kwargs):
         if self._in_use:
-            raise ConnectionError
+            raise ConnectionError("Tried to call a varlink method, while other call still in progress")
 
         method = self._interface.get_method(method_name)
 
@@ -276,7 +279,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
                 data = self._connection.read(8192)
 
             if len(data) == 0:
-                raise ConnectionError
+                raise BrokenPipeError("Disconnected")
             self._in_buffer += data
 
 
@@ -410,7 +413,7 @@ class Client:
             self.port = port
         else:
             # FIXME: also accept other transports
-            raise ConnectionError
+            raise ConnectionError("Invalid address '%s'" % address)
 
         self.address = address
         _connection = self.open("org.varlink.service")
@@ -545,7 +548,7 @@ class Service:
 
         return {'description': i.description}
 
-    def _handle(self, message, raw_message, server = None):
+    def _handle(self, message, raw_message, _server=None, _request=None):
         try:
             interface_name, _, method_name = message.get('method', '').rpartition('.')
             if not interface_name or not method_name:
@@ -602,7 +605,10 @@ class Service:
                 kwargs["_method"] = method
             if '_server' in sig.parameters and sig.parameters["_server"].kind in (
                     Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
-                kwargs["_server"] = server
+                kwargs["_server"] = _server
+            if '_request' in sig.parameters and sig.parameters["_request"].kind in (
+                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                kwargs["_request"] = _request
 
             out = func(*(parameters[k] for k in method.in_type.fields.keys()), **kwargs)
 
@@ -643,7 +649,7 @@ class Service:
             traceback.print_exception(type(error), error, error.__traceback__)
             yield {'error': 'InternalError'}
 
-    def handle(self, message, server = None):
+    def handle(self, message, _server=None, _request=None):
         """This generator function handles any incoming message. Write any returned bytes to the output stream.
 
         for outgoing_message in service.handle(incoming_message):
@@ -655,7 +661,7 @@ class Service:
         if message[-1] == 0:
             message = message[:-1]
 
-        handle = self._handle(json.loads(message), message, server)
+        handle = self._handle(json.loads(message), message, _server, _request)
         for out in handle:
             try:
                 yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
@@ -1115,82 +1121,80 @@ class RequestHandler(StreamRequestHandler):
         self.request.setblocking(True)
         while not self.rfile.closed:
             c = self.rfile.read(1)
-            #print("HANDLE", c)
-            if c == b'' or c == None:
-                #print("NULL")
+
+            if c == b'':
                 break
 
             if c != b'\0':
                 message += c
                 continue
 
-            #print("GOT:", message)
-            for reply in self.service.handle(message, server = self.server):
-                #print("REPLY:", reply)
+            for reply in self.service.handle(message, _server=self.server, _request=self.request):
                 self.wfile.write(reply + b'\0')
-                self.wfile.flush()
 
             message = b''
 
 
-class Server(TCPServer):
+class Server(BaseServer):
     """VarlinkServer
 
     The same as the standard socketserver.TCPServer, to initialize with a subclass of VarlinkRequestHandler.
+
     >>> import varlink
-    >>> service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com', interface_dir=os.path.dirname(__file__))
+    >>> import os
+    >>>
+    >>> service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
+    >>>    interface_dir=os.path.dirname(__file__))
+    >>>
     >>> class ServiceRequestHandler(varlink.RequestHandler):
     >>>    service = service
+    >>>
     >>> @service.interface('com.example.service')
     >>> class Example:
-    >>> from varlink import Client
+    >>>    # com.example.service method implementation here …
+    >>>    pass
+    >>>
     >>> server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
     >>> server.serve_forever()
     """
+    address_family = socket.AF_INET
+
+    socket_type = socket.SOCK_STREAM
+
+    request_queue_size = 5
 
     allow_reuse_address = True
 
-    def server_bind(self):
+    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
         self.remove_file = None
+        self.mode = None
+        self.listen_fd = get_listen_fd()
 
-        listen_fd = get_listen_fd()
-        if listen_fd:
-            # print("ListenFD", listen_fd)
+        if self.listen_fd:
+            server_address = self.listen_fd
             self.address_family = socket.AF_UNIX
-            self.socket = socket.fromfd(listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
-            self.address = listen_fd
-            self.socket.setblocking(True)
-            self.server_address = self.socket.getsockname()
-            self.server_address = '@' + self.server_address[1:].decode('utf-8')
+            self.socket = socket.fromfd(self.listen_fd, socket.AF_UNIX, socket.SOCK_STREAM)
 
-        elif self.server_address.startswith("unix:"):
+        elif server_address.startswith("unix:"):
             self.address_family = socket.AF_UNIX
-            mode = None
-            address = self.server_address[5:]
+            address = server_address[5:]
             m = address.rfind(';mode=')
             if m != -1:
-                mode = address[m + 6:]
+                self.mode = address[m + 6:]
                 address = address[:m]
 
             if address[0] == '@':
                 address = address.replace('@', '\0', 1)
-                mode = None
+                self.mode = None
             else:
                 self.remove_file = address
 
-            self.address = address
+            server_address = address
             self.socket = socket.socket(self.address_family, self.socket_type)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.setblocking(True)
-            self.socket.bind(address)
-            if mode:
-                os.chmod(address, mode=int(mode, 8))
-            self.server_address = self.socket.getsockname()
-            if self.server_address[0] == 0:
-                self.server_address = '@' + self.server_address[1:].decode('utf-8')
 
-        elif self.server_address.startswith("tcp:"):
-            address = self.server_address[4:]
+        elif server_address.startswith("tcp:"):
+            address = server_address[4:]
             p = address.rfind(':')
             if p != -1:
                 port = address[p + 1:]
@@ -1205,17 +1209,89 @@ class Server(TCPServer):
             self.address_family = af
             self.socket_type = socktype
             self.socket = socket.socket(self.address_family, self.socket_type)
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.setblocking(True)
-            self.socket.bind(sa[0:2])
-            self.server_address = self.socket.getsockname()
+            server_address = sa[0:2]
 
         else:
-            raise ConnectionError("Invalid address '%s'" % self.address)
+            raise ConnectionError("Invalid address '%s'" % server_address)
+
+        BaseServer.__init__(self, server_address, RequestHandlerClass)
+
+        if bind_and_activate:
+            try:
+                self.server_bind()
+                self.server_activate()
+            except:
+                self.server_close()
+                raise
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+
+        May be overridden.
+
+        """
+        if self.allow_reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setblocking(True)
+
+        if not self.listen_fd:
+            self.socket.bind(self.server_address)
+
+        self.server_address = self.socket.getsockname()
+
+        if self.server_address[0] == 0:
+            self.server_address = '@' + self.server_address[1:].decode('utf-8')
+        elif self.mode:
+            os.chmod(self.server_address, mode=int(self.mode, 8))
+
+    def server_activate(self):
+        """Called by constructor to activate the server.
+
+        May be overridden.
+
+        """
+        self.socket.listen(self.request_queue_size)
 
     def server_close(self):
+        """Called to clean-up the server.
+
+        May be overridden.
+
+        """
+        self.socket.close()
+
         if self.remove_file:
             os.remove(self.remove_file)
+
+    def fileno(self):
+        """Return socket file number.
+
+        Interface required by selector.
+
+        """
+        return self.socket.fileno()
+
+    def get_request(self):
+        """Get the request and client address from the socket.
+
+        May be overridden.
+
+        """
+        return self.socket.accept()
+
+    def shutdown_request(self, request):
+        """Called to shutdown and close an individual request."""
+        try:
+            # explicitly shutdown.  socket.close() merely releases
+            # the socket and waits for GC to perform the actual close.
+            request.shutdown(socket.SHUT_WR)
+        except OSError:
+            pass  # some platforms may raise ENOTCONN here
+        self.close_request(request)
+
+    def close_request(self, request):
+        """Called to clean up an individual request."""
+        request.close()
 
 
 class ThreadingServer(ThreadingMixIn, Server): pass

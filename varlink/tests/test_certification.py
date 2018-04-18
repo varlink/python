@@ -1,9 +1,36 @@
+import getopt
 import json
 import math
 import os
 import sys
+import threading
+import unittest
+from sys import platform
 
 import varlink
+
+
+######## CLIENT #############
+
+def run_client(address):
+    print('Connecting to %s' % address)
+    with varlink.Client(address) as client, \
+            client.open('org.varlink.certification') as con:
+        ret = con.Start()
+        ret = con.Test01()
+        ret = con.Test02(ret["bool"])
+        ret = con.Test03(ret["int"])
+        ret = con.Test04(ret["float"])
+        ret = con.Test05(ret["string"])
+        ret = con.Test06(ret["bool"], ret["int"], ret["float"], ret["string"])
+        ret = con.Test07(ret["struct"])
+        ret = con.Test08(ret["map"])
+        ret = con.Test09(ret["set"])
+        ret = con.End(ret["mytype"])
+    print("Certification passed")
+
+
+######## SERVER #############
 
 service = varlink.Service(
     vendor='Varlink',
@@ -22,6 +49,7 @@ def sorted_json(dct):
     if isinstance(dct, type([])):
         return sorted(dct)
     return dct
+
 
 class CertificationError(varlink.VarlinkError):
 
@@ -85,7 +113,7 @@ class CertService:
     def Test06(self, _bool, _int, _float, _string, _raw=None, _message=None):
         wants = '{"method": "org.varlink.certification.Test06", "parameters": ' \
                 '{"bool": false, "int": 2, "float": ' + str(math.pi) + ', "string": "a lot of ' \
-                'string"}}'
+                                                                       'string"}}'
         self.assert_raw(_raw, _message, wants)
         self.assert_cmp(_raw, wants, _int == 2)
         self.assert_cmp(_raw, wants, _bool == False)
@@ -98,7 +126,7 @@ class CertService:
     def Test07(self, _dict, _raw=None, _message=None):
         wants = '{"method": "org.varlink.certification.Test07", "parameters": ' \
                 '{"struct": {"int": 2, "bool": false, "float": ' + str(math.pi) + ', "string": "a lot of ' \
-                'string"}}}'
+                                                                                  'string"}}}'
         self.assert_raw(_raw, _message, wants)
         self.assert_cmp(_raw, wants, _dict["int"] == 2)
         self.assert_cmp(_raw, wants, _dict["bool"] == False)
@@ -183,16 +211,72 @@ class CertService:
         self.assert_raw(_raw, _message, wants)
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2 or not sys.argv[1].startswith("--varlink="):
-        print('Usage: %s --varlink=<varlink address>' % sys.argv[0])
-        sys.exit(1)
-
-    with varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler) as server:
+def run_server(address):
+    with varlink.ThreadingServer(address, ServiceRequestHandler) as server:
         print("Listening on", server.server_address)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
             pass
 
+
+######## MAIN #############
+
+def usage():
+    print('Usage: %s [[--client] --varlink=<varlink address>]' % sys.argv[0], file=sys.stderr)
+    print('\tSelf Exec: $ %s' % sys.argv[0], file=sys.stderr)
+    print('\tServer   : $ %s --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
+    print('\tClient   : $ %s --client --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
+
+
+if __name__ == '__main__':
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "", ["help", "client", "varlink="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+
+    address = None
+    client_mode = False
+
+    for opt, arg in opts:
+        if opt == "--help":
+            usage()
+            sys.exit(0)
+        elif opt == "--varlink":
+            address = arg
+        elif opt == "--client":
+            client_mode = True
+
+    if not address and not client_mode:
+        client_mode = True
+        address = 'exec:' + __file__
+
+        if platform != "linux":
+            print("varlink exec: not supported on platform %s" % platform, file=sys.stderr)
+            usage()
+            sys.exit(2)
+
+    if client_mode:
+        run_client(address)
+    else:
+        run_server(address)
+
     sys.exit(0)
+
+
+######## UNITTEST #############
+
+class TestService(unittest.TestCase):
+    def test_service(self):
+        address = "tcp:127.0.0.1:23456"
+
+        server = varlink.ThreadingServer(address, ServiceRequestHandler)
+        server_thread = threading.Thread(target=server.serve_forever)
+        server_thread.daemon = True
+        server_thread.start()
+
+        try:
+            run_client(address)
+        finally:
+            server.shutdown()

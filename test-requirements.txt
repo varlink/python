@@ -1,2 +1,1 @@
-twisted > 17
 python-coveralls

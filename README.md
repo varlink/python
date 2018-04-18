@@ -12,28 +12,23 @@ With Fedora 28/rawhide:
 $ sudo dnf install python-varlink libvarlink-util
 ```
 
-If you want to try out the twisted examples, you have to locally install a new twisted version, because Fedora has an old version, which does not handle unix domain sockets:
-```bash
-$ pip3 install --user 'twisted>17'
-```
-
 ## Examples
 
-See the [examples](https://github.com/varlink/python-varlink/tree/master/examples) directory.
+See the [tests](https://github.com/varlink/python-varlink/tree/master/varlink/tests) directory.
 
 ```bash
-$ python3 server-simple.py 'unix:@test' &
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test" &
 [1] 6434
-$ varlink help unix:@test/org.varlink.example.more
+$ varlink help unix:@test/org.example.more
 # Example Varlink service
-interface org.varlink.example.more
+interface org.example.more
 
 # Enum, returning either start, progress or end
 # progress: [0-100]
 type State (
-  start: bool,
-  progress: int,
-  end: bool
+  start: ?bool,
+  progress: ?int,
+  end: ?bool
 )
 
 # Returns the same string
@@ -43,44 +38,24 @@ method Ping(ping: string) -> (pong: string)
 # n: number of progress steps
 method TestMore(n: int) -> (state: State)
 
-# Something failed
-error ActionFailed (reason: string)
+# Stop serving
+method StopServing() -> ()
+
+# Something failed in TestMore
+error TestMoreError (reason: string)
+
 
 $ fg
-python3 server-simple.py 'unix:/tmp/tt;mode=0666'
+PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test"
 ^C
 ```
 
 ```bash
-$ python3 server-twisted.py 'unix:/tmp/tt;mode=0666' &
-$ varlink help unix:/tmp/tt/org.varlink.example.more
-# Example Varlink service
-interface org.varlink.example.more
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py
+Connecting to exec:./varlink/tests/test_orgexamplemore.py
 
-# Enum, returning either start, progress or end
-# progress: [0-100]
-type State (
-  start: bool,
-  progress: int,
-  end: bool
-)
-
-# Returns the same string
-method Ping(ping: string) -> (pong: string)
-
-# Dummy progress method
-# n: number of progress steps
-method TestMore(n: int) -> (state: State)
-
-# Something failed
-error ActionFailed (reason: string)
-$ kill %1
-```
-
-```bash
-$ python3 client-simple.py 
-Connecting to exec:./server-simple.py
-
+Listening on @0002c
+Ping:  Test
 --- Start ---
 Progress: 0
 Progress: 10
@@ -102,9 +77,13 @@ Ping:  Test
 ```
 
 ```bash
-$ python3 client-twisted.py 
-Connecting to exec:./server-twisted.py
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test" &
+Listening on @test
+[1] 6434
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --varlink="unix:@test"
+Connecting to unix:@test
 
+Ping:  Test
 --- Start ---
 Progress: 0
 Progress: 10
@@ -123,6 +102,9 @@ Ping:  Test
 Progress: 100
 Ping:  Test
 --- End ---
+$ fg
+PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test"
+^C
 ```
 
 You can also start the clients and server with URLs following the [varlink URL standard](https://github.com/varlink/documentation/wiki#address).

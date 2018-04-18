@@ -3,3 +3,7 @@
 /MANIFEST
 /dist
 /.idea
+/.cache
+/.coverage
+/.pytest_cache
+
