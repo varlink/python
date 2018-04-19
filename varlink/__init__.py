@@ -164,12 +164,21 @@ class ClientInterfaceHandler:
         if self._in_use:
             raise ConnectionError("Tried to call a varlink method, while other call still in progress")
 
+        oneway = False
+        if "_oneway" in kwargs and kwargs.pop("_oneway"):
+            oneway = True
+
         method = self._interface.get_method(method_name)
 
         parameters = self._interface.filter_params(method.in_type, False, args, kwargs)
-        out = {'method': self._interface.name + "." + method_name, 'parameters': parameters}
-
+        if oneway:
+            out = {'oneway': True, 'method': self._interface.name + "." + method_name, 'parameters': parameters}
+        else:
+            out = {'method': self._interface.name + "." + method_name, 'parameters': parameters}
         self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
+
+        if oneway:
+            return None
 
         self._in_use = True
         (message, more) = self._next_varlink_message()
