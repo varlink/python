@@ -255,7 +255,10 @@ class CertService:
     # method Test11(last_more_replies: []string) -> ()
     def Test11(self, last_more_replies, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test11", "End")
-        wants = '{"method": "org.varlink.certification.Test11", "parameters": {"last_more_replies": ["Reply number 1", "Reply number 2", "Reply number 3", "Reply number 4", "Reply number 5", "Reply number 6", "Reply number 7", "Reply number 8", "Reply number 9", "Reply number 10"]}}'
+        wants = '{"method": "org.varlink.certification.Test11", "parameters": {"last_more_replies": ' \
+                '["Reply number 1", "Reply number 2", "Reply number 3", "Reply number 4",' \
+                ' "Reply number 5", "Reply number 6", "Reply number 7", "Reply number 8",' \
+                ' "Reply number 9", "Reply number 10"]}}'
         for i in range(0, 10):
             self.assert_cmp(_raw, wants, last_more_replies[i] == "Reply number %d" % (i + 1))
 
