@@ -628,7 +628,7 @@ class Service:
                             raise o
 
                         if kwargs.get("_oneway", False):
-                            return
+                            continue
 
                         cont = True
                         if '_continues' in o:
@@ -650,7 +650,10 @@ class Service:
                     except StopIteration:
                         pass
             else:
-                yield {'parameters': out or {}}
+                if kwargs.get("_oneway", False):
+                    return
+                else:
+                    yield {'parameters': out or {}}
 
         except VarlinkError as error:
             yield error
@@ -672,6 +675,8 @@ class Service:
 
         handle = self._handle(json.loads(message), message, _server, _request)
         for out in handle:
+            if out == None:
+                return
             try:
                 yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
             except ConnectionError as e:
@@ -1139,7 +1144,8 @@ class RequestHandler(StreamRequestHandler):
                 continue
 
             for reply in self.service.handle(message, _server=self.server, _request=self.request):
-                self.wfile.write(reply + b'\0')
+                if reply != None:
+                    self.wfile.write(reply + b'\0')
 
             message = b''
 
