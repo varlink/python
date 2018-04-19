@@ -619,7 +619,10 @@ class Service:
                     Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
                 kwargs["_request"] = _request
 
-            out = func(*(parameters[k] for k in method.in_type.fields.keys()), **kwargs)
+            if self._namespaced:
+                out = func(*(getattr(parameters, k) for k in method.in_type.fields.keys()), **kwargs)
+            else:
+                out = func(*(parameters[k] for k in method.in_type.fields.keys()), **kwargs)
 
             if isinstance(out, GeneratorType):
                 try:
