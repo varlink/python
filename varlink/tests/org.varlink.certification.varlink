@@ -28,7 +28,7 @@ type MyType (
   interface: Interface
 )
 
-# must be a oneway call
+# should be a oneshot call
 method Start() -> ()
 
 method Test01() -> (bool: bool)
@@ -78,6 +78,6 @@ method Test10(mytype: MyType) -> (string: string)
 
 method Test11(last_more_replies: []string) -> ()
 
-method End() -> ()
+method End() -> (all_ok: bool)
 
 error CertificationError (wants: string, got: string)
