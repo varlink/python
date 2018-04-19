@@ -95,7 +95,7 @@ class CertService:
             self.next_method[_request] = "Start"
 
         if from_method != self.next_method[_request]:
-            raise CertificationError("Call to method org.varlink.certification." + self.next_method,
+            raise CertificationError("Call to method org.varlink.certification." + self.next_method[_request],
                                      "Call to method org.varlink.certification." + from_method)
         self.next_method[_request] = next_method
 
