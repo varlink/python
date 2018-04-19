@@ -828,10 +828,8 @@ class Interface:
             if varlink_struct:
                 if isinstance(varlink_struct, dict):
                     if name not in varlink_struct:
-                        if isinstance(varlink_type.fields[name], _Maybe):
-                            continue
-                        else:
-                            raise SyntaxError("Expected '%s' in %s" % (name, varlink_struct))
+                        continue
+
                     val = varlink_struct[name]
                     ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
                     if ret != None:
@@ -850,10 +848,7 @@ class Interface:
                         else:
                             out[name] = ret
                 else:
-                    if isinstance(varlink_type.fields[name], _Maybe):
-                        continue
-                    else:
-                        raise SyntaxError("Expected %s in %s" % (name, varlink_struct))
+                    continue
 
         return out
 
