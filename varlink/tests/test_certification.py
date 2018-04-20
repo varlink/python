@@ -82,16 +82,16 @@ class CertService:
 
     def assert_raw(self, _request, _raw, _message, wants):
 
-        have = json.loads(wants, object_hook=sorted_json)
+        #have = json.loads(wants, object_hook=sorted_json)
 
-        if have != _message:
+        if wants != _message:
             del self.next_method[_request]
-            raise CertificationError(wants, _raw.decode("utf-8"))
+            raise CertificationError(wants, json.loads(_raw))
 
     def assert_cmp(self, _request, _raw, wants, _bool):
         if not _bool:
             del self.next_method[_request]
-            raise CertificationError(wants, _raw.decode("utf-8"))
+            raise CertificationError(wants, json.loads(_raw))
 
     def assert_method(self, _request, from_method, next_method):
         if _request not in self.next_method:
@@ -104,20 +104,28 @@ class CertService:
 
     def Start(self, _request=None, _raw=None, _message=None, _oneway=False):
         self.assert_method(_request, "Start", "Test01")
-        self.assert_raw(_request, _raw, _message,
-                        '{"oneway": true, "method": "org.varlink.certification.Start", "parameters": '
-                        '{}}')
+        self.assert_raw(_request, _raw, _message, {
+            "oneway": True,
+            "method": "org.varlink.certification.Start",
+            "parameters": {}
+        })
 
     # () -> (bool: bool)
     def Test01(self, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test01", "Test02")
-        self.assert_raw(_request, _raw, _message, '{"method": "org.varlink.certification.Test01", "parameters": {}}')
+        self.assert_raw(_request, _raw, _message, {
+            "method": "org.varlink.certification.Test01",
+            "parameters": {}
+        })
         return {"bool": True}
 
     # (bool: bool) -> (int: int)
     def Test02(self, _bool, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test02", "Test03")
-        wants = '{"method": "org.varlink.certification.Test02", "parameters": {"bool": true}}'
+        wants = {
+            "method": "org.varlink.certification.Test02",
+            "parameters": {"bool": True}
+        }
         self.assert_cmp(_request, _raw, wants, _bool == True)
         self.assert_raw(_request, _raw, _message, wants)
         return {"int": 1}
@@ -125,7 +133,10 @@ class CertService:
     # (int: int) -> (float: float)
     def Test03(self, _int, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test03", "Test04")
-        wants = '{"method": "org.varlink.certification.Test03", "parameters": {"int": 1}}'
+        wants = {
+            "method": "org.varlink.certification.Test03",
+            "parameters": {"int": 1}
+        }
         self.assert_cmp(_request, _raw, wants, _int == 1)
         self.assert_raw(_request, _raw, _message, wants)
         return {"float": 1.0}
@@ -133,7 +144,10 @@ class CertService:
     # (float: float) -> (string: string)
     def Test04(self, _float, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test04", "Test05")
-        wants = '{"method": "org.varlink.certification.Test04", "parameters": {"float": 1.0}}'
+        wants = {
+            "method": "org.varlink.certification.Test04",
+            "parameters": {"float": 1.0}
+        }
         self.assert_cmp(_request, _raw, wants, _float == 1.0)
         self.assert_raw(_request, _raw, _message, wants)
         return {"string": "ping"}
@@ -141,7 +155,10 @@ class CertService:
     # (string: string) -> (bool: bool, int: int, float: float, string: string)
     def Test05(self, _string, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test05", "Test06")
-        wants = '{"method": "org.varlink.certification.Test05", "parameters": {"string": "ping"}}'
+        wants = {
+            "method": "org.varlink.certification.Test05",
+            "parameters": {"string": "ping"}
+        }
         self.assert_cmp(_request, _raw, wants, _string == "ping")
         self.assert_raw(_request, _raw, _message, wants)
         return {"bool": False, "int": 2, "float": math.pi, "string": "a lot of string"}
@@ -150,9 +167,15 @@ class CertService:
     # -> (struct: (bool: bool, int: int, float: float, string: string))
     def Test06(self, _bool, _int, _float, _string, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test06", "Test07")
-        wants = '{"method": "org.varlink.certification.Test06", "parameters": ' \
-                '{"bool": false, "int": 2, "float": ' + str(math.pi) + ', "string": "a lot of ' \
-                                                                       'string"}}'
+        wants = {
+            "method": "org.varlink.certification.Test06",
+            "parameters": {
+                "bool": False,
+                "int": 2,
+                "float": math.pi,
+                "string": "a lot of string"
+            }
+        }
         self.assert_raw(_request, _raw, _message, wants)
         self.assert_cmp(_request, _raw, wants, _int == 2)
         self.assert_cmp(_request, _raw, wants, _bool == False)
@@ -164,9 +187,12 @@ class CertService:
     # (struct: (bool: bool, int: int, float: float, string: string)) -> (map: [string]string)
     def Test07(self, _dict, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test07", "Test08")
-        wants = '{"method": "org.varlink.certification.Test07", "parameters": ' \
-                '{"struct": {"int": 2, "bool": false, "float": ' + str(math.pi) + ', "string": "a lot of ' \
-                                                                                  'string"}}}'
+        wants = {
+            "method": "org.varlink.certification.Test07",
+            "parameters": {
+                "struct": {"bool": False, "int": 2, "float": math.pi, "string": "a lot of string"}
+            }
+        }
         self.assert_raw(_request, _raw, _message, wants)
         self.assert_cmp(_request, _raw, wants, _dict["int"] == 2)
         self.assert_cmp(_request, _raw, wants, _dict["bool"] == False)
@@ -178,15 +204,21 @@ class CertService:
     def Test08(self, _map, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test08", "Test09")
         self.assert_raw(_request, _raw, _message,
-                        '{"method": "org.varlink.certification.Test08", "parameters": {"map" : {"foo": "Foo", '
-                        '"bar": "Bar"}}}')
+                        {
+                            "method": "org.varlink.certification.Test08",
+                            "parameters": {"map": {"foo": "Foo", "bar": "Bar"}}
+                        })
         return {"set": {"one", "two", "three"}}
 
     # (set: [string]()) -> (mytype: MyType)
     def Test09(self, _set, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test09", "Test10")
-        wants = '{"method": "org.varlink.certification.Test09", "parameters": {"set" : {"one": {}, "three": {},' \
-                ' "two": {}}}}'
+        wants = {
+            "method": "org.varlink.certification.Test09",
+            "parameters": {
+                "set": {"one": {}, "three": {}, "two": {}}
+            }
+        }
         self.assert_raw(_request, _raw, _message, wants)
         self.assert_cmp(_request, _raw, wants, isinstance(_set, set))
         self.assert_cmp(_request, _raw, wants, len(_set) == 3)
@@ -217,13 +249,28 @@ class CertService:
     # method Test10(mytype: MyType) -> (string: string)
     def Test10(self, mytype, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test10", "Test11")
-        wants = '{"method": "org.varlink.certification.Test10", "more": true, ' \
-                '"parameters": {"mytype": {"object": { "method": "org.varlink.certification.Test09", "parameters": ' \
-                '{"map": {"foo": "Foo", "bar": "Bar"}}}, "enum": "two", "struct": {"first": 1, "second": "2"}, ' \
-                '"array": ["one", "two", "three"], "dictionary": {"foo": "Foo", "bar": "Bar"}, "stringset": ' \
-                '{"two": {}, "one": {}, "three": {}}, ' \
-                '"interface": {"foo": [null, {"foo": "foo", "bar": "bar"}, null, {"one": "foo", "two": "bar"}], ' \
-                '"anon": {"foo": true, "bar": false}}}}}'
+        wants = {
+            "method": "org.varlink.certification.Test10",
+            "more": True,
+            "parameters": {
+                "object": {"method": "org.varlink.certification.Test09",
+                           "parameters": {"map": {"foo": "Foo", "bar": "Bar"}}},
+                "enum": "two",
+                "struct": {"first": 1, "second": "2"},
+                "array": ["one", "two", "three"],
+                "dictionary": {"foo": "Foo", "bar": "Bar"},
+                "stringset": {"one", "two", "three"},
+                "interface": {
+                    "foo": [
+                        None,
+                        {"foo": "foo", "bar": "bar"},
+                        None,
+                        {"one": "foo", "two": "bar"}
+                    ],
+                    "anon": {"foo": True, "bar": False}
+                }
+            }
+        }
 
         if "nullable" in mytype:
             self.assert_cmp(_request, _raw, wants, mytype["nullable"] == None)
@@ -233,25 +280,7 @@ class CertService:
             self.assert_cmp(_request, _raw, wants, mytype["nullable_array_struct"] == None)
             del mytype["nullable_array_struct"]
 
-        self.assert_cmp(_request, _raw, wants, mytype == {
-            "object": {"method": "org.varlink.certification.Test09",
-                       "parameters": {"map": {"foo": "Foo", "bar": "Bar"}}},
-            "enum": "two",
-            "struct": {"first": 1, "second": "2"},
-            "array": ["one", "two", "three"],
-            "dictionary": {"foo": "Foo", "bar": "Bar"},
-            "stringset": {"one", "two", "three"},
-            "interface": {
-                "foo": [
-                    None,
-                    {"foo": "foo", "bar": "bar"},
-                    None,
-                    {"one": "foo", "two": "bar"}
-                ],
-                "anon": {"foo": True, "bar": False}
-            }
-        })
-        self.assert_raw(_request, _raw, _message, wants)
+        self.assert_cmp(_request, _raw, wants, mytype == wants["parameters"])
 
         for i in range(1, 11):
             yield {"string": "Reply number %d" % i, '_continues': i != 10}
@@ -259,10 +288,16 @@ class CertService:
     # method Test11(last_more_replies: []string) -> ()
     def Test11(self, last_more_replies, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "Test11", "End")
-        wants = '{"method": "org.varlink.certification.Test11", "parameters": {"last_more_replies": ' \
-                '["Reply number 1", "Reply number 2", "Reply number 3", "Reply number 4",' \
-                ' "Reply number 5", "Reply number 6", "Reply number 7", "Reply number 8",' \
-                ' "Reply number 9", "Reply number 10"]}}'
+        wants = {
+            "method": "org.varlink.certification.Test11",
+            "parameters": {
+                "last_more_replies": [
+                    "Reply number 1", "Reply number 2", "Reply number 3", "Reply number 4",
+                    "Reply number 5", "Reply number 6", "Reply number 7", "Reply number 8",
+                    "Reply number 9", "Reply number 10"
+                ]
+            }
+        }
         for i in range(0, 10):
             self.assert_cmp(_request, _raw, wants, last_more_replies[i] == "Reply number %d" % (i + 1))
 
