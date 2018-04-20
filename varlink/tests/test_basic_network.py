@@ -1,10 +1,12 @@
 # /usr/bin/env python3
 
-import varlink
 import os
-import unittest
+import socket
 import threading
+import unittest
 from sys import platform
+
+import varlink
 
 service = varlink.Service(
     vendor='Varlink',
@@ -42,16 +44,24 @@ class TestService(unittest.TestCase):
 
         finally:
             server.shutdown()
+            server.server_close()
 
     def test_tcp(self):
         self.do_run("tcp:127.0.0.1:23450")
 
     def test_anon_unix(self):
         if platform == "linux":
-            self.do_run("unix:@org.varlink.service_anon_test")
+            self.do_run("unix:@org.varlink.service_anon_test"
+                        + str(os.getpid())
+                        + threading.current_thread().getName()
+                        )
 
     def test_unix(self):
-        self.do_run("unix:/tmp/org.varlink.service_anon_test_%d" % os.getpid())
+        if hasattr(socket, "AF_UNIX"):
+            self.do_run("unix:/tmp/org.varlink.service_anon_test_"
+                        + str(os.getpid())
+                        + threading.current_thread().getName()
+                        )
 
     def test_wrong_url(self):
         self.assertRaises(ConnectionError, self.do_run,

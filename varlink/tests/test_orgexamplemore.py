@@ -229,3 +229,4 @@ class TestService(unittest.TestCase):
                 self.assertRaises(ConnectionError, con1.Ping, "Test")
         finally:
             server.shutdown()
+            server.server_close()
