@@ -156,6 +156,7 @@ class ClientInterfaceHandler:
             message['parameters'] = {}
 
         if 'error' in message and message["error"] != None:
+            self._in_use = False
             raise VarlinkError(message, self._namespaced)
         else:
             return message['parameters'], ('continues' in message) and message['continues']
