@@ -265,6 +265,7 @@ class CertService:
     # method End() -> ()
     def End(self, _request=None, _raw=None, _message=None):
         self.assert_method(_request, "End", "Start")
+        del self.next_method[_request]
         return {"all_ok": True}
 
 
