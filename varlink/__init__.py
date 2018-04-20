@@ -1272,10 +1272,12 @@ class Server(BaseServer):
         May be overridden.
 
         """
-        self.socket.close()
-
         if self.remove_file:
-            os.remove(self.remove_file)
+            try:
+                os.remove(self.remove_file)
+            except:
+                pass
+        self.socket.close()
 
     def fileno(self):
         """Return socket file number.
