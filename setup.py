@@ -11,7 +11,7 @@ setup(
     url = "https://github.com/varlink/python",
     license = "ASL 2.0",
     keywords = "ipc varlink rpc",
-    python_requires='>=3.5',
+    python_requires='>=2.7',
     package_data = {
         "varlink": [ "*.varlink" ]
     },
