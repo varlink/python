@@ -6,8 +6,8 @@ python:
 install:
 - pip3 install -r test-requirements.txt
 script:
-- python3 -m pytest
-- python3 -m coverage run --source varlink -m py.test
+- python3 -m unittest
+- python3 -m coverage run --source varlink -m unittest
 after_success:
 - coveralls
 before_install:

@@ -1,5 +1,5 @@
 test:
-	python3 -m pytest
+	python3 -m unittest 
 
 all: test
 

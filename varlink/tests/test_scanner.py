@@ -41,8 +41,8 @@ error ActionFailed (reason: ?ErrorChain)
         self.assertIsNotNone(interface.get_method("TestMore"))
         self.assertIsNotNone(interface.get_method("TestMap"))
         self.assertIsNotNone(interface.get_method("StopServing"))
-        self.assertIsInstance(interface.members.get("ActionFailed"), varlink._Error)
-        self.assertIsInstance(interface.members.get("State"), varlink._Alias)
+        self.assertIsInstance(interface.members.get("ActionFailed"), varlink.scanner._Error)
+        self.assertIsInstance(interface.members.get("State"), varlink.scanner._Alias)
 
     def test_doubleoption(self):
         interface = None
@@ -79,5 +79,5 @@ error ActionFailed (reason: ?ErrorChain)
     """)
         self.assertEqual(interface.name, "org.example.complex")
         self.assertIsNotNone(interface.get_method("Foo"))
-        self.assertIsInstance(interface.members.get("ErrorFoo"), varlink._Error)
-        self.assertIsInstance(interface.members.get("TypeEnum"), varlink._Alias)
+        self.assertIsInstance(interface.members.get("ErrorFoo"), varlink.scanner._Error)
+        self.assertIsInstance(interface.members.get("TypeEnum"), varlink.scanner._Alias)
