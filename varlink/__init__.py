@@ -4,13 +4,7 @@ See http://varlink.org for more information about the varlink protocol and inter
 
 For service implementations use the Server() class, for client implementations use the Client() class.
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
 
-from future import standard_library
-standard_library.install_aliases()
 __all__ = ['VarlinkEncoder', 'VarlinkError',
            'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
            'ClientInterfaceHandler', 'SimpleClientInterfaceHandler', 'Client',

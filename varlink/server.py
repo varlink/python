@@ -1,26 +1,24 @@
 # coding=utf-8
 
-from __future__ import unicode_literals
 from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from builtins import range
-from builtins import open
-from builtins import int
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
-from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError, ConnectionError)
-from .scanner import Interface
+from __future__ import unicode_literals
 
+import inspect
 import json
 import os
 import socket
 import stat
 import string
 import sys
-import traceback
-import inspect
+
+from builtins import int
+from builtins import object
+from builtins import open
+from builtins import range
+
+from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError,
+                    ConnectionError)
+from .scanner import Interface
 
 try:
     from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
