@@ -1,3 +1,13 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+
+from builtins import range
+from builtins import str
+from builtins import object
+from future import standard_library
+standard_library.install_aliases()
 import getopt
 import json
 import math
@@ -9,7 +19,6 @@ import unittest
 from sys import platform
 
 import varlink
-
 
 ######## CLIENT #############
 
@@ -77,7 +86,7 @@ class CertificationError(varlink.VarlinkError):
 
 
 @service.interface('org.varlink.certification')
-class CertService:
+class CertService(object):
     next_method = {}
 
     def assert_raw(self, _request, _raw, _message, wants):
@@ -85,6 +94,7 @@ class CertService:
         #have = json.loads(wants, object_hook=sorted_json)
 
         if wants != _message:
+            print("Wants", wants, "!= GOT", _message)
             del self.next_method[_request]
             raise CertificationError(wants, json.loads(_raw))
 

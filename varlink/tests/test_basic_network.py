@@ -1,5 +1,10 @@
-# /usr/bin/env python3
-
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import str
+from future import standard_library
+standard_library.install_aliases()
 import os
 import socket
 import threading
@@ -64,5 +69,5 @@ class TestService(unittest.TestCase):
                         )
 
     def test_wrong_url(self):
-        self.assertRaises(ConnectionError, self.do_run,
+        self.assertRaises(varlink.ConnectionError, self.do_run,
                           "uenix:/tmp/org.varlink.service_wrong_url_test_%d" % os.getpid())

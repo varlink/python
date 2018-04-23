@@ -1,14 +1,30 @@
+# coding=utf-8
+
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from builtins import next
+from builtins import str
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import json
 import os
 import signal
 import socket
 import sys
 
-from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder)
+from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder, BrokenPipeError)
 from .scanner import (Interface, _Method)
 
+class ConnectionError(OSError):
+    pass
 
-class ClientInterfaceHandler:
+
+class ClientInterfaceHandler(object):
     """Base class for varlink client, which wraps varlink methods of an interface to the class"""
 
     def __init__(self, interface, namespaced=False):
@@ -60,7 +76,11 @@ class ClientInterfaceHandler:
             else:
                 return self._call(method.name, *args, **kwargs)
 
-        _wrapped.__name__ = method.name
+        if sys.version_info.major >= 3:
+            _wrapped.__name__ = method.name
+        else:
+            _wrapped.__name__ = method.name.encode("latin-1")
+
         # FIXME: add comments
         if method.signature:
             _wrapped.__doc__ = "Varlink call: " + method.signature
@@ -149,7 +169,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         file_or_socket - an open socket or io stream
         namespaced - if True, varlink methods return SimpleNamespace objects instead of dictionaries
         """
-        super().__init__(interface, namespaced=namespaced)
+        ClientInterfaceHandler.__init__(self, interface, namespaced=namespaced)
         self._connection = file_or_socket
 
         if hasattr(self._connection, 'sendall'):
@@ -178,7 +198,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         try:
             if hasattr(self._connection, 'shutdown'):
                 self._connection.shutdown(socket.SHUT_RDWR)
-        except OSError:
+        except:
             pass
 
         self._connection.close()
@@ -211,7 +231,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
             self._in_buffer += data
 
 
-class Client:
+class Client(object):
     """Varlink client class.
 
     >>> from varlink import Client
@@ -382,7 +402,7 @@ class Client:
             raise InterfaceNotFound(interface_name)
 
         if self.port:
-            s = socket.create_connection((self.address, self.port))
+            s = socket.create_connection((self.address, int(self.port)))
         else:
             s = socket.socket(socket.AF_UNIX)
             s.setblocking(True)

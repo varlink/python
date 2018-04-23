@@ -3,11 +3,12 @@ sudo: false
 dist: trusty
 python:
 - '3.6'
+- '2.7'
 install:
-- pip3 install -r test-requirements.txt
+- pip install -r test-requirements.txt
 script:
-- python3 -m unittest
-- python3 -m coverage run --source varlink -m unittest
+- python -m unittest discover
+- python -m coverage run --source varlink -m unittest discover
 after_success:
 - coveralls
 before_install:

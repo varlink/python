@@ -1,5 +1,14 @@
-#!/usr/bin/env python3
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
+from builtins import range
+from builtins import next
+from builtins import int
+from builtins import object
+from future import standard_library
+standard_library.install_aliases()
 import os
 import sys
 import threading
@@ -69,7 +78,7 @@ class ActionFailed(varlink.VarlinkError):
 
 
 @service.interface('org.example.more')
-class Example:
+class Example(object):
     sleep_duration = 1
 
     def TestMore(self, n, _more=True, _server=None):
@@ -226,7 +235,7 @@ class TestService(unittest.TestCase):
                 self.assertRaises(StopIteration, next, it)
 
                 self.assertEqual(con1.StopServing(), {})
-                self.assertRaises(ConnectionError, con1.Ping, "Test")
+                self.assertRaises(varlink.ConnectionError, con1.Ping, "Test")
         finally:
             server.shutdown()
             server.server_close()

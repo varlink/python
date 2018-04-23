@@ -1,25 +1,41 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import str
+from builtins import int
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import re
-from types import SimpleNamespace
+try:
+     from types import SimpleNamespace
+except: # Python 2
+     from argparse import Namespace as SimpleNamespace
 
 import collections
 
 from .error import MethodNotFound
 
 
-class Scanner:
+class Scanner(object):
     """Class for scanning a varlink interface definition."""
 
     def __init__(self, string):
-        self.whitespace = re.compile(r'([ \t\n]|#.*$)+', re.ASCII | re.MULTILINE)
+        if hasattr(re, "ASCII"):
+            ASCII = re.ASCII
+        else:
+            ASCII = 0
+        self.whitespace = re.compile(r'([ \t\n]|#.*$)+', ASCII | re.MULTILINE)
         # FIXME: nested ()
         self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
-                                           re.ASCII | re.MULTILINE)
+                                           ASCII | re.MULTILINE)
 
-        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]', re.ASCII)
+        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]', ASCII)
         self.patterns = {
             'interface-name': re.compile(r'[a-z]+(\.[a-z0-9][a-z0-9-]*)+'),
-            'member-name': re.compile(r'\b[A-Z][A-Za-z0-9_]*\b', re.ASCII),
-            'identifier': re.compile(r'\b[a-z][A-Za-z0-9_]*\b', re.ASCII),
+            'member-name': re.compile(r'\b[A-Z][A-Za-z0-9_]*\b', ASCII),
+            'identifier': re.compile(r'\b[a-z][A-Za-z0-9_]*\b', ASCII),
         }
 
         self.string = string
@@ -165,54 +181,54 @@ class Scanner:
             raise SyntaxError('expected type, method, or error')
 
 
-class _Object:
+class _Object(object):
     pass
 
 
-class _Struct:
+class _Struct(object):
 
     def __init__(self, fields):
         self.fields = collections.OrderedDict(fields)
 
 
-class _Enum:
+class _Enum(object):
 
     def __init__(self, fields):
         self.fields = fields
 
 
-class _Array:
+class _Array(object):
 
     def __init__(self, element_type):
         self.element_type = element_type
 
 
-class _Maybe:
+class _Maybe(object):
 
     def __init__(self, element_type):
         self.element_type = element_type
 
 
-class _Dict:
+class _Dict(object):
 
     def __init__(self, element_type):
         self.element_type = element_type
 
 
-class _CustomType:
+class _CustomType(object):
 
     def __init__(self, name):
         self.name = name
 
 
-class _Alias:
+class _Alias(object):
 
     def __init__(self, name, varlink_type):
         self.name = name
         self.type = varlink_type
 
 
-class _Method:
+class _Method(object):
 
     def __init__(self, name, in_type, out_type, _signature):
         self.name = name
@@ -221,14 +237,14 @@ class _Method:
         self.signature = _signature
 
 
-class _Error:
+class _Error(object):
 
     def __init__(self, name, varlink_type):
         self.name = name
         self.type = varlink_type
 
 
-class Interface:
+class Interface(object):
     """Class for a parsed varlink interface definition."""
 
     def __init__(self, description):

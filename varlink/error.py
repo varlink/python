@@ -1,6 +1,21 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 import json
-from types import (SimpleNamespace)
 
+try:
+     from types import SimpleNamespace
+     ConnectionError = ConnectionError
+     BrokenPipeError = BrokenPipeError
+except: # Python 2
+     from argparse import Namespace as SimpleNamespace
+     class ConnectionError(OSError):
+         pass
+     class BrokenPipeError(ConnectionError):
+         pass
 
 class VarlinkEncoder(json.JSONEncoder):
 
@@ -21,7 +36,7 @@ class VarlinkError(Exception):
         if not namespaced and not isinstance(message, dict):
             raise TypeError
         # normalize to dictionary
-        super().__init__(json.loads(json.dumps(message, cls=VarlinkEncoder)))
+        Exception.__init__(self, json.loads(json.dumps(message, cls=VarlinkEncoder)))
 
     def error(self):
         """returns the exception varlink error name"""

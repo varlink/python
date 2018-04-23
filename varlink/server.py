@@ -1,8 +1,37 @@
-from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError)
+# coding=utf-8
+
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import range
+from builtins import open
+from builtins import int
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError, ConnectionError)
 from .scanner import Interface
 
+import json
+import os
+import socket
+import stat
+import string
+import sys
+import traceback
+import inspect
 
-class Service:
+try:
+    from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
+except ImportError: # Python2
+    from SocketServer import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
+
+from types import GeneratorType
+
+
+
+class Service(object):
     """Varlink service server handler
 
     To use the Service, a global object is instantiated:
@@ -98,39 +127,37 @@ class Service:
                 raise MethodNotImplemented(method_name)
 
             kwargs = {}
-            sig = signature(func)
+
+            if hasattr(inspect, "signature"):
+                sig = inspect.signature(func)
+                arg_names = [ (sig.parameters[k].kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY) and k or None) for k in sig.parameters.keys()]
+            else:
+                from itertools import izip
+                spec = inspect.getargspec(func)
+                matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
+                arg_names = dict(izip(*matched_args))
 
             if message.get('more', False) or message.get('oneway', False) or message.get('upgrade', False):
-                if message.get('more', False) and '_more' in sig.parameters \
-                        and sig.parameters["_more"].kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                if message.get('more', False) and '_more' in arg_names:
                     kwargs["_more"] = True
 
-                if message.get('oneway', False) and '_oneway' in sig.parameters \
-                        and sig.parameters["_oneway"].kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                if message.get('oneway', False) and '_oneway' in arg_names:
                     kwargs["_oneway"] = True
 
-                if message.get('upgrade', False) and '_upgrade' in sig.parameters \
-                        and sig.parameters["_upgrade"].kind in \
-                        (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+                if message.get('upgrade', False) and '_upgrade' in arg_names:
                     kwargs["_upgrade"] = True
 
-            if '_raw' in sig.parameters and sig.parameters["_raw"].kind in (
-                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+            if '_raw' in arg_names:
                 kwargs["_raw"] = raw_message
-            if '_message' in sig.parameters and sig.parameters["_message"].kind in (
-                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+            if '_message' in arg_names:
                 kwargs["_message"] = message
-            if '_interface' in sig.parameters and sig.parameters["_interface"].kind in (
-                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+            if '_interface' in arg_names:
                 kwargs["_interface"] = interface
-            if '_method' in sig.parameters and sig.parameters["_method"].kind in (
-                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+            if '_method' in arg_names:
                 kwargs["_method"] = method
-            if '_server' in sig.parameters and sig.parameters["_server"].kind in (
-                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+            if '_server' in arg_names:
                 kwargs["_server"] = _server
-            if '_request' in sig.parameters and sig.parameters["_request"].kind in (
-                    Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+            if '_request' in arg_names:
                 kwargs["_request"] = _request
 
             if self._namespaced:
@@ -175,8 +202,8 @@ class Service:
         except VarlinkError as error:
             yield error
         except Exception as error:
-            traceback.print_exception(type(error), error, error.__traceback__)
-            yield {'error': 'InternalError'}
+            #traceback.print_exception(type(error), error, error.__traceback__)
+            yield {'error': 'InternalError', "parameters": { "msg": str(error)}}
 
     def handle(self, message, _server=None, _request=None):
         """This generator function handles any incoming message. Write any returned bytes to the output stream.
@@ -218,18 +245,6 @@ class Service:
             return interface_class
 
         return decorator
-
-
-import json
-import os
-import socket
-import stat
-import string
-import sys
-import traceback
-from inspect import (signature, Parameter)
-from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
-from types import GeneratorType
 
 
 def get_listen_fd():
@@ -367,14 +382,18 @@ class Server(BaseServer):
             address = server_address[4:]
             p = address.rfind(':')
             if p != -1:
-                port = address[p + 1:]
+                port = int(address[p + 1:])
                 address = address[:p]
             else:
                 raise ConnectionError("Invalid address 'tcp:%s'" % address)
             address = address.replace('[', '')
             address = address.replace(']', '')
 
-            res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP, flags=socket.AI_NUMERICHOST)
+            try:
+                res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP, flags=socket.AI_NUMERICHOST)
+            except TypeError:
+                res = socket.getaddrinfo(address, port, self.address_family, self.socket_type, socket.IPPROTO_TCP, socket.AI_NUMERICHOST)
+
             af, socktype, proto, canonname, sa = res[0]
             self.address_family = af
             self.socket_type = socktype
@@ -457,7 +476,7 @@ class Server(BaseServer):
             # explicitly shutdown.  socket.close() merely releases
             # the socket and waits for GC to perform the actual close.
             request.shutdown(socket.SHUT_WR)
-        except OSError:
+        except:
             pass  # some platforms may raise ENOTCONN here
         self.close_request(request)
 
@@ -465,6 +484,11 @@ class Server(BaseServer):
         """Called to clean up an individual request."""
         request.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.server_close()
 
 class ThreadingServer(ThreadingMixIn, Server): pass
 

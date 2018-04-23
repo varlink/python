@@ -1,21 +1,25 @@
-#!/usr/bin/python3
-
 """An implementation of the varlink protocol
 
 See http://varlink.org for more information about the varlink protocol and interface definition files.
 
 For service implementations use the Server() class, for client implementations use the Client() class.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
 __all__ = ['VarlinkEncoder', 'VarlinkError',
            'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
            'ClientInterfaceHandler', 'SimpleClientInterfaceHandler', 'Client',
-           'Service', 'Interface', 'Scanner',
+           'Service', 'Interface', 'Scanner', 'ConnectionError',
            'get_listen_fd', 'Server', 'ThreadingServer', 'ForkingServer', 'RequestHandler']
 
 from .client import (Client, ClientInterfaceHandler, SimpleClientInterfaceHandler)
 from .error import (VarlinkEncoder, VarlinkError, InvalidParameter, InterfaceNotFound, MethodNotImplemented,
-                    MethodNotFound)
+                    MethodNotFound, ConnectionError, BrokenPipeError)
 from .scanner import (Scanner, Interface)
 from .server import (Service, get_listen_fd, Server, ThreadingServer, ForkingServer, RequestHandler)
 
