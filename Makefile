@@ -1,6 +1,6 @@
 test:
-	python3 -m unittest discover
-	python -m unittest discover
+	python -m unittest discover -s ./varlink -t ./
+	python3 -m unittest discover -s ./varlink -t ./
 
 all: test
 
