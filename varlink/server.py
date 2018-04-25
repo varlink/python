@@ -117,7 +117,11 @@ class Service(object):
                 if name not in method.in_type.fields:
                     raise InvalidParameter(name)
 
-            parameters = interface.filter_params(method.in_type, self._namespaced, parameters, None)
+            for name in method.in_type.fields:
+                if name not in parameters:
+                    parameters[name] = None
+
+            parameters = interface.filter_params("server.call", method.in_type, self._namespaced, parameters, None)
 
             func = getattr(handler, method_name, None)
 
@@ -176,11 +180,11 @@ class Service(object):
                         if '_continues' in o:
                             cont = o['_continues']
                             del o['_continues']
-                            yield {'continues': bool(cont), 'parameters': interface.filter_params(method.out_type,
+                            yield {'continues': bool(cont), 'parameters': interface.filter_params("server.reply", method.out_type,
                                                                                                   self._namespaced, o,
                                                                                                   None) or {}}
                         else:
-                            yield {'parameters': interface.filter_params(method.out_type,
+                            yield {'parameters': interface.filter_params("server.reply", method.out_type,
                                                                          self._namespaced, o,
                                                                          None) or {}}
 

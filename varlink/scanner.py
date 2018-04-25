@@ -14,7 +14,7 @@ except: # Python 2
 
 import collections
 
-from .error import MethodNotFound
+from .error import (MethodNotFound, InvalidParameter)
 
 
 class Scanner(object):
@@ -268,29 +268,32 @@ class Interface(object):
             return method
         raise MethodNotFound(name)
 
-    def filter_params(self, varlink_type, _namespaced, args, kwargs):
+    def filter_params(self, parent_name, varlink_type, _namespaced, args, kwargs):
         # print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs)
 
         if isinstance(varlink_type, _Maybe):
             if args == None:
                 return None
-            return self.filter_params(varlink_type.element_type, _namespaced, args, kwargs)
+            return self.filter_params(parent_name, varlink_type.element_type, _namespaced, args, kwargs)
 
         if isinstance(varlink_type, _Dict):
+            if args == None:
+                return {}
+
             if isinstance(args, dict):
                 for (k, v) in args.items():
-                    args[k] = self.filter_params(varlink_type.element_type, _namespaced, v, None)
+                    args[k] = self.filter_params(parent_name + '[' + k + ']', varlink_type.element_type, _namespaced, v, None)
                 return args
             else:
-                SyntaxError("Expected dict, got %s", args)
+                InvalidParameter(parent_name)
 
         if isinstance(varlink_type, _CustomType):
             # print("CustomType", varlink_type.name)
-            return self.filter_params(self.members.get(varlink_type.name), _namespaced, args, kwargs)
+            return self.filter_params(parent_name, self.members.get(varlink_type.name), _namespaced, args, kwargs)
 
         if isinstance(varlink_type, _Alias):
             # print("Alias", varlink_type.name)
-            return self.filter_params(varlink_type.type, _namespaced, args, kwargs)
+            return self.filter_params(parent_name, varlink_type.type, _namespaced, args, kwargs)
 
         if isinstance(varlink_type, _Object):
             return args
@@ -300,7 +303,10 @@ class Interface(object):
             return args
 
         if isinstance(varlink_type, _Array):
-            return [self.filter_params(varlink_type.element_type, _namespaced, x, None) for x in args]
+            if args == None:
+                return []
+
+            return [self.filter_params(parent_name + '[]', varlink_type.element_type, _namespaced, x, None) for x in args]
 
         if isinstance(varlink_type, set):
             # print("Returned set:", set(args))
@@ -323,8 +329,10 @@ class Interface(object):
             return args
 
         if not isinstance(varlink_type, _Struct):
-            raise SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
-                                                                            args))
+            raise InvalidParameter(parent_name)
+            #SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
+            #                                                                args))
+
         if _namespaced:
             out = SimpleNamespace()
         else:
@@ -343,7 +351,7 @@ class Interface(object):
                         args = args[1:]
                     else:
                         args = None
-                    ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
+                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None)
                     if ret != None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -353,7 +361,7 @@ class Interface(object):
                     continue
                 else:
                     if name in kwargs:
-                        ret = self.filter_params(varlink_type.fields[name], _namespaced, kwargs[name], None)
+                        ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, kwargs[name], None)
                         if ret != None:
                             # print("SetOUT:", name)
                             if _namespaced:
@@ -368,7 +376,7 @@ class Interface(object):
                         continue
 
                     val = varlink_struct[name]
-                    ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
+                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None)
                     if ret != None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -377,7 +385,7 @@ class Interface(object):
                             out[name] = ret
                 elif hasattr(varlink_struct, name):
                     val = getattr(varlink_struct, name)
-                    ret = self.filter_params(varlink_type.fields[name], _namespaced, val, None)
+                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None)
                     if ret != None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -386,5 +394,6 @@ class Interface(object):
                             out[name] = ret
                 else:
                     continue
+
 
         return out

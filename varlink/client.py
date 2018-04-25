@@ -107,7 +107,7 @@ class ClientInterfaceHandler(object):
 
         method = self._interface.get_method(method_name)
 
-        parameters = self._interface.filter_params(method.in_type, False, args, kwargs)
+        parameters = self._interface.filter_params("client.call", method.in_type, False, args, kwargs)
         if oneway:
             out = {'oneway': True, 'method': self._interface.name + "." + method_name, 'parameters': parameters}
         else:
@@ -126,7 +126,7 @@ class ClientInterfaceHandler(object):
         self._in_use = False
 
         if message:
-            message = self._interface.filter_params(method.out_type, self._namespaced, message, None)
+            message = self._interface.filter_params("client.reply", method.out_type, self._namespaced, message, None)
 
         return message
 
@@ -136,7 +136,7 @@ class ClientInterfaceHandler(object):
 
         method = self._interface.get_method(method_name)
 
-        parameters = self._interface.filter_params(method.in_type, False, args, kwargs)
+        parameters = self._interface.filter_params("client.call", method.in_type, False, args, kwargs)
         out = {'method': self._interface.name + "." + method_name, 'more': True, 'parameters': parameters}
 
         self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
@@ -146,7 +146,7 @@ class ClientInterfaceHandler(object):
         while more:
             (message, more) = self._next_varlink_message()
             if message:
-                message = self._interface.filter_params(method.out_type, self._namespaced, message, None)
+                message = self._interface.filter_params("client.reply", method.out_type, self._namespaced, message, None)
             yield message
         self._in_use = False
 
