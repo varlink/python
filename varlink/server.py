@@ -474,7 +474,8 @@ class Server(BaseServer):
         try:
             # explicitly shutdown.  socket.close() merely releases
             # the socket and waits for GC to perform the actual close.
-            request.shutdown(socket.SHUT_WR)
+            request.shutdown(socket.SHUT_RDWR)
+
         except:
             pass  # some platforms may raise ENOTCONN here
         self.close_request(request)
