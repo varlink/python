@@ -196,8 +196,8 @@ class Service(object):
                     except StopIteration:
                         pass
             else:
-                if kwargs.get("_oneway", False):
-                    return
+                if message.get('oneway', False):
+                    yield None
                 else:
                     yield {'parameters': out or {}}
 
