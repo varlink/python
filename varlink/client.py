@@ -92,7 +92,8 @@ class ClientInterfaceHandler(object):
 
         if 'error' in message and message["error"] != None:
             self._in_use = False
-            raise VarlinkError(message, self._namespaced)
+            e = VarlinkError.new(message, self._namespaced)
+            raise e
         else:
             return message['parameters'], ('continues' in message) and message['continues']
 

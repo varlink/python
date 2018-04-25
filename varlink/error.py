@@ -29,6 +29,23 @@ class VarlinkEncoder(json.JSONEncoder):
 class VarlinkError(Exception):
     """The base class for varlink error exceptions"""
 
+    @classmethod
+    def new(cls, message, namespaced=False):
+        if message['error'] == 'org.varlink.service.InterfaceNotFound':
+            return InterfaceNotFound.new(message, namespaced)
+
+        elif message['error'] == 'org.varlink.service.InvalidParameter':
+            return InvalidParameter.new(message, namespaced)
+
+        elif message['error'] == 'org.varlink.service.MethodNotImplemented':
+            return MethodNotImplemented.new(message, namespaced)
+
+        elif message['error'] == 'org.varlink.service.MethodNotImplemented':
+            return MethodNotImplemented.new(message, namespaced)
+
+        else:
+            return cls(message, namespaced)
+
     def __init__(self, message, namespaced=False):
         if not namespaced and not isinstance(message, dict):
             raise TypeError
@@ -53,6 +70,10 @@ class VarlinkError(Exception):
 class InterfaceNotFound(VarlinkError):
     """The standardized varlink InterfaceNotFound error as a python exception"""
 
+    @classmethod
+    def new(cls, message, namespaced=False):
+        return cls(namespaced and message['parameters'].interface or message['parameters'].get('interface', None))
+
     def __init__(self, interface):
         VarlinkError.__init__(self, {'error': 'org.varlink.service.InterfaceNotFound',
                                      'parameters': {'interface': interface}})
@@ -60,6 +81,9 @@ class InterfaceNotFound(VarlinkError):
 
 class MethodNotFound(VarlinkError):
     """The standardized varlink MethodNotFound error as a python exception"""
+    @classmethod
+    def new(cls, message, namespaced=False):
+        return cls(namespaced and message['parameters'].method or message['parameters'].get('method', None))
 
     def __init__(self, method):
         VarlinkError.__init__(self, {'error': 'org.varlink.service.MethodNotFound', 'parameters': {'method': method}})
@@ -68,6 +92,10 @@ class MethodNotFound(VarlinkError):
 class MethodNotImplemented(VarlinkError):
     """The standardized varlink MethodNotImplemented error as a python exception"""
 
+    @classmethod
+    def new(cls, message, namespaced=False):
+        return cls(namespaced and message['parameters'].method or message['parameters'].get('method', None))
+
     def __init__(self, method):
         VarlinkError.__init__(self,
                               {'error': 'org.varlink.service.MethodNotImplemented', 'parameters': {'method': method}})
@@ -75,6 +103,10 @@ class MethodNotImplemented(VarlinkError):
 
 class InvalidParameter(VarlinkError):
     """The standardized varlink InvalidParameter error as a python exception"""
+
+    @classmethod
+    def new(cls, message, namespaced=False):
+        return cls(namespaced and message['parameters'].parameter or message['parameters'].get('parameter', None))
 
     def __init__(self, name):
         VarlinkError.__init__(self,
