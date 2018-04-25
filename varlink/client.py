@@ -232,8 +232,12 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 class Client(object):
     """Varlink client class.
 
-    >>> from varlink import Client
-    >>> client = Client(resolve_interface='io.systemd.journal')
+    >>> with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
+    >>>     assert con1.Ping("Test")["pong"] == "Test"
+
+
+    If the varlink resolver is running:
+    >>> client = varlink.Client(resolve_interface='io.systemd.journal')
     >>> print(client.get_interfaces()['io.systemd.journal'].get_description())
     # Query and monitor the log messages of a system.
     interface io.systemd.journal
@@ -243,7 +247,7 @@ class Client(object):
     # Monitor the log. Returns the @initial_lines most recent entries in the
     # first reply and then continuously replies when new entries are available.
     method Monitor(initial_lines: int) -> (entries: Entry[])
-    >>>
+
     >>> connection = client.open("io.systemd.journal")
 
     connection now holds an object with all the varlink methods available.
