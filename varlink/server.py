@@ -203,9 +203,6 @@ class Service(object):
 
         except VarlinkError as error:
             yield error
-        except Exception as error:
-            #traceback.print_exception(type(error), error, error.__traceback__)
-            yield {'error': 'InternalError', "parameters": { "msg": str(error)}}
 
     def handle(self, message, _server=None, _request=None):
         """This generator function handles any incoming message. Write any returned bytes to the output stream.
