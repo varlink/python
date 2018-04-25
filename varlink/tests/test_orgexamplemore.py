@@ -41,7 +41,7 @@ def run_client(address):
                         ret = con2.Ping("Test")
                         print("Ping: ", ret.pong)
 
-    except ConnectionError as e:
+    except varlink.ConnectionError as e:
         print("ConnectionError:", e)
         raise e
     except varlink.VarlinkError as e:
@@ -102,11 +102,11 @@ class Example(object):
 
     def StopServing(self, _request=None, _server=None):
         print("Server ends.")
-        yield {}
 
         if _request:
             print("Shutting down client connection")
             _server.shutdown_request(_request)
+
         if _server:
             print("Shutting down server")
             _server.shutdown()
@@ -231,7 +231,8 @@ class TestService(unittest.TestCase):
 
                 self.assertRaises(StopIteration, next, it)
 
-                self.assertEqual(con1.StopServing(), {})
+                con1.StopServing(_oneway=True)
+                time.sleep(0.5)
                 self.assertRaises(varlink.ConnectionError, con1.Ping, "Test")
         finally:
             server.shutdown()
