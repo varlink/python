@@ -22,11 +22,10 @@ from .scanner import Interface
 
 try:
     from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
-except ImportError: # Python2
+except ImportError:  # Python2
     from SocketServer import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
 
 from types import GeneratorType
-
 
 
 class Service(object):
@@ -132,7 +131,9 @@ class Service(object):
 
             if hasattr(inspect, "signature"):
                 sig = inspect.signature(func)
-                arg_names = [ (sig.parameters[k].kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY) and k or None) for k in sig.parameters.keys()]
+                arg_names = [(sig.parameters[k].kind in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY) and k or None) for k in
+                             sig.parameters.keys()]
             else:
                 from itertools import izip
                 spec = inspect.getargspec(func)
@@ -180,9 +181,10 @@ class Service(object):
                         if '_continues' in o:
                             cont = o['_continues']
                             del o['_continues']
-                            yield {'continues': bool(cont), 'parameters': interface.filter_params("server.reply", method.out_type,
-                                                                                                  self._namespaced, o,
-                                                                                                  None) or {}}
+                            yield {'continues': bool(cont),
+                                   'parameters': interface.filter_params("server.reply", method.out_type,
+                                                                         self._namespaced, o,
+                                                                         None) or {}}
                         else:
                             yield {'parameters': interface.filter_params("server.reply", method.out_type,
                                                                          self._namespaced, o,
@@ -318,7 +320,6 @@ class RequestHandler(StreamRequestHandler):
 
             message = b''
 
-
 class Server(BaseServer):
     """Server
 
@@ -391,7 +392,8 @@ class Server(BaseServer):
             try:
                 res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP, flags=socket.AI_NUMERICHOST)
             except TypeError:
-                res = socket.getaddrinfo(address, port, self.address_family, self.socket_type, socket.IPPROTO_TCP, socket.AI_NUMERICHOST)
+                res = socket.getaddrinfo(address, port, self.address_family, self.socket_type, socket.IPPROTO_TCP,
+                                         socket.AI_NUMERICHOST)
 
             af, socktype, proto, canonname, sa = res[0]
             self.address_family = af
@@ -489,6 +491,7 @@ class Server(BaseServer):
 
     def __exit__(self, *args):
         self.server_close()
+
 
 class ThreadingServer(ThreadingMixIn, Server): pass
 
