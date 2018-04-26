@@ -108,10 +108,15 @@ class ClientInterfaceHandler(object):
         method = self._interface.get_method(method_name)
 
         parameters = self._interface.filter_params("client.call", method.in_type, False, args, kwargs)
+
+        out = {'method': self._interface.name + "." + method_name}
+
         if oneway:
-            out = {'oneway': True, 'method': self._interface.name + "." + method_name, 'parameters': parameters}
-        else:
-            out = {'method': self._interface.name + "." + method_name, 'parameters': parameters}
+            out['oneway'] = True
+
+        if parameters:
+            out['parameters'] = parameters
+
         self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
 
         if oneway:

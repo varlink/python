@@ -110,6 +110,9 @@ class Service(object):
             method = interface.get_method(method_name)
 
             parameters = message.get('parameters', {})
+            if parameters == None:
+                parameters = {}
+
             handler = self.interfaces_handlers[interface.name]
 
             for name in parameters:

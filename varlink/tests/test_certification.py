@@ -118,11 +118,11 @@ class CertService(object):
 
     def Start(self, _server=None, _raw=None, _message=None, _oneway=False):
         client_id = self.new_client_id(_server)
-
+        if 'parameters' in _message and not _message['parameters']:
+            del _message['parameters']
         self.assert_method(client_id, _server, "Start", "Test01")
         self.assert_raw(client_id, _server, _raw, _message, {
             "method": "org.varlink.certification.Start",
-            "parameters": {}
         })
         return {"client_id": client_id}
 
@@ -331,6 +331,12 @@ class CertService(object):
     # method End() -> ()
     def End(self, client_id, _server=None, _raw=None, _message=None):
         self.assert_method(client_id, _server, "End", "Start")
+
+        self.assert_raw(client_id, _server, _raw, _message, {
+            "method": "org.varlink.certification.End",
+            "parameters": {"client_id": client_id}
+        })
+
         del _server.next_method[client_id]
         return {"all_ok": True}
 
