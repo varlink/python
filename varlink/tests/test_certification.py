@@ -1,10 +1,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import object
-from builtins import range
-from builtins import str
-
+import codecs
 import getopt
 import json
 import math
@@ -12,9 +9,14 @@ import os
 import socket
 import sys
 import threading
+import time
 import unittest
 from sys import platform
-import codecs
+
+from builtins import object
+from builtins import range
+from builtins import str
+
 import varlink
 
 
@@ -93,8 +95,29 @@ class CertService(object):
         client_id = codecs.getencoder('hex')(os.urandom(16))[0].decode("ascii")
         if not hasattr(_server, "next_method"):
             _server.next_method = {}
+        if not hasattr(_server, "lifetimes"):
+            _server.lifetimes = []
+
         _server.next_method[client_id] = "Start"
+        _server.lifetimes.append((time.time(), client_id))
         return client_id
+
+    def check_lifetimes(self, _server):
+        if not hasattr(_server, "lifetimes"):
+            return
+
+        now = time.time()
+        while True:
+            if len(_server.lifetimes) == 0:
+                return
+
+            (t, client_id) = _server.lifetimes[0]
+            if (now - t) < (60*60*12):
+                return
+
+            del _server.lifetimes[0]
+            if hasattr(_server, "next_method") and client_id in _server.next_method:
+                del _server.next_method[client_id]
 
     def assert_raw(self, client_id, _server, _raw, _message, wants):
         if wants != _message:
@@ -110,6 +133,8 @@ class CertService(object):
         if not hasattr(_server, "next_method") or client_id not in _server.next_method:
             raise CertificationError({"method": "org.varlink.certification.Start+++"},
                                      {"method": "org.varlink.certification." + from_method})
+
+        self.check_lifetimes(_server)
 
         if from_method != _server.next_method[client_id]:
             raise CertificationError("Call to method org.varlink.certification." + _server.next_method[client_id],
