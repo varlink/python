@@ -316,17 +316,19 @@ class Interface(object):
             # print("Returned str:", args)
             return args
 
-        if isinstance(varlink_type, float) and isinstance(args, float):
+        if isinstance(varlink_type, float) and (isinstance(args, float) or isinstance(args, int)):
             # print("Returned float:", args)
-            return args
+            return float(args)
 
         if isinstance(varlink_type, bool) and isinstance(args, bool):
             # print("Returned bool:", args)
             return args
 
-        if isinstance(varlink_type, int) and isinstance(args, int):
+        if isinstance(varlink_type, int) and (isinstance(args, float) or isinstance(args, int)):
             # print("Returned int:", args)
-            return args
+            if isinstance(args, float):
+                return int(args + 0.5)
+            return int(args)
 
         if not isinstance(varlink_type, _Struct):
             raise InvalidParameter(parent_name)
