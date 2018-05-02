@@ -51,7 +51,7 @@ def run_client(address):
         for ret in con.Test10(client_id, ret["mytype"], _more=True):
             print("Test10:", ret)
             ret_array.append(ret["string"])
-        ret = con.Test11(client_id, ret_array)
+        ret = con.Test11(client_id, ret_array, _oneway=True)
         print("Test11:", ret)
         ret = con.End(client_id)
         print("End:", ret)
@@ -112,7 +112,7 @@ class CertService(object):
                 return
 
             (t, client_id) = _server.lifetimes[0]
-            if (now - t) < (60*60*12):
+            if (now - t) < (60 * 60 * 12):
                 return
 
             del _server.lifetimes[0]
@@ -337,9 +337,10 @@ class CertService(object):
             yield {"string": "Reply number %d" % i, '_continues': i != 10}
 
     # method Test11(last_more_replies: []string) -> ()
-    def Test11(self, client_id, last_more_replies, _server=None, _raw=None, _message=None):
+    def Test11(self, client_id, last_more_replies, _server=None, _raw=None, _message=None, _oneway=False):
         self.assert_method(client_id, _server, "Test11", "End")
         wants = {
+            "oneway": True,
             "method": "org.varlink.certification.Test11",
             "parameters": {
                 "client_id": client_id,
@@ -350,6 +351,9 @@ class CertService(object):
                 ]
             }
         }
+
+        self.assert_cmp(client_id, _server, _raw, wants, _oneway)
+
         for i in range(0, 10):
             self.assert_cmp(client_id, _server, _raw, wants, last_more_replies[i] == "Reply number %d" % (i + 1))
 
