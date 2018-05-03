@@ -126,30 +126,30 @@
 
 <p>Varlink service server handler</p>
 <p>To use the Service, a global object is instantiated:</p>
-<blockquote>
-<blockquote>
-<blockquote>
-<p>service = Service(
-   vendor='Red Hat',
-   product='Manage System Accounts',
-   version='1',
-   interface_dir=os.path.dirname(<strong>file</strong>)
-)</p>
-</blockquote>
-</blockquote>
-</blockquote>
+<pre><code class="python">&gt;&gt;&gt; service = Service(
+&gt;&gt;&gt;    vendor='Red Hat',
+&gt;&gt;&gt;    product='Manage System Accounts',
+&gt;&gt;&gt;    version='1',
+&gt;&gt;&gt;    interface_dir=os.path.dirname(__file__)
+&gt;&gt;&gt; )
+</code></pre>
+
 <p>For the class implementing the methods of a specific varlink interface
-a decorator is used:
-@service.interface('com.redhat.system.accounts')
+a decorator is used:</p>
+<pre><code class="python">@service.interface('com.redhat.system.accounts')
 class Accounts:
-[…]</p>
+[…]
+</code></pre>
+
 <p>The varlink file corresponding to this interface is loaded from the 'interface_dir'
 specified in the constructor of the Service. It has to end in '.varlink'.</p>
 <p>Split the incoming stream for every null byte and feed it to the service.handle()
-function. Write any message returned from this generator function to the output stream.
-for outgoing_message in service.handle(incoming_message):
-    connection.write(outgoing_message)</p>
-<p>or see, how the RequestHandler handles the Service object.</p>
+function. Write any message returned from this generator function to the output stream.</p>
+<pre><code class="python">for outgoing_message in service.handle(incoming_message):
+    connection.write(outgoing_message)
+</code></pre>
+
+<p>or see, how the <code>RequestHandler</code> handles the Service object.</p>
 <p>Note: varlink only handles one method call at a time on one connection.</p>
 <h3 id="varlink.server.Service.GetInfo">GetInfo</h3>
 
@@ -184,24 +184,24 @@ Instantiate your own class and set the class variable service to your global var
 
 <p>Server</p>
 <p>The same as the standard socketserver.TCPServer, to initialize with a subclass of RequestHandler.</p>
-<blockquote>
-<blockquote>
-<blockquote>
-<p>import varlink
-import os</p>
-<p>service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
-   interface_dir=os.path.dirname(<strong>file</strong>))</p>
-<p>class ServiceRequestHandler(varlink.RequestHandler):
-   service = service</p>
-<p>@service.interface('com.example.service')
-class Example:
-   # com.example.service method implementation here …
-   pass</p>
-<p>server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
-server.serve_forever()</p>
-</blockquote>
-</blockquote>
-</blockquote>
+<pre><code class="python">&gt;&gt;&gt; import varlink
+&gt;&gt;&gt; import os
+&gt;&gt;&gt;
+&gt;&gt;&gt; service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
+&gt;&gt;&gt;    interface_dir=os.path.dirname(__file__))
+&gt;&gt;&gt;
+&gt;&gt;&gt; class ServiceRequestHandler(varlink.RequestHandler):
+&gt;&gt;&gt;    service = service
+&gt;&gt;&gt;
+&gt;&gt;&gt; @service.interface('com.example.service')
+&gt;&gt;&gt; class Example:
+&gt;&gt;&gt;    # com.example.service method implementation here …
+&gt;&gt;&gt;    pass
+&gt;&gt;&gt;
+&gt;&gt;&gt; server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
+&gt;&gt;&gt; server.serve_forever()
+</code></pre>
+
 <h3 id="varlink.server.Server.address_family">address_family</h3>
 
 <p>An enumeration.
