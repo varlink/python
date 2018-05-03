@@ -6,11 +6,8 @@
 
 A [varlink](http://varlink.org) implementation for Python.
 
-## GIT Repository
-https://github.com/varlink/python
-
-## API documentation
-https://varlink.github.io/python/
+* [GIT Repository](https://github.com/varlink/python)
+* [API documentation](https://varlink.github.io/python/)
 
 ## python varlink installation
 
