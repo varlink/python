@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>client - python varlink</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "client";
+    var mkdocs_page_input_path = "client.md";
+    var mkdocs_page_url = "/client/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> python varlink</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">API Documentation</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../varlink-doc/">varlink</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../server/">server</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">client</a>
+    <ul class="subnav">
+            
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../error/">error</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">python varlink</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>API Documentation &raquo;</li>
+        
+      
+    
+    <li>client</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/varlink/python/edit/master/docs/client.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="varlink.client">varlink.client</h1>
+
+<h2 id="varlink.client.ClientInterfaceHandler">ClientInterfaceHandler</h2>
+
+<pre><code class="python">ClientInterfaceHandler(self, interface, namespaced=False)
+</code></pre>
+
+<p>Base class for varlink client, which wraps varlink methods of an interface to the class
+<h3 id="varlink.client.ClientInterfaceHandler.close">close</h3></p>
+<pre><code class="python">ClientInterfaceHandler.close(self)
+</code></pre>
+
+<p>To be implemented.
+<h2 id="varlink.client.SimpleClientInterfaceHandler">SimpleClientInterfaceHandler</h2></p>
+<pre><code class="python">SimpleClientInterfaceHandler(self, interface, file_or_socket, namespaced=False)
+</code></pre>
+
+<p>A varlink client for an interface doing send/write and receive/read on a socket or file stream
+<h2 id="varlink.client.Client">Client</h2></p>
+<pre><code class="python">Client(self, address=None, resolve_interface=None, resolver=None)
+</code></pre>
+
+<p>Varlink client class.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
+    assert con1.Ping("Test")["pong"] == "Test"</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>If the varlink resolver is running:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>client = varlink.Client(resolve_interface='io.systemd.journal')
+print(client.get_interfaces()['io.systemd.journal'].get_description())
+<strong>Query and monitor the log messages of a system.</strong></p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>interface io.systemd.journal</p>
+<p>type Entry (cursor: string, time: string, message: string, process: string, priority: string)</p>
+<p><strong>Monitor the log. Returns the @initial_lines most recent entries in the</strong></p>
+<p><strong>first reply and then continuously replies when new entries are available.</strong></p>
+<p>method Monitor(initial_lines: int) -&gt; (entries: Entry[])</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>connection = client.open("io.systemd.journal")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>connection now holds an object with all the varlink methods available.</p>
+<p>Do varlink method call with varlink arguments and a
+single varlink return structure wrapped in a namespace class:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>ret = connection.Monitor(initial_lines=1)
+ret
+namespace(entries=[namespace(cursor='s=[…]',
+   message="req:1 'dhcp4-change' [wlp3s0][…]", priority='critical',
+   process='nm-dispatcher', time='2018-01-29 12:19:59Z')])
+ret.entries[0].process
+'nm-dispatcher'</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Do varlink method call with varlink arguments and a
+multiple return values in monitor mode, using the "_more" keyword:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>for m in connection.Monitor(_more=True):
+    for e in m.entries:
+        print("%s: %s" % (e.time, e.message))
+2018-01-29 12:19:59Z: [system] Activating via systemd: service name='[…]
+2018-01-29 12:19:59Z: Starting Network Manager Script Dispatcher Service...
+2018-01-29 12:19:59Z: bound to 10.200.159.150 -- renewal in 1423 seconds.
+2018-01-29 12:19:59Z: [system] Successfully activated service 'org.freedesktop.nm_dispatcher'
+2018-01-29 12:19:59Z: Started Network Manager Script Dispatcher Service.
+2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: new request (6 scripts)
+2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>"_more" is special to this python varlink binding. If "_more=True", then the method call does
+not return a normal namespace wrapped varlink return value, but a generator,
+which yields the return values and waits (blocks) for the service to return more return values
+in the generator's .<strong>next</strong>() call.</p>
+<h3 id="varlink.client.Client.handler">SimpleClientInterfaceHandler</h3>
+
+<pre><code class="python">Client.SimpleClientInterfaceHandler(self, interface, file_or_socket, namespaced=False)
+</code></pre>
+
+<p>A varlink client for an interface doing send/write and receive/read on a socket or file stream
+<h3 id="varlink.client.Client.open">open</h3></p>
+<pre><code class="python">Client.open(self, interface_name, namespaced=False)
+</code></pre>
+
+<p>Open a new connection and get a client interface handle with the varlink methods installed.</p>
+<p>Arguments:
+interface_name -- an interface name, which the service this client object is
+                  connected to, provides.</p>
+<p>Exceptions:
+InterfaceNotFound -- if the interface is not found
+anything socket.connect() throws</p>
+<h3 id="varlink.client.Client.get_interfaces">get_interfaces</h3>
+
+<pre><code class="python">Client.get_interfaces(self)
+</code></pre>
+
+<p>Returns the a list of Interface objects the service implements.
+<h3 id="varlink.client.Client.add_interface">add_interface</h3></p>
+<pre><code class="python">Client.add_interface(self, interface)
+</code></pre>
+
+<p>Manually add or overwrite an interface definition from an Interface object.</p>
+<p>Argument:
+interface - an Interface() object</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../error/" class="btn btn-neutral float-right" title="error">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../server/" class="btn btn-neutral" title="server"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/varlink/python" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../server/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../error/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+
+</body>
+</html>

@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>varlink - python varlink</title>
+  <title>error - python varlink</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "varlink";
-    var mkdocs_page_input_path = "varlink-doc.md";
-    var mkdocs_page_url = "/varlink-doc/";
+    var mkdocs_page_name = "error";
+    var mkdocs_page_input_path = "error.md";
+    var mkdocs_page_url = "/error/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -56,12 +56,9 @@
 		
     <span class="caption-text">API Documentation</span>
     <ul class="subnav">
-                <li class=" current">
+                <li class="">
                     
-    <a class="current" href="./">varlink</a>
-    <ul class="subnav">
-            
-    </ul>
+    <a class="" href="../varlink-doc/">varlink</a>
                 </li>
                 <li class="">
                     
@@ -71,9 +68,12 @@
                     
     <a class="" href="../client/">client</a>
                 </li>
-                <li class="">
+                <li class=" current">
                     
-    <a class="" href="../error/">error</a>
+    <a class="current" href="./">error</a>
+    <ul class="subnav">
+            
+    </ul>
                 </li>
     </ul>
 	    </li>
@@ -104,10 +104,10 @@
         
       
     
-    <li>varlink</li>
+    <li>error</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/varlink/python/edit/master/docs/varlink-doc.md"
+        <a href="https://github.com/varlink/python/edit/master/docs/error.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -117,11 +117,67 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="varlink">varlink</h1>
+                <h1 id="varlink.error">varlink.error</h1>
 
-<p>An implementation of the varlink protocol</p>
-<p>See http://varlink.org for more information about the varlink protocol and interface definition files.</p>
-<p>For service implementations use the Server() class, for client implementations use the Client() class.</p>
+<h2 id="varlink.error.VarlinkError">VarlinkError</h2>
+
+<pre><code class="python">VarlinkError(self, message, namespaced=False)
+</code></pre>
+
+<p>The base class for varlink error exceptions
+<h3 id="varlink.error.VarlinkError.new">new</h3></p>
+<pre><code class="python">VarlinkError.new(message, namespaced=False)
+</code></pre>
+
+<h3 id="varlink.error.VarlinkError.error">error</h3>
+
+<pre><code class="python">VarlinkError.error(self)
+</code></pre>
+
+<p>returns the exception varlink error name
+<h3 id="varlink.error.VarlinkError.parameters">parameters</h3></p>
+<pre><code class="python">VarlinkError.parameters(self, namespaced=False)
+</code></pre>
+
+<p>returns the exception varlink error parameters
+<h2 id="varlink.error.InterfaceNotFound">InterfaceNotFound</h2></p>
+<pre><code class="python">InterfaceNotFound(self, interface)
+</code></pre>
+
+<p>The standardized varlink InterfaceNotFound error as a python exception
+<h3 id="varlink.error.InterfaceNotFound.new">new</h3></p>
+<pre><code class="python">InterfaceNotFound.new(message, namespaced=False)
+</code></pre>
+
+<h2 id="varlink.error.MethodNotFound">MethodNotFound</h2>
+
+<pre><code class="python">MethodNotFound(self, method)
+</code></pre>
+
+<p>The standardized varlink MethodNotFound error as a python exception
+<h3 id="varlink.error.MethodNotFound.new">new</h3></p>
+<pre><code class="python">MethodNotFound.new(message, namespaced=False)
+</code></pre>
+
+<h2 id="varlink.error.MethodNotImplemented">MethodNotImplemented</h2>
+
+<pre><code class="python">MethodNotImplemented(self, method)
+</code></pre>
+
+<p>The standardized varlink MethodNotImplemented error as a python exception
+<h3 id="varlink.error.MethodNotImplemented.new">new</h3></p>
+<pre><code class="python">MethodNotImplemented.new(message, namespaced=False)
+</code></pre>
+
+<h2 id="varlink.error.InvalidParameter">InvalidParameter</h2>
+
+<pre><code class="python">InvalidParameter(self, name)
+</code></pre>
+
+<p>The standardized varlink InvalidParameter error as a python exception
+<h3 id="varlink.error.InvalidParameter.new">new</h3></p>
+<pre><code class="python">InvalidParameter.new(message, namespaced=False)
+</code></pre>
               
             </div>
           </div>
@@ -129,10 +185,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../server/" class="btn btn-neutral float-right" title="server">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../client/" class="btn btn-neutral" title="client"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -160,10 +214,8 @@
           <a href="https://github.com/varlink/python" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../client/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
-      
-        <span style="margin-left: 15px"><a href="../server/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
