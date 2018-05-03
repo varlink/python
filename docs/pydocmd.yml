@@ -1,0 +1,13 @@
+site_name: python varlink
+repo_url: https://github.com/varlink/python
+generate:
+- varlink-doc.md:
+  - varlink++
+  - varlink.server++
+  - varlink.client++
+  - varlink.error++
+pages:
+- Home: index.md << ../README.md
+- API Documentation:
+  - varlink: varlink-doc.md
+

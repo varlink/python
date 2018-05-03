@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 version="$1"
 
 sed -i -e "s/^Version.*/Version: \t${version}/" python-varlink.spec
@@ -13,4 +15,5 @@ python3 setup.py bdist_wheel --universal
 python3 setup.py sdist
 twine upload --skip-existing --sign-with gpg2 -s dist/*
 wget https://github.com/varlink/python-varlink/archive/${version}/python-varlink-${version}.tar.gz
+(cd docs; PYTHONPATH=$(pwd)/..  pydocmd gh-deploy)
 
