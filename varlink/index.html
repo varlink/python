@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Document - python varlink</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Document";
+    var mkdocs_page_input_path = "varlink.md";
+    var mkdocs_page_url = "/varlink/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> python varlink</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">API Documentation</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">Document</a>
+    <ul class="subnav">
+            
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">python varlink</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>API Documentation &raquo;</li>
+        
+      
+    
+    <li>Document</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/varlink/python/edit/master/docs/varlink.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="varlink">varlink</h1>
+
+<p>An implementation of the varlink protocol</p>
+<p>See http://varlink.org for more information about the varlink protocol and interface definition files.</p>
+<p>For service implementations use the Server() class, for client implementations use the Client() class.</p>
+<h1 id="varlink.server">varlink.server</h1>
+
+<h2 id="varlink.server.Service">Service</h2>
+
+<pre><code class="python">Service(self, vendor='', product='', version='', url='', interface_dir='.', namespaced=False)
+</code></pre>
+
+<p>Varlink service server handler</p>
+<p>To use the Service, a global object is instantiated:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>service = Service(
+   vendor='Red Hat',
+   product='Manage System Accounts',
+   version='1',
+   interface_dir=os.path.dirname(<strong>file</strong>)
+)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>For the class implementing the methods of a specific varlink interface
+a decorator is used:
+@service.interface('com.redhat.system.accounts')
+class Accounts:
+[…]</p>
+<p>The varlink file corresponding to this interface is loaded from the 'interface_dir'
+specified in the constructor of the Service. It has to end in '.varlink'.</p>
+<p>Split the incoming stream for every null byte and feed it to the service.handle()
+function. Write any message returned from this generator function to the output stream.
+for outgoing_message in service.handle(incoming_message):
+    connection.write(outgoing_message)</p>
+<p>or see, how the RequestHandler handles the Service object.</p>
+<p>Note: varlink only handles one method call at a time on one connection.</p>
+<h3 id="varlink.server.Service.GetInfo">GetInfo</h3>
+
+<pre><code class="python">Service.GetInfo(self)
+</code></pre>
+
+<p>The standardized org.varlink.service.GetInfo() varlink method.
+<h3 id="varlink.server.Service.GetInterfaceDescription">GetInterfaceDescription</h3></p>
+<pre><code class="python">Service.GetInterfaceDescription(self, interface)
+</code></pre>
+
+<p>The standardized org.varlink.service.GetInterfaceDescription() varlink method.
+<h3 id="varlink.server.Service.handle">handle</h3></p>
+<pre><code class="python">Service.handle(self, message, _server=None, _request=None)
+</code></pre>
+
+<p>This generator function handles any incoming message. Write any returned bytes to the output stream.</p>
+<p>for outgoing_message in service.handle(incoming_message):
+    connection.write(outgoing_message)</p>
+<h2 id="varlink.server.RequestHandler">RequestHandler</h2>
+
+<pre><code class="python">RequestHandler(self, request, client_address, server)
+</code></pre>
+
+<p>Varlink request handler</p>
+<p>To use as an argument for the VarlinkServer constructor.
+Instantiate your own class and set the class variable service to your global varlink.Service object.</p>
+<h2 id="varlink.server.Server">Server</h2>
+
+<pre><code class="python">Server(self, server_address, RequestHandlerClass, bind_and_activate=True)
+</code></pre>
+
+<p>Server</p>
+<p>The same as the standard socketserver.TCPServer, to initialize with a subclass of RequestHandler.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>import varlink
+import os</p>
+<p>service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
+   interface_dir=os.path.dirname(<strong>file</strong>))</p>
+<p>class ServiceRequestHandler(varlink.RequestHandler):
+   service = service</p>
+<p>@service.interface('com.example.service')
+class Example:
+   # com.example.service method implementation here …
+   pass</p>
+<p>server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
+server.serve_forever()</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<h3 id="varlink.server.Server.address_family">address_family</h3>
+
+<p>An enumeration.
+<h3 id="varlink.server.Server.socket_type">socket_type</h3></p>
+<p>An enumeration.
+<h3 id="varlink.server.Server.request_queue_size">request_queue_size</h3></p>
+<p>int(x=0) -&gt; integer
+int(x, base=10) -&gt; integer</p>
+<p>Convert a number or string to an integer, or return 0 if no arguments
+are given.  If x is a number, return x.<strong>int</strong>().  For floating point
+numbers, this truncates towards zero.</p>
+<p>If x is not a number or if base is given, then x must be a string,
+bytes, or bytearray instance representing an integer literal in the
+given base.  The literal can be preceded by '+' or '-' and be surrounded
+by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
+Base 0 means to interpret the base from the string as an integer literal.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>int('0b100', base=0)
+4
+<h3 id="varlink.server.Server.allow_reuse_address">allow_reuse_address</h3></p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>bool(x) -&gt; bool</p>
+<p>Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.
+<h3 id="varlink.server.Server.server_bind">server_bind</h3></p>
+<pre><code class="python">Server.server_bind(self)
+</code></pre>
+
+<p>Called by constructor to bind the socket.</p>
+<p>May be overridden.</p>
+<h3 id="varlink.server.Server.server_activate">server_activate</h3>
+
+<pre><code class="python">Server.server_activate(self)
+</code></pre>
+
+<p>Called by constructor to activate the server.</p>
+<p>May be overridden.</p>
+<h3 id="varlink.server.Server.server_close">server_close</h3>
+
+<pre><code class="python">Server.server_close(self)
+</code></pre>
+
+<p>Called to clean-up the server.</p>
+<p>May be overridden.</p>
+<h3 id="varlink.server.Server.fileno">fileno</h3>
+
+<pre><code class="python">Server.fileno(self)
+</code></pre>
+
+<p>Return socket file number.</p>
+<p>Interface required by selector.</p>
+<h3 id="varlink.server.Server.get_request">get_request</h3>
+
+<pre><code class="python">Server.get_request(self)
+</code></pre>
+
+<p>Get the request and client address from the socket.</p>
+<p>May be overridden.</p>
+<h3 id="varlink.server.Server.shutdown_request">shutdown_request</h3>
+
+<pre><code class="python">Server.shutdown_request(self, request)
+</code></pre>
+
+<p>Called to shutdown and close an individual request.
+<h3 id="varlink.server.Server.close_request">close_request</h3></p>
+<pre><code class="python">Server.close_request(self, request)
+</code></pre>
+
+<p>Called to clean up an individual request.
+<h1 id="varlink.client">varlink.client</h1></p>
+<h2 id="varlink.client.ClientInterfaceHandler">ClientInterfaceHandler</h2>
+
+<pre><code class="python">ClientInterfaceHandler(self, interface, namespaced=False)
+</code></pre>
+
+<p>Base class for varlink client, which wraps varlink methods of an interface to the class
+<h3 id="varlink.client.ClientInterfaceHandler.close">close</h3></p>
+<pre><code class="python">ClientInterfaceHandler.close(self)
+</code></pre>
+
+<p>To be implemented.
+<h2 id="varlink.client.SimpleClientInterfaceHandler">SimpleClientInterfaceHandler</h2></p>
+<pre><code class="python">SimpleClientInterfaceHandler(self, interface, file_or_socket, namespaced=False)
+</code></pre>
+
+<p>A varlink client for an interface doing send/write and receive/read on a socket or file stream
+<h2 id="varlink.client.Client">Client</h2></p>
+<pre><code class="python">Client(self, address=None, resolve_interface=None, resolver=None)
+</code></pre>
+
+<p>Varlink client class.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
+    assert con1.Ping("Test")["pong"] == "Test"</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>If the varlink resolver is running:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>client = varlink.Client(resolve_interface='io.systemd.journal')
+print(client.get_interfaces()['io.systemd.journal'].get_description())
+<strong>Query and monitor the log messages of a system.</strong></p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>interface io.systemd.journal</p>
+<p>type Entry (cursor: string, time: string, message: string, process: string, priority: string)</p>
+<p><strong>Monitor the log. Returns the @initial_lines most recent entries in the</strong></p>
+<p><strong>first reply and then continuously replies when new entries are available.</strong></p>
+<p>method Monitor(initial_lines: int) -&gt; (entries: Entry[])</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>connection = client.open("io.systemd.journal")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>connection now holds an object with all the varlink methods available.</p>
+<p>Do varlink method call with varlink arguments and a
+single varlink return structure wrapped in a namespace class:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>ret = connection.Monitor(initial_lines=1)
+ret
+namespace(entries=[namespace(cursor='s=[…]',
+   message="req:1 'dhcp4-change' [wlp3s0][…]", priority='critical',
+   process='nm-dispatcher', time='2018-01-29 12:19:59Z')])
+ret.entries[0].process
+'nm-dispatcher'</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Do varlink method call with varlink arguments and a
+multiple return values in monitor mode, using the "_more" keyword:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>for m in connection.Monitor(_more=True):
+    for e in m.entries:
+        print("%s: %s" % (e.time, e.message))
+2018-01-29 12:19:59Z: [system] Activating via systemd: service name='[…]
+2018-01-29 12:19:59Z: Starting Network Manager Script Dispatcher Service...
+2018-01-29 12:19:59Z: bound to 10.200.159.150 -- renewal in 1423 seconds.
+2018-01-29 12:19:59Z: [system] Successfully activated service 'org.freedesktop.nm_dispatcher'
+2018-01-29 12:19:59Z: Started Network Manager Script Dispatcher Service.
+2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: new request (6 scripts)
+2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>"_more" is special to this python varlink binding. If "_more=True", then the method call does
+not return a normal namespace wrapped varlink return value, but a generator,
+which yields the return values and waits (blocks) for the service to return more return values
+in the generator's .<strong>next</strong>() call.</p>
+<h3 id="varlink.client.Client.handler">SimpleClientInterfaceHandler</h3>
+
+<pre><code class="python">Client.SimpleClientInterfaceHandler(self, interface, file_or_socket, namespaced=False)
+</code></pre>
+
+<p>A varlink client for an interface doing send/write and receive/read on a socket or file stream
+<h3 id="varlink.client.Client.open">open</h3></p>
+<pre><code class="python">Client.open(self, interface_name, namespaced=False)
+</code></pre>
+
+<p>Open a new connection and get a client interface handle with the varlink methods installed.</p>
+<p>Arguments:
+interface_name -- an interface name, which the service this client object is
+                  connected to, provides.</p>
+<p>Exceptions:
+InterfaceNotFound -- if the interface is not found
+anything socket.connect() throws</p>
+<h3 id="varlink.client.Client.get_interfaces">get_interfaces</h3>
+
+<pre><code class="python">Client.get_interfaces(self)
+</code></pre>
+
+<p>Returns the a list of Interface objects the service implements.
+<h3 id="varlink.client.Client.add_interface">add_interface</h3></p>
+<pre><code class="python">Client.add_interface(self, interface)
+</code></pre>
+
+<p>Manually add or overwrite an interface definition from an Interface object.</p>
+<p>Argument:
+interface - an Interface() object</p>
+<h1 id="varlink.error">varlink.error</h1>
+
+<h2 id="varlink.error.VarlinkError">VarlinkError</h2>
+
+<pre><code class="python">VarlinkError(self, message, namespaced=False)
+</code></pre>
+
+<p>The base class for varlink error exceptions
+<h3 id="varlink.error.VarlinkError.new">new</h3></p>
+<pre><code class="python">VarlinkError.new(message, namespaced=False)
+</code></pre>
+
+<h3 id="varlink.error.VarlinkError.error">error</h3>
+
+<pre><code class="python">VarlinkError.error(self)
+</code></pre>
+
+<p>returns the exception varlink error name
+<h3 id="varlink.error.VarlinkError.parameters">parameters</h3></p>
+<pre><code class="python">VarlinkError.parameters(self, namespaced=False)
+</code></pre>
+
+<p>returns the exception varlink error parameters
+<h2 id="varlink.error.InterfaceNotFound">InterfaceNotFound</h2></p>
+<pre><code class="python">InterfaceNotFound(self, interface)
+</code></pre>
+
+<p>The standardized varlink InterfaceNotFound error as a python exception
+<h3 id="varlink.error.InterfaceNotFound.new">new</h3></p>
+<pre><code class="python">InterfaceNotFound.new(message, namespaced=False)
+</code></pre>
+
+<h2 id="varlink.error.MethodNotFound">MethodNotFound</h2>
+
+<pre><code class="python">MethodNotFound(self, method)
+</code></pre>
+
+<p>The standardized varlink MethodNotFound error as a python exception
+<h3 id="varlink.error.MethodNotFound.new">new</h3></p>
+<pre><code class="python">MethodNotFound.new(message, namespaced=False)
+</code></pre>
+
+<h2 id="varlink.error.MethodNotImplemented">MethodNotImplemented</h2>
+
+<pre><code class="python">MethodNotImplemented(self, method)
+</code></pre>
+
+<p>The standardized varlink MethodNotImplemented error as a python exception
+<h3 id="varlink.error.MethodNotImplemented.new">new</h3></p>
+<pre><code class="python">MethodNotImplemented.new(message, namespaced=False)
+</code></pre>
+
+<h2 id="varlink.error.InvalidParameter">InvalidParameter</h2>
+
+<pre><code class="python">InvalidParameter(self, name)
+</code></pre>
+
+<p>The standardized varlink InvalidParameter error as a python exception
+<h3 id="varlink.error.InvalidParameter.new">new</h3></p>
+<pre><code class="python">InvalidParameter.new(message, namespaced=False)
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/varlink/python" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+
+</body>
+</html>

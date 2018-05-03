@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="None">
+  
+  <link rel="shortcut icon" href="./img/favicon.ico">
+  <title>Home - python varlink</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="./css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Home";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = "/";
+  </script>
+  
+  <script src="./js/jquery-2.1.1.min.js"></script>
+  <script src="./js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="./js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> python varlink</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href=".">Home</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#python-varlink">python-varlink</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#python-varlink-installation">python varlink installation</a></li>
+        
+            <li><a class="toctree-l3" href="#varlink-tool-installation">varlink tool installation</a></li>
+        
+            <li><a class="toctree-l3" href="#examples">Examples</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">API Documentation</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="varlink/">Document</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">python varlink</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Home</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/varlink/python/edit/master/docs/index.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p><a href="https://travis-ci.org/varlink/python"><img alt="Build Status" src="https://travis-ci.org/varlink/python.svg?branch=master" /></a>
+<a href="https://coveralls.io/github/varlink/python?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/varlink/python/badge.svg?branch=master" /></a>
+<a href="https://github.com/varlink/documentation/wiki/Language-Bindings"><img alt="Varlink Certified" src="https://img.shields.io/badge/varlink-certified-green.svg" /></a></p>
+<h1 id="python-varlink">python-varlink</h1>
+<p>A <a href="http://varlink.org">varlink</a> implementation for Python.</p>
+<h2 id="python-varlink-installation">python varlink installation</h2>
+<p>From pypi:</p>
+<pre><code class="bash">$ pip3 install --user varlink
+</code></pre>
+
+<p>With Fedora 28/rawhide:</p>
+<pre><code class="bash">$ sudo dnf install python-varlink
+</code></pre>
+
+<h2 id="varlink-tool-installation">varlink tool installation</h2>
+<p>With Fedora 28/rawhide:</p>
+<pre><code class="bash">$ sudo dnf install libvarlink-util
+</code></pre>
+
+<p>or compile from https://github.com/varlink/libvarlink</p>
+<h2 id="examples">Examples</h2>
+<p>See the <a href="https://github.com/varlink/python-varlink/tree/master/varlink/tests">tests</a> directory.</p>
+<pre><code class="bash">$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink=&quot;unix:@test&quot; &amp;
+[1] 6434
+$ varlink help unix:@test/org.example.more
+# Example Varlink service
+interface org.example.more
+
+# Enum, returning either start, progress or end
+# progress: [0-100]
+type State (
+  start: ?bool,
+  progress: ?int,
+  end: ?bool
+)
+
+# Returns the same string
+method Ping(ping: string) -&gt; (pong: string)
+
+# Dummy progress method
+# n: number of progress steps
+method TestMore(n: int) -&gt; (state: State)
+
+# Stop serving
+method StopServing() -&gt; ()
+
+# Something failed in TestMore
+error TestMoreError (reason: string)
+
+
+$ fg
+PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink=&quot;unix:@test&quot;
+^C
+</code></pre>
+
+<pre><code class="bash">$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py
+Connecting to exec:./varlink/tests/test_orgexamplemore.py
+
+Listening on @0002c
+Ping:  Test
+--- Start ---
+Progress: 0
+Progress: 10
+Progress: 20
+Progress: 30
+Progress: 40
+Progress: 50
+Progress: 60
+Ping:  Test
+Progress: 70
+Ping:  Test
+Progress: 80
+Ping:  Test
+Progress: 90
+Ping:  Test
+Progress: 100
+Ping:  Test
+--- End ---
+</code></pre>
+
+<pre><code class="bash">$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink=&quot;unix:@test&quot; &amp;
+Listening on @test
+[1] 6434
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --varlink=&quot;unix:@test&quot;
+Connecting to unix:@test
+
+Ping:  Test
+--- Start ---
+Progress: 0
+Progress: 10
+Progress: 20
+Progress: 30
+Progress: 40
+Progress: 50
+Progress: 60
+Ping:  Test
+Progress: 70
+Ping:  Test
+Progress: 80
+Ping:  Test
+Progress: 90
+Ping:  Test
+Progress: 100
+Ping:  Test
+--- End ---
+$ fg
+PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink=&quot;unix:@test&quot;
+^C
+</code></pre>
+
+<p>You can also start the clients and server with URLs following the <a href="https://github.com/varlink/documentation/wiki#address">varlink URL standard</a>.
+E.g.
+- unix:@anonuds
+- unix:/run/myserver/socketfile
+- tcp:127.0.0.1:12345
+- tcp:[::1]:12345</p>
+<h3 id="varlink-certification-server">Varlink Certification Server</h3>
+<pre><code>$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_certification.py --varlink=tcp:127.0.0.1:12345
+</code></pre>
+
+<h3 id="varlink-certification-client">Varlink Certification Client</h3>
+<pre><code>$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_certification.py --varlink=tcp:127.0.0.1:12345 --client
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="varlink/" class="btn btn-neutral float-right" title="Document">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/varlink/python" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+      
+        <span style="margin-left: 15px"><a href="varlink/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script src="./js/theme.js"></script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 0.16.3
+Build Date UTC : 2018-05-03 11:08:05
+-->
