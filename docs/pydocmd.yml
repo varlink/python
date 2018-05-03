@@ -5,9 +5,9 @@ generate:
   - varlink++
 - server.md:
   - varlink.server++
-- client.md
+- client.md:
   - varlink.client++
-- error.md
+- error.md:
   - varlink.error++
 pages:
 - Home: index.md << ../README.md
