@@ -32,29 +32,33 @@ class Service(object):
     """Varlink service server handler
 
     To use the Service, a global object is instantiated:
+    ```python
     >>> service = Service(
     >>>    vendor='Red Hat',
     >>>    product='Manage System Accounts',
     >>>    version='1',
     >>>    interface_dir=os.path.dirname(__file__)
     >>> )
-
+    ```
 
     For the class implementing the methods of a specific varlink interface
     a decorator is used:
+    ```python
     @service.interface('com.redhat.system.accounts')
     class Accounts:
     […]
+    ```
 
     The varlink file corresponding to this interface is loaded from the 'interface_dir'
     specified in the constructor of the Service. It has to end in '.varlink'.
 
     Split the incoming stream for every null byte and feed it to the service.handle()
     function. Write any message returned from this generator function to the output stream.
+    ```python
     for outgoing_message in service.handle(incoming_message):
         connection.write(outgoing_message)
-
-    or see, how the RequestHandler handles the Service object.
+    ```
+    or see, how the #RequestHandler handles the Service object.
 
     Note: varlink only handles one method call at a time on one connection.
 
@@ -135,7 +139,7 @@ class Service(object):
             if hasattr(inspect, "signature"):
                 sig = inspect.signature(func)
                 arg_names = [(sig.parameters[k].kind in (
-                inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY) and k or None) for k in
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY) and k or None) for k in
                              sig.parameters.keys()]
             else:
                 from itertools import izip
@@ -323,11 +327,12 @@ class RequestHandler(StreamRequestHandler):
 
             message = b''
 
+
 class Server(BaseServer):
     """Server
 
     The same as the standard socketserver.TCPServer, to initialize with a subclass of RequestHandler.
-
+    ```python
     >>> import varlink
     >>> import os
     >>>
@@ -344,6 +349,7 @@ class Server(BaseServer):
     >>>
     >>> server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
     >>> server.serve_forever()
+    ```
     """
     address_family = socket.AF_INET
 
