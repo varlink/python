@@ -12,11 +12,11 @@ or the source code of L{varlink.tests.test_orgexamplemore}
 
 """
 
-__all__ = ['VarlinkEncoder', 'VarlinkError',
+__all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
+           'Service', 'RequestHandler', 'Server', 'ThreadingServer', 'ForkingServer',
            'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
-           'ClientInterfaceHandler', 'SimpleClientInterfaceHandler', 'Client',
-           'Service', 'Interface', 'Scanner', 'ConnectionError',
-           'get_listen_fd', 'Server', 'ThreadingServer', 'ForkingServer', 'RequestHandler']
+           'ConnectionError', 'VarlinkEncoder', 'VarlinkError',
+           'Interface', 'Scanner', 'get_listen_fd', ]
 
 from .client import (Client, ClientInterfaceHandler, SimpleClientInterfaceHandler)
 from .error import (VarlinkEncoder, VarlinkError, InvalidParameter, InterfaceNotFound, MethodNotImplemented,
