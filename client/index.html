@@ -147,15 +147,15 @@
 <p>If the varlink resolver is running:</p>
 <pre><code class="python">&gt;&gt;&gt; client = varlink.Client(resolve_interface='com.redhat.logging')
 &gt;&gt;&gt; print(client.get_interfaces()['com.redhat.logging'].get_description())
-</code></pre>
+# Query and monitor the log messages of a system.
+interface com.redhat.logging
 
-<p><strong>Query and monitor the log messages of a system.</strong></p>
-<p>interface com.redhat.logging</p>
-<p>type Entry (cursor: string, time: string, message: string, process: string, priority: string)</p>
-<p><strong>Monitor the log. Returns the @initial_lines most recent entries in the</strong></p>
-<p><strong>first reply and then continuously replies when new entries are available.</strong></p>
-<p>method Monitor(initial_lines: int) -&gt; (entries: Entry[])</p>
-<pre><code class="python">&gt;&gt;&gt; connection = client.open(&quot;com.redhat.logging&quot;)
+type Entry (cursor: string, time: string, message: string, process: string, priority: string)
+
+# Monitor the log. Returns the @initial_lines most recent entries in the
+# first reply and then continuously replies when new entries are available.
+method Monitor(initial_lines: int) -&gt; (entries: Entry[])
+&gt;&gt;&gt; connection = client.open(&quot;com.redhat.logging&quot;)
 </code></pre>
 
 <p>connection now holds an object with all the varlink methods available.</p>
