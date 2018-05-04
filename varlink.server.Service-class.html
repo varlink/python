@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>varlink.server.Service</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="varlink-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="varlink-module.html">Package&nbsp;varlink</a> ::
+        <a href="varlink.server-module.html" onclick="show_private();">Module&nbsp;server</a> ::
+        Class&nbsp;Service
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="varlink.server.Service-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== TYPE DESCRIPTION ==================== -->
+<h1 class="epydoc">type Service</h1><p class="nomargin-top"><span class="codelink"><a href="varlink.server-pysrc.html#Service">source&nbsp;code</a></span></p>
+<pre class="base-tree">
+    object --+    
+             |    
+scanner.object --+
+                 |
+                <strong class="uidshort">Service</strong>
+</pre>
+
+<hr />
+<p>Varlink service server handler</p>
+  <p>To use the Service, a global object is instantiated:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>service = Service(
+<span class="py-prompt">&gt;&gt;&gt; </span>   vendor=<span class="py-string">'Red Hat'</span>,
+<span class="py-prompt">&gt;&gt;&gt; </span>   product=<span class="py-string">'Manage System Accounts'</span>,
+<span class="py-prompt">&gt;&gt;&gt; </span>   version=<span class="py-string">'1'</span>,
+<span class="py-prompt">&gt;&gt;&gt; </span>   interface_dir=os.path.dirname(__file__)
+<span class="py-prompt">&gt;&gt;&gt; </span>)</pre>
+  <p>For the class implementing the methods of a specific varlink interface
+  a decorator is used:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>@service.interface(<span class="py-string">'com.redhat.system.accounts'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">class</span> <span class="py-defname">Accounts</span>:
+<span class="py-prompt">&gt;&gt;&gt; </span>    <span class="py-keyword">pass</span></pre>
+  <p>The varlink file corresponding to this interface is loaded from the 
+  'interface_dir' specified in the constructor of the Service. It has to 
+  end in '.varlink'.</p>
+  <p>Use a <a href="varlink.server.RequestHandler-class.html" 
+  class="link">RequestHandler</a> with your Service object and run a <a 
+  href="varlink.server.Server-class.html" class="link">varlink.Server</a> 
+  with it.</p>
+  <p>If you want to use your own server with the Service object, split the 
+  incoming stream for every null byte and feed it to the <a 
+  href="varlink.server.Service-class.html#handle" 
+  class="link">Service.handle</a> method. Write any message returned from 
+  this generator function to the output stream.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> outgoing_message <span class="py-keyword">in</span> service.handle(incoming_message):
+<span class="py-prompt">&gt;&gt;&gt; </span>    connection.write(outgoing_message)</pre>
+  <p>Note: varlink only handles one method call at a time on one 
+  connection.</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="varlink.server.Service-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">vendor</span>=<span class="summary-sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">product</span>=<span class="summary-sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">version</span>=<span class="summary-sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">url</span>=<span class="summary-sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">interface_dir</span>=<span class="summary-sig-default"><code class="variable-quote">u'</code><code class="variable-string">.</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">namespaced</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Initialize the service with the data org.varlink.service.GetInfo() 
+      returns</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="varlink.server-pysrc.html#Service.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="GetInfo"></a><span class="summary-sig-name">GetInfo</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      The standardized org.varlink.service.GetInfo() varlink method.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="varlink.server-pysrc.html#Service.GetInfo">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="GetInterfaceDescription"></a><span class="summary-sig-name">GetInterfaceDescription</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">interface</span>)</span><br />
+      The standardized org.varlink.service.GetInterfaceDescription() 
+      varlink method.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="varlink.server-pysrc.html#Service.GetInterfaceDescription">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_handle"></a><span class="summary-sig-name">_handle</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">message</span>,
+        <span class="summary-sig-arg">raw_message</span>,
+        <span class="summary-sig-arg">_server</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">_request</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="varlink.server-pysrc.html#Service._handle">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="varlink.server.Service-class.html#handle" class="summary-sig-name">handle</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">message</span>,
+        <span class="summary-sig-arg">_server</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">_request</span>=<span class="summary-sig-default">None</span>)</span><br />
+      This generator function handles any incoming message.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="varlink.server-pysrc.html#Service.handle">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_add_interface"></a><span class="summary-sig-name">_add_interface</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">handler</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="varlink.server-pysrc.html#Service._add_interface">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="interface"></a><span class="summary-sig-name">interface</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="varlink.server-pysrc.html#Service.interface">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>scanner.object</code></b>:
+      <code>__long__</code>,
+      <code>__native__</code>,
+      <code>__nonzero__</code>,
+      <code>__unicode__</code>,
+      <code>next</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">vendor</span>=<span class="sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">product</span>=<span class="sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">version</span>=<span class="sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">url</span>=<span class="sig-default"><code class="variable-quote">u'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">interface_dir</span>=<span class="sig-default"><code class="variable-quote">u'</code><code class="variable-string">.</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">namespaced</span>=<span class="sig-default">False</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="varlink.server-pysrc.html#Service.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Initialize the service with the data org.varlink.service.GetInfo() 
+  returns</p>
+  <p>Arguments: interface_dir -- the directory with the *.varlink files for
+  the interfaces</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__init__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="handle"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">handle</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">message</span>,
+        <span class="sig-arg">_server</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">_request</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="varlink.server-pysrc.html#Service.handle">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>This generator function handles any incoming message.</p>
+  <p>Write any returned bytes to the output stream.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> outgoing_message <span class="py-keyword">in</span> service.handle(incoming_message):
+<span class="py-prompt">&gt;&gt;&gt; </span>   connection.write(outgoing_message)</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="varlink-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

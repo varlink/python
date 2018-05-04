@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>varlink.error</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="varlink-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="varlink-module.html">Package&nbsp;varlink</a> ::
+        Module&nbsp;error
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="varlink.error-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="varlink.error-module.html" onclick="show_private();">Module varlink.error</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">__future__</tt> <tt class="py-keyword">import</tt> <tt class="py-name">print_function</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">__future__</tt> <tt class="py-keyword">import</tt> <tt class="py-name">unicode_literals</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">json</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line">    <tt class="py-keyword">from</tt> <tt class="py-name">types</tt> <tt class="py-keyword">import</tt> <tt class="py-name">SimpleNamespace</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line">    <tt id="link-0" class="py-name" targets="Class varlink.client.ConnectionError=varlink.client.ConnectionError-class.html,Class varlink.error.ConnectionError=varlink.error.ConnectionError-class.html"><a title="varlink.client.ConnectionError
+varlink.error.ConnectionError" class="py-name" href="#" onclick="return doclink('link-0', 'ConnectionError', 'link-0');">ConnectionError</a></tt> <tt class="py-op">=</tt> <tt id="link-1" class="py-name"><a title="varlink.client.ConnectionError
+varlink.error.ConnectionError" class="py-name" href="#" onclick="return doclink('link-1', 'ConnectionError', 'link-0');">ConnectionError</a></tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line">    <tt id="link-2" class="py-name" targets="Class varlink.error.BrokenPipeError=varlink.error.BrokenPipeError-class.html"><a title="varlink.error.BrokenPipeError" class="py-name" href="#" onclick="return doclink('link-2', 'BrokenPipeError', 'link-2');">BrokenPipeError</a></tt> <tt class="py-op">=</tt> <tt id="link-3" class="py-name"><a title="varlink.error.BrokenPipeError" class="py-name" href="#" onclick="return doclink('link-3', 'BrokenPipeError', 'link-2');">BrokenPipeError</a></tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-keyword">except</tt><tt class="py-op">:</tt>  <tt class="py-comment"># Python 2</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line">    <tt class="py-keyword">from</tt> <tt class="py-name">argparse</tt> <tt class="py-keyword">import</tt> <tt class="py-name">Namespace</tt> <tt class="py-keyword">as</tt> <tt class="py-name">SimpleNamespace</tt> </tt>
+<a name="ConnectionError"></a><div id="ConnectionError-def"><a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt> <a class="py-toggle" href="#" id="ConnectionError-toggle" onclick="return toggle('ConnectionError');">-</a><tt class="py-line">    <tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.ConnectionError-class.html">ConnectionError</a><tt class="py-op">(</tt><tt class="py-base-class">OSError</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ConnectionError-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="ConnectionError-expanded"><a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+</div><a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"> </tt>
+<a name="BrokenPipeError"></a><div id="BrokenPipeError-def"><a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt> <a class="py-toggle" href="#" id="BrokenPipeError-toggle" onclick="return toggle('BrokenPipeError');">-</a><tt class="py-line">    <tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.BrokenPipeError-class.html">BrokenPipeError</a><tt class="py-op">(</tt><tt class="py-base-class">ConnectionError</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="BrokenPipeError-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="BrokenPipeError-expanded"><a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+</div><a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"> </tt>
+<a name="VarlinkEncoder"></a><div id="VarlinkEncoder-def"><a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt> <a class="py-toggle" href="#" id="VarlinkEncoder-toggle" onclick="return toggle('VarlinkEncoder');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.VarlinkEncoder-class.html">VarlinkEncoder</a><tt class="py-op">(</tt><tt class="py-base-class">json</tt><tt class="py-op">.</tt><tt class="py-base-class">JSONEncoder</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkEncoder-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="VarlinkEncoder-expanded"><a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line">    <tt class="py-docstring">"""The Encoder used to encode JSON"""</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"> </tt>
+<a name="VarlinkEncoder.default"></a><div id="VarlinkEncoder.default-def"><a name="L26"></a><tt class="py-lineno"> 26</tt> <a class="py-toggle" href="#" id="VarlinkEncoder.default-toggle" onclick="return toggle('VarlinkEncoder.default');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.VarlinkEncoder-class.html#default">default</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">o</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkEncoder.default-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="VarlinkEncoder.default-expanded"><a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">o</tt><tt class="py-op">,</tt> <tt class="py-name">set</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">dict</tt><tt class="py-op">.</tt><tt class="py-name">fromkeys</tt><tt class="py-op">(</tt><tt class="py-name">o</tt><tt class="py-op">,</tt> <tt class="py-op">{</tt><tt class="py-op">}</tt><tt class="py-op">)</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">o</tt><tt class="py-op">,</tt> <tt class="py-name">SimpleNamespace</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">o</tt><tt class="py-op">.</tt><tt class="py-name">__dict__</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">o</tt><tt class="py-op">,</tt> <tt id="link-4" class="py-name" targets="Class varlink.error.VarlinkError=varlink.error.VarlinkError-class.html"><a title="varlink.error.VarlinkError" class="py-name" href="#" onclick="return doclink('link-4', 'VarlinkError', 'link-4');">VarlinkError</a></tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">o</tt><tt class="py-op">.</tt><tt id="link-5" class="py-name" targets="Method varlink.error.VarlinkError.as_dict()=varlink.error.VarlinkError-class.html#as_dict"><a title="varlink.error.VarlinkError.as_dict" class="py-name" href="#" onclick="return doclink('link-5', 'as_dict', 'link-5');">as_dict</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">json</tt><tt class="py-op">.</tt><tt class="py-name">JSONEncoder</tt><tt class="py-op">.</tt><tt id="link-6" class="py-name" targets="Method varlink.error.VarlinkEncoder.default()=varlink.error.VarlinkEncoder-class.html#default"><a title="varlink.error.VarlinkEncoder.default" class="py-name" href="#" onclick="return doclink('link-6', 'default', 'link-6');">default</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> <tt class="py-name">o</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"> </tt>
+<a name="VarlinkError"></a><div id="VarlinkError-def"><a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt> <a class="py-toggle" href="#" id="VarlinkError-toggle" onclick="return toggle('VarlinkError');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.VarlinkError-class.html">VarlinkError</a><tt class="py-op">(</tt><tt class="py-base-class">Exception</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkError-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="VarlinkError-expanded"><a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line">    <tt class="py-docstring">"""The base class for varlink error exceptions"""</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">classmethod</tt> </tt>
+<a name="VarlinkError.new"></a><div id="VarlinkError.new-def"><a name="L40"></a><tt class="py-lineno"> 40</tt> <a class="py-toggle" href="#" id="VarlinkError.new-toggle" onclick="return toggle('VarlinkError.new');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.VarlinkError-class.html#new">new</a><tt class="py-op">(</tt><tt class="py-param">cls</tt><tt class="py-op">,</tt> <tt class="py-param">message</tt><tt class="py-op">,</tt> <tt class="py-param">namespaced</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkError.new-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="VarlinkError.new-expanded"><a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'error'</tt><tt class="py-op">]</tt> <tt class="py-op">==</tt> <tt class="py-string">'org.varlink.service.InterfaceNotFound'</tt><tt class="py-op">:</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-7" class="py-name" targets="Class varlink.error.InterfaceNotFound=varlink.error.InterfaceNotFound-class.html"><a title="varlink.error.InterfaceNotFound" class="py-name" href="#" onclick="return doclink('link-7', 'InterfaceNotFound', 'link-7');">InterfaceNotFound</a></tt><tt class="py-op">.</tt><tt id="link-8" class="py-name" targets="Class Method varlink.error.InterfaceNotFound.new()=varlink.error.InterfaceNotFound-class.html#new,Class Method varlink.error.InvalidParameter.new()=varlink.error.InvalidParameter-class.html#new,Class Method varlink.error.MethodNotFound.new()=varlink.error.MethodNotFound-class.html#new,Class Method varlink.error.MethodNotImplemented.new()=varlink.error.MethodNotImplemented-class.html#new,Class Method varlink.error.VarlinkError.new()=varlink.error.VarlinkError-class.html#new"><a title="varlink.error.InterfaceNotFound.new
+varlink.error.InvalidParameter.new
+varlink.error.MethodNotFound.new
+varlink.error.MethodNotImplemented.new
+varlink.error.VarlinkError.new" class="py-name" href="#" onclick="return doclink('link-8', 'new', 'link-8');">new</a></tt><tt class="py-op">(</tt><tt class="py-name">message</tt><tt class="py-op">,</tt> <tt class="py-name">namespaced</tt><tt class="py-op">)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'error'</tt><tt class="py-op">]</tt> <tt class="py-op">==</tt> <tt class="py-string">'org.varlink.service.InvalidParameter'</tt><tt class="py-op">:</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-9" class="py-name" targets="Class varlink.error.InvalidParameter=varlink.error.InvalidParameter-class.html"><a title="varlink.error.InvalidParameter" class="py-name" href="#" onclick="return doclink('link-9', 'InvalidParameter', 'link-9');">InvalidParameter</a></tt><tt class="py-op">.</tt><tt id="link-10" class="py-name"><a title="varlink.error.InterfaceNotFound.new
+varlink.error.InvalidParameter.new
+varlink.error.MethodNotFound.new
+varlink.error.MethodNotImplemented.new
+varlink.error.VarlinkError.new" class="py-name" href="#" onclick="return doclink('link-10', 'new', 'link-8');">new</a></tt><tt class="py-op">(</tt><tt class="py-name">message</tt><tt class="py-op">,</tt> <tt class="py-name">namespaced</tt><tt class="py-op">)</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'error'</tt><tt class="py-op">]</tt> <tt class="py-op">==</tt> <tt class="py-string">'org.varlink.service.MethodNotImplemented'</tt><tt class="py-op">:</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-11" class="py-name" targets="Class varlink.error.MethodNotImplemented=varlink.error.MethodNotImplemented-class.html"><a title="varlink.error.MethodNotImplemented" class="py-name" href="#" onclick="return doclink('link-11', 'MethodNotImplemented', 'link-11');">MethodNotImplemented</a></tt><tt class="py-op">.</tt><tt id="link-12" class="py-name"><a title="varlink.error.InterfaceNotFound.new
+varlink.error.InvalidParameter.new
+varlink.error.MethodNotFound.new
+varlink.error.MethodNotImplemented.new
+varlink.error.VarlinkError.new" class="py-name" href="#" onclick="return doclink('link-12', 'new', 'link-8');">new</a></tt><tt class="py-op">(</tt><tt class="py-name">message</tt><tt class="py-op">,</tt> <tt class="py-name">namespaced</tt><tt class="py-op">)</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'error'</tt><tt class="py-op">]</tt> <tt class="py-op">==</tt> <tt class="py-string">'org.varlink.service.MethodNotImplemented'</tt><tt class="py-op">:</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-13" class="py-name"><a title="varlink.error.MethodNotImplemented" class="py-name" href="#" onclick="return doclink('link-13', 'MethodNotImplemented', 'link-11');">MethodNotImplemented</a></tt><tt class="py-op">.</tt><tt id="link-14" class="py-name"><a title="varlink.error.InterfaceNotFound.new
+varlink.error.InvalidParameter.new
+varlink.error.MethodNotFound.new
+varlink.error.MethodNotImplemented.new
+varlink.error.VarlinkError.new" class="py-name" href="#" onclick="return doclink('link-14', 'new', 'link-8');">new</a></tt><tt class="py-op">(</tt><tt class="py-name">message</tt><tt class="py-op">,</tt> <tt class="py-name">namespaced</tt><tt class="py-op">)</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">cls</tt><tt class="py-op">(</tt><tt class="py-name">message</tt><tt class="py-op">,</tt> <tt class="py-name">namespaced</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"> </tt>
+<a name="VarlinkError.__init__"></a><div id="VarlinkError.__init__-def"><a name="L56"></a><tt class="py-lineno"> 56</tt> <a class="py-toggle" href="#" id="VarlinkError.__init__-toggle" onclick="return toggle('VarlinkError.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.VarlinkError-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">message</tt><tt class="py-op">,</tt> <tt class="py-param">namespaced</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkError.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="VarlinkError.__init__-expanded"><a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">namespaced</tt> <tt class="py-keyword">and</tt> <tt class="py-keyword">not</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">message</tt><tt class="py-op">,</tt> <tt class="py-name">dict</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line">            <tt class="py-keyword">raise</tt> <tt class="py-name">TypeError</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">        <tt class="py-comment"># normalize to dictionary</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line">        <tt class="py-name">Exception</tt><tt class="py-op">.</tt><tt id="link-15" class="py-name" targets="Method varlink.client.Client.__init__()=varlink.client.Client-class.html#__init__,Method varlink.client.ClientInterfaceHandler.__init__()=varlink.client.ClientInterfaceHandler-class.html#__init__,Method varlink.client.SimpleClientInterfaceHandler.__init__()=varlink.client.SimpleClientInterfaceHandler-class.html#__init__,Method varlink.error.InterfaceNotFound.__init__()=varlink.error.InterfaceNotFound-class.html#__init__,Method varlink.error.InvalidParameter.__init__()=varlink.error.InvalidParameter-class.html#__init__,Method varlink.error.MethodNotFound.__init__()=varlink.error.MethodNotFound-class.html#__init__,Method varlink.error.MethodNotImplemented.__init__()=varlink.error.MethodNotImplemented-class.html#__init__,Method varlink.error.VarlinkError.__init__()=varlink.error.VarlinkError-class.html#__init__,Method varlink.scanner.Interface.__init__()=varlink.scanner.Interface-class.html#__init__,Method varlink.scanner.Scanner.__init__()=varlink.scanner.Scanner-class.html#__init__,Method varlink.scanner._Alias.__init__()=varlink.scanner._Alias-class.html#__init__,Method varlink.scanner._Array.__init__()=varlink.scanner._Array-class.html#__init__,Method varlink.scanner._CustomType.__init__()=varlink.scanner._CustomType-class.html#__init__,Method varlink.scanner._Dict.__init__()=varlink.scanner._Dict-class.html#__init__,Method varlink.scanner._Enum.__init__()=varlink.scanner._Enum-class.html#__init__,Method varlink.scanner._Error.__init__()=varlink.scanner._Error-class.html#__init__,Method varlink.scanner._Maybe.__init__()=varlink.scanner._Maybe-class.html#__init__,Method varlink.scanner._Method.__init__()=varlink.scanner._Method-class.html#__init__,Method varlink.scanner._Struct.__init__()=varlink.scanner._Struct-class.html#__init__,Method varlink.server.Server.__init__()=varlink.server.Server-class.html#__init__,Method varlink.server.Service.__init__()=varlink.server.Service-class.html#__init__,Method varlink.tests.test_certification.CertificationError.__init__()=varlink.tests.test_certification.CertificationError-class.html#__init__,Method varlink.tests.test_orgexamplemore.ActionFailed.__init__()=varlink.tests.test_orgexamplemore.ActionFailed-class.html#__init__"><a title="varlink.client.Client.__init__
+varlink.client.ClientInterfaceHandler.__init__
+varlink.client.SimpleClientInterfaceHandler.__init__
+varlink.error.InterfaceNotFound.__init__
+varlink.error.InvalidParameter.__init__
+varlink.error.MethodNotFound.__init__
+varlink.error.MethodNotImplemented.__init__
+varlink.error.VarlinkError.__init__
+varlink.scanner.Interface.__init__
+varlink.scanner.Scanner.__init__
+varlink.scanner._Alias.__init__
+varlink.scanner._Array.__init__
+varlink.scanner._CustomType.__init__
+varlink.scanner._Dict.__init__
+varlink.scanner._Enum.__init__
+varlink.scanner._Error.__init__
+varlink.scanner._Maybe.__init__
+varlink.scanner._Method.__init__
+varlink.scanner._Struct.__init__
+varlink.server.Server.__init__
+varlink.server.Service.__init__
+varlink.tests.test_certification.CertificationError.__init__
+varlink.tests.test_orgexamplemore.ActionFailed.__init__" class="py-name" href="#" onclick="return doclink('link-15', '__init__', 'link-15');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> <tt class="py-name">json</tt><tt class="py-op">.</tt><tt class="py-name">loads</tt><tt class="py-op">(</tt><tt class="py-name">json</tt><tt class="py-op">.</tt><tt class="py-name">dumps</tt><tt class="py-op">(</tt><tt class="py-name">message</tt><tt class="py-op">,</tt> <tt class="py-name">cls</tt><tt class="py-op">=</tt><tt id="link-16" class="py-name" targets="Class varlink.error.VarlinkEncoder=varlink.error.VarlinkEncoder-class.html"><a title="varlink.error.VarlinkEncoder" class="py-name" href="#" onclick="return doclink('link-16', 'VarlinkEncoder', 'link-16');">VarlinkEncoder</a></tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"> </tt>
+<a name="VarlinkError.error"></a><div id="VarlinkError.error-def"><a name="L62"></a><tt class="py-lineno"> 62</tt> <a class="py-toggle" href="#" id="VarlinkError.error-toggle" onclick="return toggle('VarlinkError.error');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.VarlinkError-class.html#error">error</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkError.error-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="VarlinkError.error-expanded"><a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line">        <tt class="py-docstring">"""returns the exception varlink error name"""</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">args</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Method varlink.scanner.Scanner.get()=varlink.scanner.Scanner-class.html#get"><a title="varlink.scanner.Scanner.get" class="py-name" href="#" onclick="return doclink('link-17', 'get', 'link-17');">get</a></tt><tt class="py-op">(</tt><tt class="py-string">'error'</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"> </tt>
+<a name="VarlinkError.parameters"></a><div id="VarlinkError.parameters-def"><a name="L66"></a><tt class="py-lineno"> 66</tt> <a class="py-toggle" href="#" id="VarlinkError.parameters-toggle" onclick="return toggle('VarlinkError.parameters');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.VarlinkError-class.html#parameters">parameters</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">namespaced</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkError.parameters-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="VarlinkError.parameters-expanded"><a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line">        <tt class="py-docstring">"""returns the exception varlink error parameters"""</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">namespaced</tt><tt class="py-op">:</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">json</tt><tt class="py-op">.</tt><tt class="py-name">loads</tt><tt class="py-op">(</tt><tt class="py-name">json</tt><tt class="py-op">.</tt><tt class="py-name">dumps</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">args</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">object_hook</tt><tt class="py-op">=</tt><tt class="py-keyword">lambda</tt> <tt class="py-name">d</tt><tt class="py-op">:</tt> <tt class="py-name">SimpleNamespace</tt><tt class="py-op">(</tt><tt class="py-op">**</tt><tt class="py-name">d</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">args</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-18" class="py-name"><a title="varlink.scanner.Scanner.get" class="py-name" href="#" onclick="return doclink('link-18', 'get', 'link-17');">get</a></tt><tt class="py-op">(</tt><tt class="py-string">'parameters'</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"> </tt>
+<a name="VarlinkError.as_dict"></a><div id="VarlinkError.as_dict-def"><a name="L73"></a><tt class="py-lineno"> 73</tt> <a class="py-toggle" href="#" id="VarlinkError.as_dict-toggle" onclick="return toggle('VarlinkError.as_dict');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.VarlinkError-class.html#as_dict">as_dict</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VarlinkError.as_dict-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="VarlinkError.as_dict-expanded"><a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">args</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+</div></div><a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"> </tt>
+<a name="InterfaceNotFound"></a><div id="InterfaceNotFound-def"><a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt> <a class="py-toggle" href="#" id="InterfaceNotFound-toggle" onclick="return toggle('InterfaceNotFound');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.InterfaceNotFound-class.html">InterfaceNotFound</a><tt class="py-op">(</tt><tt class="py-base-class">VarlinkError</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="InterfaceNotFound-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="InterfaceNotFound-expanded"><a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">    <tt class="py-docstring">"""The standardized varlink InterfaceNotFound error as a python exception"""</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">classmethod</tt> </tt>
+<a name="InterfaceNotFound.new"></a><div id="InterfaceNotFound.new-def"><a name="L81"></a><tt class="py-lineno"> 81</tt> <a class="py-toggle" href="#" id="InterfaceNotFound.new-toggle" onclick="return toggle('InterfaceNotFound.new');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.InterfaceNotFound-class.html#new">new</a><tt class="py-op">(</tt><tt class="py-param">cls</tt><tt class="py-op">,</tt> <tt class="py-param">message</tt><tt class="py-op">,</tt> <tt class="py-param">namespaced</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="InterfaceNotFound.new-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="InterfaceNotFound.new-expanded"><a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">cls</tt><tt class="py-op">(</tt><tt class="py-name">namespaced</tt> <tt class="py-keyword">and</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-19" class="py-name" targets="Method varlink.server.Service.interface()=varlink.server.Service-class.html#interface"><a title="varlink.server.Service.interface" class="py-name" href="#" onclick="return doclink('link-19', 'interface', 'link-19');">interface</a></tt> <tt class="py-keyword">or</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-20" class="py-name"><a title="varlink.scanner.Scanner.get" class="py-name" href="#" onclick="return doclink('link-20', 'get', 'link-17');">get</a></tt><tt class="py-op">(</tt><tt class="py-string">'interface'</tt><tt class="py-op">,</tt> <tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"> </tt>
+<a name="InterfaceNotFound.__init__"></a><div id="InterfaceNotFound.__init__-def"><a name="L84"></a><tt class="py-lineno"> 84</tt> <a class="py-toggle" href="#" id="InterfaceNotFound.__init__-toggle" onclick="return toggle('InterfaceNotFound.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.InterfaceNotFound-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">interface</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="InterfaceNotFound.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="InterfaceNotFound.__init__-expanded"><a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">        <tt id="link-21" class="py-name"><a title="varlink.error.VarlinkError" class="py-name" href="#" onclick="return doclink('link-21', 'VarlinkError', 'link-4');">VarlinkError</a></tt><tt class="py-op">.</tt><tt id="link-22" class="py-name"><a title="varlink.client.Client.__init__
+varlink.client.ClientInterfaceHandler.__init__
+varlink.client.SimpleClientInterfaceHandler.__init__
+varlink.error.InterfaceNotFound.__init__
+varlink.error.InvalidParameter.__init__
+varlink.error.MethodNotFound.__init__
+varlink.error.MethodNotImplemented.__init__
+varlink.error.VarlinkError.__init__
+varlink.scanner.Interface.__init__
+varlink.scanner.Scanner.__init__
+varlink.scanner._Alias.__init__
+varlink.scanner._Array.__init__
+varlink.scanner._CustomType.__init__
+varlink.scanner._Dict.__init__
+varlink.scanner._Enum.__init__
+varlink.scanner._Error.__init__
+varlink.scanner._Maybe.__init__
+varlink.scanner._Method.__init__
+varlink.scanner._Struct.__init__
+varlink.server.Server.__init__
+varlink.server.Service.__init__
+varlink.tests.test_certification.CertificationError.__init__
+varlink.tests.test_orgexamplemore.ActionFailed.__init__" class="py-name" href="#" onclick="return doclink('link-22', '__init__', 'link-15');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> <tt class="py-op">{</tt><tt class="py-string">'error'</tt><tt class="py-op">:</tt> <tt class="py-string">'org.varlink.service.InterfaceNotFound'</tt><tt class="py-op">,</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">                                     <tt class="py-string">'parameters'</tt><tt class="py-op">:</tt> <tt class="py-op">{</tt><tt class="py-string">'interface'</tt><tt class="py-op">:</tt> <tt id="link-23" class="py-name"><a title="varlink.server.Service.interface" class="py-name" href="#" onclick="return doclink('link-23', 'interface', 'link-19');">interface</a></tt><tt class="py-op">}</tt><tt class="py-op">}</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"> </tt>
+<a name="MethodNotFound"></a><div id="MethodNotFound-def"><a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt> <a class="py-toggle" href="#" id="MethodNotFound-toggle" onclick="return toggle('MethodNotFound');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.MethodNotFound-class.html">MethodNotFound</a><tt class="py-op">(</tt><tt class="py-base-class">VarlinkError</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MethodNotFound-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="MethodNotFound-expanded"><a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line">    <tt class="py-docstring">"""The standardized varlink MethodNotFound error as a python exception"""</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">classmethod</tt> </tt>
+<a name="MethodNotFound.new"></a><div id="MethodNotFound.new-def"><a name="L93"></a><tt class="py-lineno"> 93</tt> <a class="py-toggle" href="#" id="MethodNotFound.new-toggle" onclick="return toggle('MethodNotFound.new');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.MethodNotFound-class.html#new">new</a><tt class="py-op">(</tt><tt class="py-param">cls</tt><tt class="py-op">,</tt> <tt class="py-param">message</tt><tt class="py-op">,</tt> <tt class="py-param">namespaced</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MethodNotFound.new-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MethodNotFound.new-expanded"><a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">cls</tt><tt class="py-op">(</tt><tt class="py-name">namespaced</tt> <tt class="py-keyword">and</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">method</tt> <tt class="py-keyword">or</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-24" class="py-name"><a title="varlink.scanner.Scanner.get" class="py-name" href="#" onclick="return doclink('link-24', 'get', 'link-17');">get</a></tt><tt class="py-op">(</tt><tt class="py-string">'method'</tt><tt class="py-op">,</tt> <tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"> </tt>
+<a name="MethodNotFound.__init__"></a><div id="MethodNotFound.__init__-def"><a name="L96"></a><tt class="py-lineno"> 96</tt> <a class="py-toggle" href="#" id="MethodNotFound.__init__-toggle" onclick="return toggle('MethodNotFound.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.MethodNotFound-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">method</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MethodNotFound.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MethodNotFound.__init__-expanded"><a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">        <tt id="link-25" class="py-name"><a title="varlink.error.VarlinkError" class="py-name" href="#" onclick="return doclink('link-25', 'VarlinkError', 'link-4');">VarlinkError</a></tt><tt class="py-op">.</tt><tt id="link-26" class="py-name"><a title="varlink.client.Client.__init__
+varlink.client.ClientInterfaceHandler.__init__
+varlink.client.SimpleClientInterfaceHandler.__init__
+varlink.error.InterfaceNotFound.__init__
+varlink.error.InvalidParameter.__init__
+varlink.error.MethodNotFound.__init__
+varlink.error.MethodNotImplemented.__init__
+varlink.error.VarlinkError.__init__
+varlink.scanner.Interface.__init__
+varlink.scanner.Scanner.__init__
+varlink.scanner._Alias.__init__
+varlink.scanner._Array.__init__
+varlink.scanner._CustomType.__init__
+varlink.scanner._Dict.__init__
+varlink.scanner._Enum.__init__
+varlink.scanner._Error.__init__
+varlink.scanner._Maybe.__init__
+varlink.scanner._Method.__init__
+varlink.scanner._Struct.__init__
+varlink.server.Server.__init__
+varlink.server.Service.__init__
+varlink.tests.test_certification.CertificationError.__init__
+varlink.tests.test_orgexamplemore.ActionFailed.__init__" class="py-name" href="#" onclick="return doclink('link-26', '__init__', 'link-15');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> <tt class="py-op">{</tt><tt class="py-string">'error'</tt><tt class="py-op">:</tt> <tt class="py-string">'org.varlink.service.MethodNotFound'</tt><tt class="py-op">,</tt> <tt class="py-string">'parameters'</tt><tt class="py-op">:</tt> <tt class="py-op">{</tt><tt class="py-string">'method'</tt><tt class="py-op">:</tt> <tt class="py-name">method</tt><tt class="py-op">}</tt><tt class="py-op">}</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"> </tt>
+<a name="MethodNotImplemented"></a><div id="MethodNotImplemented-def"><a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt> <a class="py-toggle" href="#" id="MethodNotImplemented-toggle" onclick="return toggle('MethodNotImplemented');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.MethodNotImplemented-class.html">MethodNotImplemented</a><tt class="py-op">(</tt><tt class="py-base-class">VarlinkError</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MethodNotImplemented-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="MethodNotImplemented-expanded"><a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">    <tt class="py-docstring">"""The standardized varlink MethodNotImplemented error as a python exception"""</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">classmethod</tt> </tt>
+<a name="MethodNotImplemented.new"></a><div id="MethodNotImplemented.new-def"><a name="L104"></a><tt class="py-lineno">104</tt> <a class="py-toggle" href="#" id="MethodNotImplemented.new-toggle" onclick="return toggle('MethodNotImplemented.new');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.MethodNotImplemented-class.html#new">new</a><tt class="py-op">(</tt><tt class="py-param">cls</tt><tt class="py-op">,</tt> <tt class="py-param">message</tt><tt class="py-op">,</tt> <tt class="py-param">namespaced</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MethodNotImplemented.new-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MethodNotImplemented.new-expanded"><a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">cls</tt><tt class="py-op">(</tt><tt class="py-name">namespaced</tt> <tt class="py-keyword">and</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">method</tt> <tt class="py-keyword">or</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-27" class="py-name"><a title="varlink.scanner.Scanner.get" class="py-name" href="#" onclick="return doclink('link-27', 'get', 'link-17');">get</a></tt><tt class="py-op">(</tt><tt class="py-string">'method'</tt><tt class="py-op">,</tt> <tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"> </tt>
+<a name="MethodNotImplemented.__init__"></a><div id="MethodNotImplemented.__init__-def"><a name="L107"></a><tt class="py-lineno">107</tt> <a class="py-toggle" href="#" id="MethodNotImplemented.__init__-toggle" onclick="return toggle('MethodNotImplemented.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.MethodNotImplemented-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">method</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MethodNotImplemented.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MethodNotImplemented.__init__-expanded"><a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">        <tt id="link-28" class="py-name"><a title="varlink.error.VarlinkError" class="py-name" href="#" onclick="return doclink('link-28', 'VarlinkError', 'link-4');">VarlinkError</a></tt><tt class="py-op">.</tt><tt id="link-29" class="py-name"><a title="varlink.client.Client.__init__
+varlink.client.ClientInterfaceHandler.__init__
+varlink.client.SimpleClientInterfaceHandler.__init__
+varlink.error.InterfaceNotFound.__init__
+varlink.error.InvalidParameter.__init__
+varlink.error.MethodNotFound.__init__
+varlink.error.MethodNotImplemented.__init__
+varlink.error.VarlinkError.__init__
+varlink.scanner.Interface.__init__
+varlink.scanner.Scanner.__init__
+varlink.scanner._Alias.__init__
+varlink.scanner._Array.__init__
+varlink.scanner._CustomType.__init__
+varlink.scanner._Dict.__init__
+varlink.scanner._Enum.__init__
+varlink.scanner._Error.__init__
+varlink.scanner._Maybe.__init__
+varlink.scanner._Method.__init__
+varlink.scanner._Struct.__init__
+varlink.server.Server.__init__
+varlink.server.Service.__init__
+varlink.tests.test_certification.CertificationError.__init__
+varlink.tests.test_orgexamplemore.ActionFailed.__init__" class="py-name" href="#" onclick="return doclink('link-29', '__init__', 'link-15');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">                              <tt class="py-op">{</tt><tt class="py-string">'error'</tt><tt class="py-op">:</tt> <tt class="py-string">'org.varlink.service.MethodNotImplemented'</tt><tt class="py-op">,</tt> <tt class="py-string">'parameters'</tt><tt class="py-op">:</tt> <tt class="py-op">{</tt><tt class="py-string">'method'</tt><tt class="py-op">:</tt> <tt class="py-name">method</tt><tt class="py-op">}</tt><tt class="py-op">}</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"> </tt>
+<a name="InvalidParameter"></a><div id="InvalidParameter-def"><a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt> <a class="py-toggle" href="#" id="InvalidParameter-toggle" onclick="return toggle('InvalidParameter');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.error.InvalidParameter-class.html">InvalidParameter</a><tt class="py-op">(</tt><tt class="py-base-class">VarlinkError</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="InvalidParameter-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="InvalidParameter-expanded"><a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">    <tt class="py-docstring">"""The standardized varlink InvalidParameter error as a python exception"""</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">classmethod</tt> </tt>
+<a name="InvalidParameter.new"></a><div id="InvalidParameter.new-def"><a name="L116"></a><tt class="py-lineno">116</tt> <a class="py-toggle" href="#" id="InvalidParameter.new-toggle" onclick="return toggle('InvalidParameter.new');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.InvalidParameter-class.html#new">new</a><tt class="py-op">(</tt><tt class="py-param">cls</tt><tt class="py-op">,</tt> <tt class="py-param">message</tt><tt class="py-op">,</tt> <tt class="py-param">namespaced</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="InvalidParameter.new-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="InvalidParameter.new-expanded"><a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">cls</tt><tt class="py-op">(</tt><tt class="py-name">namespaced</tt> <tt class="py-keyword">and</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">parameter</tt> <tt class="py-keyword">or</tt> <tt class="py-name">message</tt><tt class="py-op">[</tt><tt class="py-string">'parameters'</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-30" class="py-name"><a title="varlink.scanner.Scanner.get" class="py-name" href="#" onclick="return doclink('link-30', 'get', 'link-17');">get</a></tt><tt class="py-op">(</tt><tt class="py-string">'parameter'</tt><tt class="py-op">,</tt> <tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"> </tt>
+<a name="InvalidParameter.__init__"></a><div id="InvalidParameter.__init__-def"><a name="L119"></a><tt class="py-lineno">119</tt> <a class="py-toggle" href="#" id="InvalidParameter.__init__-toggle" onclick="return toggle('InvalidParameter.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.error.InvalidParameter-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">name</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="InvalidParameter.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="InvalidParameter.__init__-expanded"><a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">        <tt id="link-31" class="py-name"><a title="varlink.error.VarlinkError" class="py-name" href="#" onclick="return doclink('link-31', 'VarlinkError', 'link-4');">VarlinkError</a></tt><tt class="py-op">.</tt><tt id="link-32" class="py-name"><a title="varlink.client.Client.__init__
+varlink.client.ClientInterfaceHandler.__init__
+varlink.client.SimpleClientInterfaceHandler.__init__
+varlink.error.InterfaceNotFound.__init__
+varlink.error.InvalidParameter.__init__
+varlink.error.MethodNotFound.__init__
+varlink.error.MethodNotImplemented.__init__
+varlink.error.VarlinkError.__init__
+varlink.scanner.Interface.__init__
+varlink.scanner.Scanner.__init__
+varlink.scanner._Alias.__init__
+varlink.scanner._Array.__init__
+varlink.scanner._CustomType.__init__
+varlink.scanner._Dict.__init__
+varlink.scanner._Enum.__init__
+varlink.scanner._Error.__init__
+varlink.scanner._Maybe.__init__
+varlink.scanner._Method.__init__
+varlink.scanner._Struct.__init__
+varlink.server.Server.__init__
+varlink.server.Service.__init__
+varlink.tests.test_certification.CertificationError.__init__
+varlink.tests.test_orgexamplemore.ActionFailed.__init__" class="py-name" href="#" onclick="return doclink('link-32', '__init__', 'link-15');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">,</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line">                              <tt class="py-op">{</tt><tt class="py-string">'error'</tt><tt class="py-op">:</tt> <tt class="py-string">'org.varlink.service.InvalidParameter'</tt><tt class="py-op">,</tt> <tt class="py-string">'parameters'</tt><tt class="py-op">:</tt> <tt class="py-op">{</tt><tt class="py-string">'parameter'</tt><tt class="py-op">:</tt> <tt class="py-name">name</tt><tt class="py-op">}</tt><tt class="py-op">}</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="varlink-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

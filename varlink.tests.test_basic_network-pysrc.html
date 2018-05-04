@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>varlink.tests.test_basic_network</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="varlink-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="varlink-module.html">Package&nbsp;varlink</a> ::
+        <a href="varlink.tests-module.html" onclick="show_private();">Package&nbsp;tests</a> ::
+        Module&nbsp;test_basic_network
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="varlink.tests.test_basic_network-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="varlink.tests.test_basic_network-module.html">Module varlink.tests.test_basic_network</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">__future__</tt> <tt class="py-keyword">import</tt> <tt class="py-name">print_function</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">__future__</tt> <tt class="py-keyword">import</tt> <tt class="py-name">unicode_literals</tt> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">builtins</tt> <tt class="py-keyword">import</tt> <tt class="py-name">str</tt> </tt>
+<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">socket</tt> </tt>
+<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">threading</tt> </tt>
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">unittest</tt> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">sys</tt> <tt class="py-keyword">import</tt> <tt class="py-name">platform</tt> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt id="link-0" class="py-name" targets="Package varlink=varlink-module.html"><a title="varlink" class="py-name" href="#" onclick="return doclink('link-0', 'varlink', 'link-0');">varlink</a></tt> </tt>
+<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"> </tt>
+<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt id="link-1" class="py-name" targets="Variable varlink.server.RequestHandler.service=varlink.server.RequestHandler-class.html#service,Variable varlink.tests.test_basic_network.ServiceRequestHandler.service=varlink.tests.test_basic_network.ServiceRequestHandler-class.html#service,Variable varlink.tests.test_basic_network.service=varlink.tests.test_basic_network-module.html#service,Variable varlink.tests.test_certification.ServiceRequestHandler.service=varlink.tests.test_certification.ServiceRequestHandler-class.html#service,Variable varlink.tests.test_certification.service=varlink.tests.test_certification-module.html#service,Variable varlink.tests.test_orgexamplemore.ServiceRequestHandler.service=varlink.tests.test_orgexamplemore.ServiceRequestHandler-class.html#service,Variable varlink.tests.test_orgexamplemore.service=varlink.tests.test_orgexamplemore-module.html#service"><a title="varlink.server.RequestHandler.service
+varlink.tests.test_basic_network.ServiceRequestHandler.service
+varlink.tests.test_basic_network.service
+varlink.tests.test_certification.ServiceRequestHandler.service
+varlink.tests.test_certification.service
+varlink.tests.test_orgexamplemore.ServiceRequestHandler.service
+varlink.tests.test_orgexamplemore.service" class="py-name" href="#" onclick="return doclink('link-1', 'service', 'link-1');">service</a></tt> <tt class="py-op">=</tt> <tt id="link-2" class="py-name"><a title="varlink" class="py-name" href="#" onclick="return doclink('link-2', 'varlink', 'link-0');">varlink</a></tt><tt class="py-op">.</tt><tt id="link-3" class="py-name" targets="Class varlink.server.Service=varlink.server.Service-class.html"><a title="varlink.server.Service" class="py-name" href="#" onclick="return doclink('link-3', 'Service', 'link-3');">Service</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line">    <tt class="py-name">vendor</tt><tt class="py-op">=</tt><tt class="py-string">'Varlink'</tt><tt class="py-op">,</tt> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line">    <tt class="py-name">product</tt><tt class="py-op">=</tt><tt class="py-string">'Varlink Examples'</tt><tt class="py-op">,</tt> </tt>
+<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line">    <tt class="py-name">version</tt><tt class="py-op">=</tt><tt class="py-string">'1'</tt><tt class="py-op">,</tt> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line">    <tt class="py-name">url</tt><tt class="py-op">=</tt><tt class="py-string">'http://varlink.org'</tt><tt class="py-op">,</tt> </tt>
+<a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line">    <tt class="py-name">interface_dir</tt><tt class="py-op">=</tt><tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">dirname</tt><tt class="py-op">(</tt><tt class="py-name">__file__</tt><tt class="py-op">)</tt> </tt>
+<a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"><tt class="py-op">)</tt> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line"> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line"> </tt>
+<a name="ServiceRequestHandler"></a><div id="ServiceRequestHandler-def"><a name="L23"></a><tt class="py-lineno">23</tt> <a class="py-toggle" href="#" id="ServiceRequestHandler-toggle" onclick="return toggle('ServiceRequestHandler');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.tests.test_basic_network.ServiceRequestHandler-class.html">ServiceRequestHandler</a><tt class="py-op">(</tt><tt class="py-base-class">varlink</tt><tt class="py-op">.</tt><tt class="py-base-class">RequestHandler</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ServiceRequestHandler-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="ServiceRequestHandler-expanded"><a name="L24"></a><tt class="py-lineno">24</tt>  <tt class="py-line">    <tt id="link-4" class="py-name"><a title="varlink.server.RequestHandler.service
+varlink.tests.test_basic_network.ServiceRequestHandler.service
+varlink.tests.test_basic_network.service
+varlink.tests.test_certification.ServiceRequestHandler.service
+varlink.tests.test_certification.service
+varlink.tests.test_orgexamplemore.ServiceRequestHandler.service
+varlink.tests.test_orgexamplemore.service" class="py-name" href="#" onclick="return doclink('link-4', 'service', 'link-1');">service</a></tt> <tt class="py-op">=</tt> <tt id="link-5" class="py-name"><a title="varlink.server.RequestHandler.service
+varlink.tests.test_basic_network.ServiceRequestHandler.service
+varlink.tests.test_basic_network.service
+varlink.tests.test_certification.ServiceRequestHandler.service
+varlink.tests.test_certification.service
+varlink.tests.test_orgexamplemore.ServiceRequestHandler.service
+varlink.tests.test_orgexamplemore.service" class="py-name" href="#" onclick="return doclink('link-5', 'service', 'link-1');">service</a></tt> </tt>
+</div><a name="L25"></a><tt class="py-lineno">25</tt>  <tt class="py-line"> </tt>
+<a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line"> </tt>
+<a name="TestService"></a><div id="TestService-def"><a name="L27"></a><tt class="py-lineno">27</tt> <a class="py-toggle" href="#" id="TestService-toggle" onclick="return toggle('TestService');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="varlink.tests.test_basic_network.TestService-class.html">TestService</a><tt class="py-op">(</tt><tt class="py-base-class">unittest</tt><tt class="py-op">.</tt><tt class="py-base-class">TestCase</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestService-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="TestService-expanded"><a name="TestService.do_run"></a><div id="TestService.do_run-def"><a name="L28"></a><tt class="py-lineno">28</tt> <a class="py-toggle" href="#" id="TestService.do_run-toggle" onclick="return toggle('TestService.do_run');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.tests.test_basic_network.TestService-class.html#do_run">do_run</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">address</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestService.do_run-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="TestService.do_run-expanded"><a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line">        <tt id="link-6" class="py-name" targets="Module varlink.server=varlink.server-module.html"><a title="varlink.server" class="py-name" href="#" onclick="return doclink('link-6', 'server', 'link-6');">server</a></tt> <tt class="py-op">=</tt> <tt id="link-7" class="py-name"><a title="varlink" class="py-name" href="#" onclick="return doclink('link-7', 'varlink', 'link-0');">varlink</a></tt><tt class="py-op">.</tt><tt id="link-8" class="py-name" targets="Class varlink.server.ThreadingServer=varlink.server.ThreadingServer-class.html"><a title="varlink.server.ThreadingServer" class="py-name" href="#" onclick="return doclink('link-8', 'ThreadingServer', 'link-8');">ThreadingServer</a></tt><tt class="py-op">(</tt><tt class="py-name">address</tt><tt class="py-op">,</tt> <tt id="link-9" class="py-name" targets="Class varlink.tests.test_basic_network.ServiceRequestHandler=varlink.tests.test_basic_network.ServiceRequestHandler-class.html,Class varlink.tests.test_certification.ServiceRequestHandler=varlink.tests.test_certification.ServiceRequestHandler-class.html,Class varlink.tests.test_orgexamplemore.ServiceRequestHandler=varlink.tests.test_orgexamplemore.ServiceRequestHandler-class.html"><a title="varlink.tests.test_basic_network.ServiceRequestHandler
+varlink.tests.test_certification.ServiceRequestHandler
+varlink.tests.test_orgexamplemore.ServiceRequestHandler" class="py-name" href="#" onclick="return doclink('link-9', 'ServiceRequestHandler', 'link-9');">ServiceRequestHandler</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line">        <tt class="py-name">server_thread</tt> <tt class="py-op">=</tt> <tt class="py-name">threading</tt><tt class="py-op">.</tt><tt class="py-name">Thread</tt><tt class="py-op">(</tt><tt class="py-name">target</tt><tt class="py-op">=</tt><tt id="link-10" class="py-name"><a title="varlink.server" class="py-name" href="#" onclick="return doclink('link-10', 'server', 'link-6');">server</a></tt><tt class="py-op">.</tt><tt class="py-name">serve_forever</tt><tt class="py-op">)</tt> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line">        <tt class="py-name">server_thread</tt><tt class="py-op">.</tt><tt class="py-name">daemon</tt> <tt class="py-op">=</tt> <tt class="py-name">True</tt> </tt>
+<a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line">        <tt class="py-name">server_thread</tt><tt class="py-op">.</tt><tt class="py-name">start</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line"> </tt>
+<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line">        <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line">            <tt class="py-keyword">with</tt> <tt id="link-11" class="py-name"><a title="varlink" class="py-name" href="#" onclick="return doclink('link-11', 'varlink', 'link-0');">varlink</a></tt><tt class="py-op">.</tt><tt id="link-12" class="py-name" targets="Class varlink.client.Client=varlink.client.Client-class.html"><a title="varlink.client.Client" class="py-name" href="#" onclick="return doclink('link-12', 'Client', 'link-12');">Client</a></tt><tt class="py-op">(</tt><tt class="py-name">address</tt><tt class="py-op">)</tt> <tt class="py-keyword">as</tt> <tt id="link-13" class="py-name" targets="Module varlink.client=varlink.client-module.html"><a title="varlink.client" class="py-name" href="#" onclick="return doclink('link-13', 'client', 'link-13');">client</a></tt><tt class="py-op">,</tt> \ </tt>
+<a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line">                    <tt id="link-14" class="py-name"><a title="varlink.client" class="py-name" href="#" onclick="return doclink('link-14', 'client', 'link-13');">client</a></tt><tt class="py-op">.</tt><tt id="link-15" class="py-name" targets="Method varlink.client.Client.open()=varlink.client.Client-class.html#open"><a title="varlink.client.Client.open" class="py-name" href="#" onclick="return doclink('link-15', 'open', 'link-15');">open</a></tt><tt class="py-op">(</tt><tt class="py-string">'org.varlink.service'</tt><tt class="py-op">)</tt> <tt class="py-keyword">as</tt> <tt class="py-name">_connection</tt><tt class="py-op">:</tt> </tt>
+<a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line">                <tt class="py-name">info</tt> <tt class="py-op">=</tt> <tt class="py-name">_connection</tt><tt class="py-op">.</tt><tt id="link-16" class="py-name" targets="Method varlink.server.Service.GetInfo()=varlink.server.Service-class.html#GetInfo"><a title="varlink.server.Service.GetInfo" class="py-name" href="#" onclick="return doclink('link-16', 'GetInfo', 'link-16');">GetInfo</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line"> </tt>
+<a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertEqual</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">info</tt><tt class="py-op">[</tt><tt class="py-string">'interfaces'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L40"></a><tt class="py-lineno">40</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertEqual</tt><tt class="py-op">(</tt><tt class="py-name">info</tt><tt class="py-op">[</tt><tt class="py-string">'interfaces'</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-string">"org.varlink.service"</tt><tt class="py-op">)</tt> </tt>
+<a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertEqual</tt><tt class="py-op">(</tt><tt class="py-name">info</tt><tt class="py-op">,</tt> <tt id="link-17" class="py-name"><a title="varlink.server.RequestHandler.service
+varlink.tests.test_basic_network.ServiceRequestHandler.service
+varlink.tests.test_basic_network.service
+varlink.tests.test_certification.ServiceRequestHandler.service
+varlink.tests.test_certification.service
+varlink.tests.test_orgexamplemore.ServiceRequestHandler.service
+varlink.tests.test_orgexamplemore.service" class="py-name" href="#" onclick="return doclink('link-17', 'service', 'link-1');">service</a></tt><tt class="py-op">.</tt><tt id="link-18" class="py-name"><a title="varlink.server.Service.GetInfo" class="py-name" href="#" onclick="return doclink('link-18', 'GetInfo', 'link-16');">GetInfo</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line"> </tt>
+<a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line">                <tt class="py-name">desc</tt> <tt class="py-op">=</tt> <tt class="py-name">_connection</tt><tt class="py-op">.</tt><tt id="link-19" class="py-name" targets="Method varlink.server.Service.GetInterfaceDescription()=varlink.server.Service-class.html#GetInterfaceDescription"><a title="varlink.server.Service.GetInterfaceDescription" class="py-name" href="#" onclick="return doclink('link-19', 'GetInterfaceDescription', 'link-19');">GetInterfaceDescription</a></tt><tt class="py-op">(</tt><tt class="py-name">info</tt><tt class="py-op">[</tt><tt class="py-string">'interfaces'</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertEqual</tt><tt class="py-op">(</tt><tt class="py-name">desc</tt><tt class="py-op">,</tt> <tt id="link-20" class="py-name"><a title="varlink.server.RequestHandler.service
+varlink.tests.test_basic_network.ServiceRequestHandler.service
+varlink.tests.test_basic_network.service
+varlink.tests.test_certification.ServiceRequestHandler.service
+varlink.tests.test_certification.service
+varlink.tests.test_orgexamplemore.ServiceRequestHandler.service
+varlink.tests.test_orgexamplemore.service" class="py-name" href="#" onclick="return doclink('link-20', 'service', 'link-1');">service</a></tt><tt class="py-op">.</tt><tt id="link-21" class="py-name"><a title="varlink.server.Service.GetInterfaceDescription" class="py-name" href="#" onclick="return doclink('link-21', 'GetInterfaceDescription', 'link-19');">GetInterfaceDescription</a></tt><tt class="py-op">(</tt><tt class="py-string">"org.varlink.service"</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line"> </tt>
+<a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line">                <tt class="py-name">_connection</tt><tt class="py-op">.</tt><tt id="link-22" class="py-name" targets="Method varlink.client.ClientInterfaceHandler.close()=varlink.client.ClientInterfaceHandler-class.html#close,Method varlink.client.SimpleClientInterfaceHandler.close()=varlink.client.SimpleClientInterfaceHandler-class.html#close"><a title="varlink.client.ClientInterfaceHandler.close
+varlink.client.SimpleClientInterfaceHandler.close" class="py-name" href="#" onclick="return doclink('link-22', 'close', 'link-22');">close</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt>  <tt class="py-line"> </tt>
+<a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line">        <tt class="py-keyword">finally</tt><tt class="py-op">:</tt> </tt>
+<a name="L49"></a><tt class="py-lineno">49</tt>  <tt class="py-line">            <tt id="link-23" class="py-name"><a title="varlink.server" class="py-name" href="#" onclick="return doclink('link-23', 'server', 'link-6');">server</a></tt><tt class="py-op">.</tt><tt class="py-name">shutdown</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line">            <tt id="link-24" class="py-name"><a title="varlink.server" class="py-name" href="#" onclick="return doclink('link-24', 'server', 'link-6');">server</a></tt><tt class="py-op">.</tt><tt id="link-25" class="py-name" targets="Method varlink.server.Server.server_close()=varlink.server.Server-class.html#server_close"><a title="varlink.server.Server.server_close" class="py-name" href="#" onclick="return doclink('link-25', 'server_close', 'link-25');">server_close</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line"> </tt>
+<a name="TestService.test_tcp"></a><div id="TestService.test_tcp-def"><a name="L52"></a><tt class="py-lineno">52</tt> <a class="py-toggle" href="#" id="TestService.test_tcp-toggle" onclick="return toggle('TestService.test_tcp');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.tests.test_basic_network.TestService-class.html#test_tcp">test_tcp</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestService.test_tcp-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="TestService.test_tcp-expanded"><a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-26" class="py-name" targets="Method varlink.tests.test_basic_network.TestService.do_run()=varlink.tests.test_basic_network.TestService-class.html#do_run"><a title="varlink.tests.test_basic_network.TestService.do_run" class="py-name" href="#" onclick="return doclink('link-26', 'do_run', 'link-26');">do_run</a></tt><tt class="py-op">(</tt><tt class="py-string">"tcp:127.0.0.1:23450"</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line"> </tt>
+<a name="TestService.test_anon_unix"></a><div id="TestService.test_anon_unix-def"><a name="L55"></a><tt class="py-lineno">55</tt> <a class="py-toggle" href="#" id="TestService.test_anon_unix-toggle" onclick="return toggle('TestService.test_anon_unix');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.tests.test_basic_network.TestService-class.html#test_anon_unix">test_anon_unix</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestService.test_anon_unix-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="TestService.test_anon_unix-expanded"><a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">platform</tt> <tt class="py-op">==</tt> <tt class="py-string">"linux"</tt><tt class="py-op">:</tt> </tt>
+<a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-27" class="py-name"><a title="varlink.tests.test_basic_network.TestService.do_run" class="py-name" href="#" onclick="return doclink('link-27', 'do_run', 'link-26');">do_run</a></tt><tt class="py-op">(</tt><tt class="py-string">"unix:@org.varlink.service_anon_test"</tt> </tt>
+<a name="L58"></a><tt class="py-lineno">58</tt>  <tt class="py-line">                        <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">getpid</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L59"></a><tt class="py-lineno">59</tt>  <tt class="py-line">                        <tt class="py-op">+</tt> <tt class="py-name">threading</tt><tt class="py-op">.</tt><tt class="py-name">current_thread</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">getName</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line">                        <tt class="py-op">)</tt> </tt>
+</div><a name="L61"></a><tt class="py-lineno">61</tt>  <tt class="py-line"> </tt>
+<a name="TestService.test_unix"></a><div id="TestService.test_unix-def"><a name="L62"></a><tt class="py-lineno">62</tt> <a class="py-toggle" href="#" id="TestService.test_unix-toggle" onclick="return toggle('TestService.test_unix');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.tests.test_basic_network.TestService-class.html#test_unix">test_unix</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestService.test_unix-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="TestService.test_unix-expanded"><a name="L63"></a><tt class="py-lineno">63</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">socket</tt><tt class="py-op">,</tt> <tt class="py-string">"AF_UNIX"</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L64"></a><tt class="py-lineno">64</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-28" class="py-name"><a title="varlink.tests.test_basic_network.TestService.do_run" class="py-name" href="#" onclick="return doclink('link-28', 'do_run', 'link-26');">do_run</a></tt><tt class="py-op">(</tt><tt class="py-string">"unix:/tmp/org.varlink.service_anon_test_"</tt> </tt>
+<a name="L65"></a><tt class="py-lineno">65</tt>  <tt class="py-line">                        <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">getpid</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L66"></a><tt class="py-lineno">66</tt>  <tt class="py-line">                        <tt class="py-op">+</tt> <tt class="py-name">threading</tt><tt class="py-op">.</tt><tt class="py-name">current_thread</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">getName</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L67"></a><tt class="py-lineno">67</tt>  <tt class="py-line">                        <tt class="py-op">)</tt> </tt>
+</div><a name="L68"></a><tt class="py-lineno">68</tt>  <tt class="py-line"> </tt>
+<a name="TestService.test_wrong_url"></a><div id="TestService.test_wrong_url-def"><a name="L69"></a><tt class="py-lineno">69</tt> <a class="py-toggle" href="#" id="TestService.test_wrong_url-toggle" onclick="return toggle('TestService.test_wrong_url');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="varlink.tests.test_basic_network.TestService-class.html#test_wrong_url">test_wrong_url</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestService.test_wrong_url-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="TestService.test_wrong_url-expanded"><a name="L70"></a><tt class="py-lineno">70</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertRaises</tt><tt class="py-op">(</tt><tt id="link-29" class="py-name"><a title="varlink" class="py-name" href="#" onclick="return doclink('link-29', 'varlink', 'link-0');">varlink</a></tt><tt class="py-op">.</tt><tt id="link-30" class="py-name" targets="Class varlink.client.ConnectionError=varlink.client.ConnectionError-class.html,Class varlink.error.ConnectionError=varlink.error.ConnectionError-class.html"><a title="varlink.client.ConnectionError
+varlink.error.ConnectionError" class="py-name" href="#" onclick="return doclink('link-30', 'ConnectionError', 'link-30');">ConnectionError</a></tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-31" class="py-name"><a title="varlink.tests.test_basic_network.TestService.do_run" class="py-name" href="#" onclick="return doclink('link-31', 'do_run', 'link-26');">do_run</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L71"></a><tt class="py-lineno">71</tt>  <tt class="py-line">                          <tt class="py-string">"uenix:/tmp/org.varlink.service_wrong_url_test_%d"</tt> <tt class="py-op">%</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">getpid</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L72"></a><tt class="py-lineno">72</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="varlink-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
