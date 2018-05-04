@@ -33,8 +33,9 @@ class ClientInterfaceHandler(object):
 
         For monitor calls with '_more=True' a generator object is returned.
 
-        @param interface: an Interface object
-        @param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries
+        :param interface: an Interface object
+        :param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries
+
         """
         if not isinstance(interface, Interface):
             raise TypeError
@@ -168,9 +169,10 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
         For monitor calls with '_more=True' a generator object is returned.
 
-        @param interface: an Interface object
-        @param file_or_socket: an open socket or io stream
-        @param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries
+        :param interface: an Interface object
+        :param file_or_socket: an open socket or io stream
+        :param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries
+        
         """
         ClientInterfaceHandler.__init__(self, interface, namespaced=namespaced)
         self._connection = file_or_socket
@@ -289,10 +291,11 @@ class Client(object):
     def __init__(self, address=None, resolve_interface=None, resolver=None):
         """Get the interface descriptions from a varlink service.
 
-        @param address: the exact address like "unix:/run/org.varlink.resolver"
-        @param resolve_interface: an interface name, which is resolved with the system wide resolver
-        @param resolver: the exact address of the resolver to be used to resolve the interface name
-        @exception ConnectionError: could not connect to the service or resolver
+        :param address: the exact address like "unix:/run/org.varlink.resolver"
+        :param resolve_interface: an interface name, which is resolved with the system wide resolver
+        :param resolver: the exact address of the resolver to be used to resolve the interface name
+        :exception ConnectionError: could not connect to the service or resolver
+
         """
         self._interfaces = {}
         self._child_pid = 0
@@ -392,12 +395,13 @@ class Client(object):
     def open(self, interface_name, namespaced=False):
         """Open a new connection and get a client interface handle with the varlink methods installed.
 
-        @param interface_name: an interface name, which the service this client object is
+        :param interface_name: an interface name, which the service this client object is
                                connected to, provides.
-        @param namespaced: If arguments and return values are instances of SimpleNamespace
+        :param namespaced: If arguments and return values are instances of SimpleNamespace
                             rather than dictionaries.
-        @exception InterfaceNotFound: if the interface is not found
-        @exception OSError: anything socket.connect() throws
+        :exception InterfaceNotFound: if the interface is not found
+        :exception OSError: anything socket.connect() throws
+
         """
 
         if interface_name not in self._interfaces:
@@ -419,7 +423,8 @@ class Client(object):
     def add_interface(self, interface):
         """Manually add or overwrite an interface definition from an Interface object.
 
-        @param interface: an Interface() object
+        :param interface: an Interface() object
+
         """
         if not isinstance(interface, Interface):
             raise TypeError

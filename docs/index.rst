@@ -3,6 +3,7 @@ varlink for python
 
 .. automodule:: varlink
    :members:
+   :special-members: __init__,__next__
    :undoc-members:
    :show-inheritance:
 

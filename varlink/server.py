@@ -50,10 +50,10 @@ class Service(object):
     The varlink file corresponding to this interface is loaded from the 'interface_dir'
     specified in the constructor of the Service. It has to end in '.varlink'.
 
-    Use a L{RequestHandler} with your Service object and run a L{varlink.Server} with it.
+    Use a :class:`RequestHandler` with your Service object and run a :class:`Server` with it.
 
     If you want to use your own server with the Service object, split the incoming stream
-    for every null byte and feed it to the L{Service.handle} method.
+    for every null byte and feed it to the :meth:`Service.handle` method.
     Write any message returned from this generator function to the output stream.
 
         >>> for outgoing_message in service.handle(incoming_message):
@@ -67,8 +67,8 @@ class Service(object):
     def __init__(self, vendor='', product='', version='', url='', interface_dir='.', namespaced=False):
         """Initialize the service with the data org.varlink.service.GetInfo() returns
 
-        Arguments:
-        interface_dir -- the directory with the *.varlink files for the interfaces
+        :param interface_dir: the directory with the \*.varlink files for the interfaces
+
         """
         self.vendor = vendor
         self.product = product
@@ -305,7 +305,7 @@ class RequestHandler(StreamRequestHandler):
     """Varlink request handler
 
     To use as an argument for the VarlinkServer constructor.
-    Instantiate your own class and set the class variable service to your global L{varlink.Service} object.
+    Instantiate your own class and set the class variable service to your global :class:`Service` object.
     """
     service = None
 
@@ -333,7 +333,7 @@ class RequestHandler(StreamRequestHandler):
 class Server(BaseServer):
     """Server
 
-    The same as the standard socketserver.TCPServer, to initialize with a subclass of L{RequestHandler}.
+    The same as the standard socketserver.TCPServer, to initialize with a subclass of :class:`RequestHandler`.
 
         >>> import varlink
         >>> import os
