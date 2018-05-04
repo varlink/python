@@ -17,6 +17,7 @@ import sys
 from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder, BrokenPipeError)
 from .scanner import (Interface, _Method)
 
+
 class ConnectionError(OSError):
     pass
 
@@ -151,7 +152,8 @@ class ClientInterfaceHandler(object):
         while more:
             (message, more) = self._next_varlink_message()
             if message:
-                message = self._interface.filter_params("client.reply", method.out_type, self._namespaced, message, None)
+                message = self._interface.filter_params("client.reply", method.out_type, self._namespaced, message,
+                                                        None)
             yield message
         self._in_use = False
 
@@ -236,29 +238,30 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
 class Client(object):
     """Varlink client class.
-
+    ```python
     >>> with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
     >>>     assert con1.Ping("Test")["pong"] == "Test"
-
+    ```
 
     If the varlink resolver is running:
-    >>> client = varlink.Client(resolve_interface='io.systemd.journal')
-    >>> print(client.get_interfaces()['io.systemd.journal'].get_description())
+    ```python
+    >>> client = varlink.Client(resolve_interface='com.redhat.logging')
+    >>> print(client.get_interfaces()['com.redhat.logging'].get_description())
     # Query and monitor the log messages of a system.
-    interface io.systemd.journal
+    interface com.redhat.logging
 
     type Entry (cursor: string, time: string, message: string, process: string, priority: string)
 
     # Monitor the log. Returns the @initial_lines most recent entries in the
     # first reply and then continuously replies when new entries are available.
     method Monitor(initial_lines: int) -> (entries: Entry[])
-
-    >>> connection = client.open("io.systemd.journal")
-
+    >>> connection = client.open("com.redhat.logging")
+    ```
     connection now holds an object with all the varlink methods available.
 
     Do varlink method call with varlink arguments and a
     single varlink return structure wrapped in a namespace class:
+    ```python
     >>> ret = connection.Monitor(initial_lines=1)
     >>> ret
     namespace(entries=[namespace(cursor='s=[…]',
@@ -266,9 +269,11 @@ class Client(object):
        process='nm-dispatcher', time='2018-01-29 12:19:59Z')])
     >>> ret.entries[0].process
     'nm-dispatcher'
+    ```
 
     Do varlink method call with varlink arguments and a
     multiple return values in monitor mode, using the "_more" keyword:
+    ```python
     >>> for m in connection.Monitor(_more=True):
     >>>     for e in m.entries:
     >>>         print("%s: %s" % (e.time, e.message))
@@ -279,6 +284,7 @@ class Client(object):
     2018-01-29 12:19:59Z: Started Network Manager Script Dispatcher Service.
     2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: new request (6 scripts)
     2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...
+    ```
 
     "_more" is special to this python varlink binding. If "_more=True", then the method call does
     not return a normal namespace wrapped varlink return value, but a generator,

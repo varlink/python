@@ -351,6 +351,7 @@ class Server(BaseServer):
     >>> server.serve_forever()
     ```
     """
+
     address_family = socket.AF_INET
 
     socket_type = socket.SOCK_STREAM
