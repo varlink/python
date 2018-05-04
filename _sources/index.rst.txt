@@ -6,6 +6,11 @@ varlink for python
    :undoc-members:
    :show-inheritance:
 
+Example
+#######
+.. automodule:: varlink.tests.test_orgexamplemore
+   :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

@@ -37,12 +37,13 @@
   <div class="section" id="module-varlink">
 <span id="varlink-for-python"></span><h1>varlink for python<a class="headerlink" href="#module-varlink" title="Permalink to this headline">¶</a></h1>
 <p>An implementation of the varlink protocol</p>
-<p>See U{<a class="reference external" href="https://www.varlink.org">https://www.varlink.org</a>} for more information about the varlink protocol and interface definition
+<p>See <a class="reference external" href="https://www.varlink.org">https://www.varlink.org</a> for more information about the varlink protocol and interface definition
 files.</p>
 <p>For server implementations use the <a class="reference internal" href="#varlink.Server" title="varlink.Server"><code class="xref py py-class docutils literal notranslate"><span class="pre">varlink.Server</span></code></a> class.</p>
 <p>For client implementations use the <a class="reference internal" href="#varlink.Client" title="varlink.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">varlink.Client</span></code></a> class.</p>
 <p>For installation and examples, see the GIT repository <a class="reference external" href="https://github.com/varlink/python">https://github.com/varlink/python</a>.
-or the source code of L{varlink.tests.test_orgexamplemore}</p>
+or the <a class="reference external" href="_modules/varlink/tests/test_orgexamplemore.html">source code</a> of
+<a class="reference internal" href="#module-varlink.tests.test_orgexamplemore" title="varlink.tests.test_orgexamplemore"><code class="xref py py-mod docutils literal notranslate"><span class="pre">varlink.tests.test_orgexamplemore</span></code></a></p>
 <dl class="class">
 <dt id="varlink.Client">
 <em class="property">class </em><code class="descclassname">varlink.</code><code class="descname">Client</code><span class="sig-paren">(</span><em>address=None</em>, <em>resolve_interface=None</em>, <em>resolver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client" title="Permalink to this definition">¶</a></dt>
@@ -517,7 +518,38 @@ implement default like this:</p>
 <code class="descclassname">varlink.</code><code class="descname">get_listen_fd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/server.html#get_listen_fd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.get_listen_fd" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<div class="section" id="module-varlink.tests.test_orgexamplemore">
+<span id="example"></span><h2>Example<a class="headerlink" href="#module-varlink.tests.test_orgexamplemore" title="Permalink to this headline">¶</a></h2>
+<p>Server and Client example of varlink for python</p>
+<p>From the main git repository directory run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink=&quot;unix:@test&quot; &amp;
+Listening on @test
+[1] 6434
+$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --varlink=&quot;unix:@test&quot;
+[...]
+</pre></div>
+</div>
+<dl class="exception">
+<dt id="varlink.tests.test_orgexamplemore.ActionFailed">
+<em class="property">exception </em><code class="descclassname">varlink.tests.test_orgexamplemore.</code><code class="descname">ActionFailed</code><span class="sig-paren">(</span><em>reason</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/tests/test_orgexamplemore.html#ActionFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.tests.test_orgexamplemore.ActionFailed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="varlink.tests.test_orgexamplemore.ServiceRequestHandler">
+<em class="property">class </em><code class="descclassname">varlink.tests.test_orgexamplemore.</code><code class="descname">ServiceRequestHandler</code><span class="sig-paren">(</span><em>request</em>, <em>client_address</em>, <em>server</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/tests/test_orgexamplemore.html#ServiceRequestHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.tests.test_orgexamplemore.ServiceRequestHandler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="varlink.tests.test_orgexamplemore.TestService">
+<em class="property">class </em><code class="descclassname">varlink.tests.test_orgexamplemore.</code><code class="descname">TestService</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/tests/test_orgexamplemore.html#TestService"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.tests.test_orgexamplemore.TestService" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <div class="toctree-wrapper compound">
+</div>
 </div>
 <div class="section" id="indices-and-tables">
 <h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
@@ -538,6 +570,7 @@ implement default like this:</p>
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">varlink for python</a><ul>
+<li><a class="reference internal" href="#module-varlink.tests.test_orgexamplemore">Example</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 </li>
