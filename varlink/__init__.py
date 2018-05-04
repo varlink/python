@@ -3,11 +3,11 @@
 See U{https://www.varlink.org} for more information about the varlink protocol and interface definition
 files.
 
-For server implementations use the L{varlink.Server} class.
+For server implementations use the :class:`varlink.Server` class.
 
-For client implementations use the L{varlink.Client} class.
+For client implementations use the :class:`varlink.Client` class.
 
-For installation and examples, see the GIT repository U{https://github.com/varlink/python}.
+For installation and examples, see the GIT repository https://github.com/varlink/python.
 or the source code of L{varlink.tests.test_orgexamplemore}
 
 """
