@@ -33,9 +33,8 @@ class ClientInterfaceHandler(object):
 
         For monitor calls with '_more=True' a generator object is returned.
 
-        Arguments:
-        interface - an Interface object
-        namespaced - if True, varlink methods return SimpleNamespace objects instead of dictionaries
+        @param interface: an Interface object
+        @param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries
         """
         if not isinstance(interface, Interface):
             raise TypeError
@@ -169,10 +168,9 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
         For monitor calls with '_more=True' a generator object is returned.
 
-        Arguments:
-        interface - an Interface object
-        file_or_socket - an open socket or io stream
-        namespaced - if True, varlink methods return SimpleNamespace objects instead of dictionaries
+        @param interface: an Interface object
+        @param file_or_socket: an open socket or io stream
+        @param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries
         """
         ClientInterfaceHandler.__init__(self, interface, namespaced=namespaced)
         self._connection = file_or_socket
@@ -238,53 +236,48 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
 class Client(object):
     """Varlink client class.
-    ```python
-    >>> with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
-    >>>     assert con1.Ping("Test")["pong"] == "Test"
-    ```
+
+        >>> with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
+        >>>     assert con1.Ping("Test")["pong"] == "Test"
 
     If the varlink resolver is running:
-    ```python
-    >>> client = varlink.Client(resolve_interface='com.redhat.logging')
-    >>> print(client.get_interfaces()['com.redhat.logging'].get_description())
-    # Query and monitor the log messages of a system.
-    interface com.redhat.logging
 
-    type Entry (cursor: string, time: string, message: string, process: string, priority: string)
+        >>> client = varlink.Client(resolve_interface='com.redhat.logging')
+        >>> print(client.get_interfaces()['com.redhat.logging'].get_description())
+        # Query and monitor the log messages of a system.
+        interface com.redhat.logging
+        type Entry (cursor: string, time: string, message: string, process: string, priority: string)
+        # Monitor the log. Returns the @initial_lines most recent entries in the
+        # first reply and then continuously replies when new entries are available.
+        method Monitor(initial_lines: int) -> (entries: Entry[])
+        >>> connection = client.open("com.redhat.logging")
 
-    # Monitor the log. Returns the @initial_lines most recent entries in the
-    # first reply and then continuously replies when new entries are available.
-    method Monitor(initial_lines: int) -> (entries: Entry[])
-    >>> connection = client.open("com.redhat.logging")
-    ```
     connection now holds an object with all the varlink methods available.
 
     Do varlink method call with varlink arguments and a
     single varlink return structure wrapped in a namespace class:
-    ```python
-    >>> ret = connection.Monitor(initial_lines=1)
-    >>> ret
-    namespace(entries=[namespace(cursor='s=[…]',
-       message="req:1 'dhcp4-change' [wlp3s0][…]", priority='critical',
-       process='nm-dispatcher', time='2018-01-29 12:19:59Z')])
-    >>> ret.entries[0].process
-    'nm-dispatcher'
-    ```
+
+        >>> ret = connection.Monitor(initial_lines=1)
+        >>> ret
+        namespace(entries=[namespace(cursor='s=[…]',
+           message="req:1 'dhcp4-change' [wlp3s0][…]", priority='critical',
+           process='nm-dispatcher', time='2018-01-29 12:19:59Z')])
+        >>> ret.entries[0].process
+        'nm-dispatcher'
 
     Do varlink method call with varlink arguments and a
     multiple return values in monitor mode, using the "_more" keyword:
-    ```python
-    >>> for m in connection.Monitor(_more=True):
-    >>>     for e in m.entries:
-    >>>         print("%s: %s" % (e.time, e.message))
-    2018-01-29 12:19:59Z: [system] Activating via systemd: service name='[…]
-    2018-01-29 12:19:59Z: Starting Network Manager Script Dispatcher Service...
-    2018-01-29 12:19:59Z: bound to 10.200.159.150 -- renewal in 1423 seconds.
-    2018-01-29 12:19:59Z: [system] Successfully activated service 'org.freedesktop.nm_dispatcher'
-    2018-01-29 12:19:59Z: Started Network Manager Script Dispatcher Service.
-    2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: new request (6 scripts)
-    2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...
-    ```
+
+        >>> for m in connection.Monitor(_more=True):
+        >>>     for e in m.entries:
+        >>>         print("%s: %s" % (e.time, e.message))
+        2018-01-29 12:19:59Z: [system] Activating via systemd: service name='[…]
+        2018-01-29 12:19:59Z: Starting Network Manager Script Dispatcher Service...
+        2018-01-29 12:19:59Z: bound to 10.200.159.150 -- renewal in 1423 seconds.
+        2018-01-29 12:19:59Z: [system] Successfully activated service 'org.freedesktop.nm_dispatcher'
+        2018-01-29 12:19:59Z: Started Network Manager Script Dispatcher Service.
+        2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: new request (6 scripts)
+        2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...
 
     "_more" is special to this python varlink binding. If "_more=True", then the method call does
     not return a normal namespace wrapped varlink return value, but a generator,
@@ -296,13 +289,10 @@ class Client(object):
     def __init__(self, address=None, resolve_interface=None, resolver=None):
         """Get the interface descriptions from a varlink service.
 
-        Keyword arguments:
-        address -- the exact address like "unix:/run/org.varlink.resolver"
-        resolve_interface -- an interface name, which is resolved with the system wide resolver
-        resolver -- the exact address of the resolver to be used to resolve the interface name
-
-        Exceptions:
-        ConnectionError - could not connect to the service or resolver
+        @param address: the exact address like "unix:/run/org.varlink.resolver"
+        @param resolve_interface: an interface name, which is resolved with the system wide resolver
+        @param resolver: the exact address of the resolver to be used to resolve the interface name
+        @exception ConnectionError: could not connect to the service or resolver
         """
         self._interfaces = {}
         self._child_pid = 0
@@ -402,13 +392,12 @@ class Client(object):
     def open(self, interface_name, namespaced=False):
         """Open a new connection and get a client interface handle with the varlink methods installed.
 
-        Arguments:
-        interface_name -- an interface name, which the service this client object is
-                          connected to, provides.
-
-        Exceptions:
-        InterfaceNotFound -- if the interface is not found
-        anything socket.connect() throws
+        @param interface_name: an interface name, which the service this client object is
+                               connected to, provides.
+        @param namespaced: If arguments and return values are instances of SimpleNamespace
+                            rather than dictionaries.
+        @exception InterfaceNotFound: if the interface is not found
+        @exception OSError: anything socket.connect() throws
         """
 
         if interface_name not in self._interfaces:
@@ -430,8 +419,7 @@ class Client(object):
     def add_interface(self, interface):
         """Manually add or overwrite an interface definition from an Interface object.
 
-        Argument:
-        interface - an Interface() object
+        @param interface: an Interface() object
         """
         if not isinstance(interface, Interface):
             raise TypeError

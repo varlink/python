@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+
+"""Server and Client example of varlink for python
+
+From the main git repository directory run::
+
+    $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py
+
+or::
+
+    $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test" &
+    Listening on @test
+    [1] 6434
+    $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --varlink="unix:@test"
+    [...]
+
+"""
+
 from __future__ import print_function
 from __future__ import unicode_literals
 

@@ -4,17 +4,24 @@ from __future__ import unicode_literals
 import json
 
 try:
-     from types import SimpleNamespace
-     ConnectionError = ConnectionError
-     BrokenPipeError = BrokenPipeError
-except: # Python 2
-     from argparse import Namespace as SimpleNamespace
-     class ConnectionError(OSError):
-         pass
-     class BrokenPipeError(ConnectionError):
-         pass
+    from types import SimpleNamespace
+
+    ConnectionError = ConnectionError
+    BrokenPipeError = BrokenPipeError
+except:  # Python 2
+    from argparse import Namespace as SimpleNamespace
+
+
+    class ConnectionError(OSError):
+        pass
+
+
+    class BrokenPipeError(ConnectionError):
+        pass
+
 
 class VarlinkEncoder(json.JSONEncoder):
+    """The Encoder used to encode JSON"""
 
     def default(self, o):
         if isinstance(o, set):
@@ -81,6 +88,7 @@ class InterfaceNotFound(VarlinkError):
 
 class MethodNotFound(VarlinkError):
     """The standardized varlink MethodNotFound error as a python exception"""
+
     @classmethod
     def new(cls, message, namespaced=False):
         return cls(namespaced and message['parameters'].method or message['parameters'].get('method', None))

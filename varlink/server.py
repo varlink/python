@@ -32,33 +32,33 @@ class Service(object):
     """Varlink service server handler
 
     To use the Service, a global object is instantiated:
-    ```python
-    >>> service = Service(
-    >>>    vendor='Red Hat',
-    >>>    product='Manage System Accounts',
-    >>>    version='1',
-    >>>    interface_dir=os.path.dirname(__file__)
-    >>> )
-    ```
+
+        >>> service = Service(
+        >>>    vendor='Red Hat',
+        >>>    product='Manage System Accounts',
+        >>>    version='1',
+        >>>    interface_dir=os.path.dirname(__file__)
+        >>> )
 
     For the class implementing the methods of a specific varlink interface
     a decorator is used:
-    ```python
-    @service.interface('com.redhat.system.accounts')
-    class Accounts:
-    […]
-    ```
+
+        >>> @service.interface('com.redhat.system.accounts')
+        >>> class Accounts:
+        >>>     pass
 
     The varlink file corresponding to this interface is loaded from the 'interface_dir'
     specified in the constructor of the Service. It has to end in '.varlink'.
 
-    Split the incoming stream for every null byte and feed it to the service.handle()
-    function. Write any message returned from this generator function to the output stream.
-    ```python
-    for outgoing_message in service.handle(incoming_message):
-        connection.write(outgoing_message)
-    ```
-    or see, how the #RequestHandler handles the Service object.
+    Use a L{RequestHandler} with your Service object and run a L{varlink.Server} with it.
+
+    If you want to use your own server with the Service object, split the incoming stream
+    for every null byte and feed it to the L{Service.handle} method.
+    Write any message returned from this generator function to the output stream.
+
+        >>> for outgoing_message in service.handle(incoming_message):
+        >>>     connection.write(outgoing_message)
+
 
     Note: varlink only handles one method call at a time on one connection.
 
@@ -214,10 +214,12 @@ class Service(object):
             yield error
 
     def handle(self, message, _server=None, _request=None):
-        """This generator function handles any incoming message. Write any returned bytes to the output stream.
+        """This generator function handles any incoming message.
 
-        for outgoing_message in service.handle(incoming_message):
-            connection.write(outgoing_message)
+        Write any returned bytes to the output stream.
+
+            >>> for outgoing_message in service.handle(incoming_message):
+            >>>    connection.write(outgoing_message)
         """
         if not message:
             return
@@ -303,7 +305,7 @@ class RequestHandler(StreamRequestHandler):
     """Varlink request handler
 
     To use as an argument for the VarlinkServer constructor.
-    Instantiate your own class and set the class variable service to your global varlink.Service object.
+    Instantiate your own class and set the class variable service to your global L{varlink.Service} object.
     """
     service = None
 
@@ -331,25 +333,24 @@ class RequestHandler(StreamRequestHandler):
 class Server(BaseServer):
     """Server
 
-    The same as the standard socketserver.TCPServer, to initialize with a subclass of RequestHandler.
-    ```python
-    >>> import varlink
-    >>> import os
-    >>>
-    >>> service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
-    >>>    interface_dir=os.path.dirname(__file__))
-    >>>
-    >>> class ServiceRequestHandler(varlink.RequestHandler):
-    >>>    service = service
-    >>>
-    >>> @service.interface('com.example.service')
-    >>> class Example:
-    >>>    # com.example.service method implementation here …
-    >>>    pass
-    >>>
-    >>> server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
-    >>> server.serve_forever()
-    ```
+    The same as the standard socketserver.TCPServer, to initialize with a subclass of L{RequestHandler}.
+
+        >>> import varlink
+        >>> import os
+        >>>
+        >>> service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
+        >>>    interface_dir=os.path.dirname(__file__))
+        >>>
+        >>> class ServiceRequestHandler(varlink.RequestHandler):
+        >>>    service = service
+        >>>
+        >>> @service.interface('com.example.service')
+        >>> class Example:
+        >>>    # com.example.service method implementation here …
+        >>>    pass
+        >>>
+        >>> server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
+        >>> server.serve_forever()
     """
 
     address_family = socket.AF_INET
