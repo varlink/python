@@ -126,30 +126,28 @@
 
 <p>Varlink service server handler</p>
 <p>To use the Service, a global object is instantiated:</p>
-<pre><code class="python">&gt;&gt;&gt; service = Service(
+<pre><code>&gt;&gt;&gt; service = Service(
 &gt;&gt;&gt;    vendor='Red Hat',
 &gt;&gt;&gt;    product='Manage System Accounts',
 &gt;&gt;&gt;    version='1',
 &gt;&gt;&gt;    interface_dir=os.path.dirname(__file__)
 &gt;&gt;&gt; )
 </code></pre>
-
 <p>For the class implementing the methods of a specific varlink interface
 a decorator is used:</p>
-<pre><code class="python">@service.interface('com.redhat.system.accounts')
-class Accounts:
-[…]
+<pre><code>&gt;&gt;&gt; @service.interface('com.redhat.system.accounts')
+&gt;&gt;&gt; class Accounts:
+&gt;&gt;&gt;     pass
 </code></pre>
-
 <p>The varlink file corresponding to this interface is loaded from the 'interface_dir'
 specified in the constructor of the Service. It has to end in '.varlink'.</p>
-<p>Split the incoming stream for every null byte and feed it to the service.handle()
-function. Write any message returned from this generator function to the output stream.</p>
-<pre><code class="python">for outgoing_message in service.handle(incoming_message):
-    connection.write(outgoing_message)
+<p>Use a L{RequestHandler} with your Service object and run a L{varlink.Server} with it.</p>
+<p>If you want to use your own server with the Service object, split the incoming stream
+for every null byte and feed it to the L{Service.handle} method.
+Write any message returned from this generator function to the output stream.</p>
+<pre><code>&gt;&gt;&gt; for outgoing_message in service.handle(incoming_message):
+&gt;&gt;&gt;     connection.write(outgoing_message)
 </code></pre>
-
-<p>or see, how the <code>RequestHandler</code> handles the Service object.</p>
 <p>Note: varlink only handles one method call at a time on one connection.</p>
 <h3 id="varlink.server.Service.GetInfo">GetInfo</h3>
 
@@ -166,9 +164,11 @@ function. Write any message returned from this generator function to the output 
 <pre><code class="python">Service.handle(self, message, _server=None, _request=None)
 </code></pre>
 
-<p>This generator function handles any incoming message. Write any returned bytes to the output stream.</p>
-<p>for outgoing_message in service.handle(incoming_message):
-    connection.write(outgoing_message)</p>
+<p>This generator function handles any incoming message.</p>
+<p>Write any returned bytes to the output stream.</p>
+<pre><code>&gt;&gt;&gt; for outgoing_message in service.handle(incoming_message):
+&gt;&gt;&gt;    connection.write(outgoing_message)
+</code></pre>
 <h2 id="varlink.server.RequestHandler">RequestHandler</h2>
 
 <pre><code class="python">RequestHandler(self, request, client_address, server)
@@ -176,15 +176,15 @@ function. Write any message returned from this generator function to the output 
 
 <p>Varlink request handler</p>
 <p>To use as an argument for the VarlinkServer constructor.
-Instantiate your own class and set the class variable service to your global varlink.Service object.</p>
+Instantiate your own class and set the class variable service to your global L{varlink.Service} object.</p>
 <h2 id="varlink.server.Server">Server</h2>
 
 <pre><code class="python">Server(self, server_address, RequestHandlerClass, bind_and_activate=True)
 </code></pre>
 
 <p>Server</p>
-<p>The same as the standard socketserver.TCPServer, to initialize with a subclass of RequestHandler.</p>
-<pre><code class="python">&gt;&gt;&gt; import varlink
+<p>The same as the standard socketserver.TCPServer, to initialize with a subclass of L{RequestHandler}.</p>
+<pre><code>&gt;&gt;&gt; import varlink
 &gt;&gt;&gt; import os
 &gt;&gt;&gt;
 &gt;&gt;&gt; service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
@@ -201,7 +201,6 @@ Instantiate your own class and set the class variable service to your global var
 &gt;&gt;&gt; server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
 &gt;&gt;&gt; server.serve_forever()
 </code></pre>
-
 <h3 id="varlink.server.Server.address_family">address_family</h3>
 
 <p>An enumeration.

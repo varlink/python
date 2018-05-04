@@ -140,50 +140,70 @@
 </code></pre>
 
 <p>Varlink client class.</p>
-<pre><code class="python">&gt;&gt;&gt; with varlink.Client(&quot;unix:/run/org.example.ping&quot;) as client, client.open('org.example.ping') as connection:
-&gt;&gt;&gt;     assert con1.Ping(&quot;Test&quot;)[&quot;pong&quot;] == &quot;Test&quot;
-</code></pre>
-
+<blockquote>
+<blockquote>
+<blockquote>
+<p>with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
+    assert con1.Ping("Test")["pong"] == "Test"</p>
+</blockquote>
+</blockquote>
+</blockquote>
 <p>If the varlink resolver is running:</p>
-<pre><code class="python">&gt;&gt;&gt; client = varlink.Client(resolve_interface='com.redhat.logging')
-&gt;&gt;&gt; print(client.get_interfaces()['com.redhat.logging'].get_description())
-# Query and monitor the log messages of a system.
-interface com.redhat.logging
-
+<blockquote>
+<blockquote>
+<blockquote>
+<p>client = varlink.Client(resolve_interface='com.redhat.logging')
+print(client.get_interfaces()['com.redhat.logging'].get_description())
+<strong>Query and monitor the log messages of a system.</strong></p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>interface com.redhat.logging
 type Entry (cursor: string, time: string, message: string, process: string, priority: string)
-
-# Monitor the log. Returns the @initial_lines most recent entries in the
-# first reply and then continuously replies when new entries are available.
-method Monitor(initial_lines: int) -&gt; (entries: Entry[])
-&gt;&gt;&gt; connection = client.open(&quot;com.redhat.logging&quot;)
-</code></pre>
-
+<strong>Monitor the log. Returns the @initial_lines most recent entries in the</strong></p>
+<p><strong>first reply and then continuously replies when new entries are available.</strong></p>
+<p>method Monitor(initial_lines: int) -&gt; (entries: Entry[])</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>connection = client.open("com.redhat.logging")</p>
+</blockquote>
+</blockquote>
+</blockquote>
 <p>connection now holds an object with all the varlink methods available.</p>
 <p>Do varlink method call with varlink arguments and a
 single varlink return structure wrapped in a namespace class:</p>
-<pre><code class="python">&gt;&gt;&gt; ret = connection.Monitor(initial_lines=1)
-&gt;&gt;&gt; ret
+<blockquote>
+<blockquote>
+<blockquote>
+<p>ret = connection.Monitor(initial_lines=1)
+ret
 namespace(entries=[namespace(cursor='s=[…]',
-   message=&quot;req:1 'dhcp4-change' [wlp3s0][…]&quot;, priority='critical',
+   message="req:1 'dhcp4-change' [wlp3s0][…]", priority='critical',
    process='nm-dispatcher', time='2018-01-29 12:19:59Z')])
-&gt;&gt;&gt; ret.entries[0].process
-'nm-dispatcher'
-</code></pre>
-
+ret.entries[0].process
+'nm-dispatcher'</p>
+</blockquote>
+</blockquote>
+</blockquote>
 <p>Do varlink method call with varlink arguments and a
 multiple return values in monitor mode, using the "_more" keyword:</p>
-<pre><code class="python">&gt;&gt;&gt; for m in connection.Monitor(_more=True):
-&gt;&gt;&gt;     for e in m.entries:
-&gt;&gt;&gt;         print(&quot;%s: %s&quot; % (e.time, e.message))
+<blockquote>
+<blockquote>
+<blockquote>
+<p>for m in connection.Monitor(_more=True):
+    for e in m.entries:
+        print("%s: %s" % (e.time, e.message))
 2018-01-29 12:19:59Z: [system] Activating via systemd: service name='[…]
 2018-01-29 12:19:59Z: Starting Network Manager Script Dispatcher Service...
 2018-01-29 12:19:59Z: bound to 10.200.159.150 -- renewal in 1423 seconds.
 2018-01-29 12:19:59Z: [system] Successfully activated service 'org.freedesktop.nm_dispatcher'
 2018-01-29 12:19:59Z: Started Network Manager Script Dispatcher Service.
 2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: new request (6 scripts)
-2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...
-</code></pre>
-
+2018-01-29 12:19:59Z: req:1 'dhcp4-change' [wlp3s0]: start running ordered scripts...</p>
+</blockquote>
+</blockquote>
+</blockquote>
 <p>"_more" is special to this python varlink binding. If "_more=True", then the method call does
 not return a normal namespace wrapped varlink return value, but a generator,
 which yields the return values and waits (blocks) for the service to return more return values
@@ -199,12 +219,12 @@ in the generator's .<strong>next</strong>() call.</p>
 </code></pre>
 
 <p>Open a new connection and get a client interface handle with the varlink methods installed.</p>
-<p>Arguments:
-interface_name -- an interface name, which the service this client object is
-                  connected to, provides.</p>
-<p>Exceptions:
-InterfaceNotFound -- if the interface is not found
-anything socket.connect() throws</p>
+<p>@param interface_name: an interface name, which the service this client object is
+                       connected to, provides.
+@param namespaced: If arguments and return values are instances of SimpleNamespace
+                    rather than dictionaries.
+@exception InterfaceNotFound: if the interface is not found
+@exception OSError: anything socket.connect() throws</p>
 <h3 id="varlink.client.Client.get_interfaces">get_interfaces</h3>
 
 <pre><code class="python">Client.get_interfaces(self)
@@ -216,8 +236,7 @@ anything socket.connect() throws</p>
 </code></pre>
 
 <p>Manually add or overwrite an interface definition from an Interface object.</p>
-<p>Argument:
-interface - an Interface() object</p>
+<p>@param interface: an Interface() object</p>
               
             </div>
           </div>
