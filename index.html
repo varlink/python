@@ -96,10 +96,39 @@ not return a normal namespace wrapped varlink return value, but a generator,
 which yields the return values and waits (blocks) for the service to return more return values
 in the generator’s .__next__() call.</p>
 <dl class="method">
+<dt id="varlink.Client.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>address=None</em>, <em>resolve_interface=None</em>, <em>resolver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the interface descriptions from a varlink service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> – the exact address like “unix:/run/org.varlink.resolver”</li>
+<li><strong>resolve_interface</strong> – an interface name, which is resolved with the system wide resolver</li>
+<li><strong>resolver</strong> – the exact address of the resolver to be used to resolve the interface name</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#varlink.ConnectionError" title="varlink.ConnectionError"><strong>ConnectionError</strong></a> – could not connect to the service or resolver</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="varlink.Client.add_interface">
 <code class="descname">add_interface</code><span class="sig-paren">(</span><em>interface</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.add_interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.add_interface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Manually add or overwrite an interface definition from an Interface object.</p>
-<p>&#64;param interface: an Interface() object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>interface</strong> – an Interface() object</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -118,14 +147,26 @@ in the generator’s .__next__() call.</p>
 <dt id="varlink.Client.open">
 <code class="descname">open</code><span class="sig-paren">(</span><em>interface_name</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new connection and get a client interface handle with the varlink methods installed.</p>
-<dl class="docutils">
-<dt>&#64;param interface_name: an interface name, which the service this client object is</dt>
-<dd>connected to, provides.</dd>
-<dt>&#64;param namespaced: If arguments and return values are instances of SimpleNamespace</dt>
-<dd>rather than dictionaries.</dd>
-</dl>
-<p>&#64;exception InterfaceNotFound: if the interface is not found
-&#64;exception OSError: anything socket.connect() throws</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>interface_name</strong> – an interface name, which the service this client object is
+connected to, provides.</li>
+<li><strong>namespaced</strong> – If arguments and return values are instances of SimpleNamespace
+rather than dictionaries.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="#varlink.InterfaceNotFound" title="varlink.InterfaceNotFound"><strong>InterfaceNotFound</strong></a> – if the interface is not found</li>
+<li><strong>OSError</strong> – anything socket.connect() throws</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -135,6 +176,27 @@ in the generator’s .__next__() call.</p>
 <em class="property">class </em><code class="descclassname">varlink.</code><code class="descname">ClientInterfaceHandler</code><span class="sig-paren">(</span><em>interface</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#ClientInterfaceHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.ClientInterfaceHandler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class for varlink client, which wraps varlink methods of an interface to the class</p>
+<dl class="method">
+<dt id="varlink.ClientInterfaceHandler.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>interface</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#ClientInterfaceHandler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.ClientInterfaceHandler.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for varlink client, which wraps varlink methods of an interface.</p>
+<p>The object allows to talk to a varlink service, which implements the specified interface
+transparently by calling the methods. The call blocks until enough messages are received.</p>
+<p>For monitor calls with ‘_more=True’ a generator object is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>interface</strong> – an Interface object</li>
+<li><strong>namespaced</strong> – if True, varlink methods return SimpleNamespace objects instead of dictionaries</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="varlink.ClientInterfaceHandler.close">
 <code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#ClientInterfaceHandler.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.ClientInterfaceHandler.close" title="Permalink to this definition">¶</a></dt>
@@ -148,6 +210,28 @@ in the generator’s .__next__() call.</p>
 <em class="property">class </em><code class="descclassname">varlink.</code><code class="descname">SimpleClientInterfaceHandler</code><span class="sig-paren">(</span><em>interface</em>, <em>file_or_socket</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#SimpleClientInterfaceHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.SimpleClientInterfaceHandler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">varlink.client.ClientInterfaceHandler</span></code></p>
 <p>A varlink client for an interface doing send/write and receive/read on a socket or file stream</p>
+<dl class="method">
+<dt id="varlink.SimpleClientInterfaceHandler.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>interface</em>, <em>file_or_socket</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#SimpleClientInterfaceHandler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.SimpleClientInterfaceHandler.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an object with the varlink methods of an interface installed.</p>
+<p>The object allows to talk to a varlink service, which implements the specified interface
+transparently by calling the methods. The call blocks until enough messages are received.</p>
+<p>For monitor calls with ‘_more=True’ a generator object is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>interface</strong> – an Interface object</li>
+<li><strong>file_or_socket</strong> – an open socket or io stream</li>
+<li><strong>namespaced</strong> – if True, varlink methods return SimpleNamespace objects instead of dictionaries</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="varlink.SimpleClientInterfaceHandler.close">
 <code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#SimpleClientInterfaceHandler.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.SimpleClientInterfaceHandler.close" title="Permalink to this definition">¶</a></dt>
@@ -179,9 +263,9 @@ a decorator is used:</p>
 </div>
 <p>The varlink file corresponding to this interface is loaded from the ‘interface_dir’
 specified in the constructor of the Service. It has to end in ‘.varlink’.</p>
-<p>Use a L{RequestHandler} with your Service object and run a L{varlink.Server} with it.</p>
+<p>Use a <a class="reference internal" href="#varlink.RequestHandler" title="varlink.RequestHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></a> with your Service object and run a <a class="reference internal" href="#varlink.Server" title="varlink.Server"><code class="xref py py-class docutils literal notranslate"><span class="pre">Server</span></code></a> with it.</p>
 <p>If you want to use your own server with the Service object, split the incoming stream
-for every null byte and feed it to the L{Service.handle} method.
+for every null byte and feed it to the <a class="reference internal" href="#varlink.Service.handle" title="varlink.Service.handle"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Service.handle()</span></code></a> method.
 Write any message returned from this generator function to the output stream.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">outgoing_message</span> <span class="ow">in</span> <span class="n">service</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">incoming_message</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">connection</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">outgoing_message</span><span class="p">)</span>
@@ -198,6 +282,20 @@ Write any message returned from this generator function to the output stream.</p
 <dt id="varlink.Service.GetInterfaceDescription">
 <code class="descname">GetInterfaceDescription</code><span class="sig-paren">(</span><em>interface</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/server.html#Service.GetInterfaceDescription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Service.GetInterfaceDescription" title="Permalink to this definition">¶</a></dt>
 <dd><p>The standardized org.varlink.service.GetInterfaceDescription() varlink method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="varlink.Service.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>vendor=''</em>, <em>product=''</em>, <em>version=''</em>, <em>url=''</em>, <em>interface_dir='.'</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/server.html#Service.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Service.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the service with the data org.varlink.service.GetInfo() returns</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>interface_dir</strong> – the directory with the *.varlink files for the interfaces</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -224,7 +322,7 @@ Write any message returned from this generator function to the output stream.</p
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">socketserver.StreamRequestHandler</span></code></p>
 <p>Varlink request handler</p>
 <p>To use as an argument for the VarlinkServer constructor.
-Instantiate your own class and set the class variable service to your global L{varlink.Service} object.</p>
+Instantiate your own class and set the class variable service to your global <a class="reference internal" href="#varlink.Service" title="varlink.Service"><code class="xref py py-class docutils literal notranslate"><span class="pre">Service</span></code></a> object.</p>
 <dl class="method">
 <dt id="varlink.RequestHandler.handle">
 <code class="descname">handle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/server.html#RequestHandler.handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.RequestHandler.handle" title="Permalink to this definition">¶</a></dt>
@@ -241,7 +339,7 @@ Instantiate your own class and set the class variable service to your global L{v
 <dt id="varlink.Server">
 <em class="property">class </em><code class="descclassname">varlink.</code><code class="descname">Server</code><span class="sig-paren">(</span><em>server_address</em>, <em>RequestHandlerClass</em>, <em>bind_and_activate=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/server.html#Server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Server" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">socketserver.BaseServer</span></code></p>
-<p>The same as the standard socketserver.TCPServer, to initialize with a subclass of L{RequestHandler}.</p>
+<p>The same as the standard socketserver.TCPServer, to initialize with a subclass of <a class="reference internal" href="#varlink.RequestHandler" title="varlink.RequestHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></a>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">varlink</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
 <span class="go">&gt;&gt;&gt;</span>
@@ -260,6 +358,12 @@ Instantiate your own class and set the class variable service to your global L{v
 <span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
 </pre></div>
 </div>
+<dl class="method">
+<dt id="varlink.Server.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>server_address</em>, <em>RequestHandlerClass</em>, <em>bind_and_activate=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/server.html#Server.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Server.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor.  May be extended, do not override.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="varlink.Server.address_family">
 <code class="descname">address_family</code><em class="property"> = 2</em><a class="headerlink" href="#varlink.Server.address_family" title="Permalink to this definition">¶</a></dt>
@@ -346,6 +450,12 @@ Instantiate your own class and set the class variable service to your global L{v
 <em class="property">exception </em><code class="descclassname">varlink.</code><code class="descname">InterfaceNotFound</code><span class="sig-paren">(</span><em>interface</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#InterfaceNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.InterfaceNotFound" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">varlink.error.VarlinkError</span></code></p>
 <p>The standardized varlink InterfaceNotFound error as a python exception</p>
+<dl class="method">
+<dt id="varlink.InterfaceNotFound.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>interface</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#InterfaceNotFound.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.InterfaceNotFound.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="varlink.InterfaceNotFound.new">
 <em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>message</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#InterfaceNotFound.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.InterfaceNotFound.new" title="Permalink to this definition">¶</a></dt>
@@ -358,6 +468,12 @@ Instantiate your own class and set the class variable service to your global L{v
 <em class="property">exception </em><code class="descclassname">varlink.</code><code class="descname">MethodNotFound</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#MethodNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.MethodNotFound" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">varlink.error.VarlinkError</span></code></p>
 <p>The standardized varlink MethodNotFound error as a python exception</p>
+<dl class="method">
+<dt id="varlink.MethodNotFound.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#MethodNotFound.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.MethodNotFound.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="varlink.MethodNotFound.new">
 <em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>message</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#MethodNotFound.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.MethodNotFound.new" title="Permalink to this definition">¶</a></dt>
@@ -370,6 +486,12 @@ Instantiate your own class and set the class variable service to your global L{v
 <em class="property">exception </em><code class="descclassname">varlink.</code><code class="descname">MethodNotImplemented</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#MethodNotImplemented"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.MethodNotImplemented" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">varlink.error.VarlinkError</span></code></p>
 <p>The standardized varlink MethodNotImplemented error as a python exception</p>
+<dl class="method">
+<dt id="varlink.MethodNotImplemented.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#MethodNotImplemented.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.MethodNotImplemented.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="varlink.MethodNotImplemented.new">
 <em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>message</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#MethodNotImplemented.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.MethodNotImplemented.new" title="Permalink to this definition">¶</a></dt>
@@ -382,6 +504,12 @@ Instantiate your own class and set the class variable service to your global L{v
 <em class="property">exception </em><code class="descclassname">varlink.</code><code class="descname">InvalidParameter</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#InvalidParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.InvalidParameter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">varlink.error.VarlinkError</span></code></p>
 <p>The standardized varlink InvalidParameter error as a python exception</p>
+<dl class="method">
+<dt id="varlink.InvalidParameter.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#InvalidParameter.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.InvalidParameter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="varlink.InvalidParameter.new">
 <em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>message</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#InvalidParameter.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.InvalidParameter.new" title="Permalink to this definition">¶</a></dt>
@@ -394,6 +522,12 @@ Instantiate your own class and set the class variable service to your global L{v
 <em class="property">exception </em><code class="descclassname">varlink.</code><code class="descname">ConnectionError</code><a class="headerlink" href="#varlink.ConnectionError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code></p>
 <p>Connection error.</p>
+<dl class="attribute">
+<dt id="varlink.ConnectionError.__init__">
+<code class="descname">__init__</code><a class="headerlink" href="#varlink.ConnectionError.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -430,6 +564,12 @@ implement default like this:</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>The base class for varlink error exceptions</p>
 <dl class="method">
+<dt id="varlink.VarlinkError.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>message</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#VarlinkError.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.VarlinkError.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="varlink.VarlinkError.as_dict">
 <code class="descname">as_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/error.html#VarlinkError.as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.VarlinkError.as_dict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -459,6 +599,12 @@ implement default like this:</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for a parsed varlink interface definition.</p>
 <dl class="method">
+<dt id="varlink.Interface.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>description</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/scanner.html#Interface.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Interface.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>description – description string in varlink interface definition language</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="varlink.Interface.filter_params">
 <code class="descname">filter_params</code><span class="sig-paren">(</span><em>parent_name</em>, <em>varlink_type</em>, <em>_namespaced</em>, <em>args</em>, <em>kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/scanner.html#Interface.filter_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Interface.filter_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -481,6 +627,12 @@ implement default like this:</p>
 <em class="property">class </em><code class="descclassname">varlink.</code><code class="descname">Scanner</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/scanner.html#Scanner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Scanner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for scanning a varlink interface definition.</p>
+<dl class="method">
+<dt id="varlink.Scanner.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/scanner.html#Scanner.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Scanner.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="varlink.Scanner.end">
 <code class="descname">end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/scanner.html#Scanner.end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Scanner.end" title="Permalink to this definition">¶</a></dt>

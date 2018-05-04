@@ -58,7 +58,7 @@
 <div class="viewcode-block" id="Scanner"><a class="viewcode-back" href="../../index.html#varlink.Scanner">[docs]</a><span class="k">class</span> <span class="nc">Scanner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class for scanning a varlink interface definition.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+<div class="viewcode-block" id="Scanner.__init__"><a class="viewcode-back" href="../../index.html#varlink.Scanner.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">re</span><span class="p">,</span> <span class="s2">&quot;ASCII&quot;</span><span class="p">):</span>
             <span class="n">ASCII</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">ASCII</span>
         <span class="k">else</span><span class="p">:</span>
@@ -76,7 +76,7 @@
         <span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">string</span> <span class="o">=</span> <span class="n">string</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span></div>
 
 <div class="viewcode-block" id="Scanner.get"><a class="viewcode-back" href="../../index.html#varlink.Scanner.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
         <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">whitespace</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
@@ -284,7 +284,7 @@
 <div class="viewcode-block" id="Interface"><a class="viewcode-back" href="../../index.html#varlink.Interface">[docs]</a><span class="k">class</span> <span class="nc">Interface</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class for a parsed varlink interface definition.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+<div class="viewcode-block" id="Interface.__init__"><a class="viewcode-back" href="../../index.html#varlink.Interface.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;description -- description string in varlink interface definition language&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
 
@@ -294,7 +294,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">scanner</span><span class="o">.</span><span class="n">end</span><span class="p">():</span>
             <span class="n">member</span> <span class="o">=</span> <span class="n">scanner</span><span class="o">.</span><span class="n">read_member</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">member</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">member</span></div>
 
 <div class="viewcode-block" id="Interface.get_description"><a class="viewcode-back" href="../../index.html#varlink.Interface.get_description">[docs]</a>    <span class="k">def</span> <span class="nf">get_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;return the description string in varlink interface definition language&quot;&quot;&quot;</span>

@@ -88,10 +88,10 @@
 <span class="sd">    The varlink file corresponding to this interface is loaded from the &#39;interface_dir&#39;</span>
 <span class="sd">    specified in the constructor of the Service. It has to end in &#39;.varlink&#39;.</span>
 
-<span class="sd">    Use a L{RequestHandler} with your Service object and run a L{varlink.Server} with it.</span>
+<span class="sd">    Use a :class:`RequestHandler` with your Service object and run a :class:`Server` with it.</span>
 
 <span class="sd">    If you want to use your own server with the Service object, split the incoming stream</span>
-<span class="sd">    for every null byte and feed it to the L{Service.handle} method.</span>
+<span class="sd">    for every null byte and feed it to the :meth:`Service.handle` method.</span>
 <span class="sd">    Write any message returned from this generator function to the output stream.</span>
 
 <span class="sd">        &gt;&gt;&gt; for outgoing_message in service.handle(incoming_message):</span>
@@ -102,11 +102,11 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vendor</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">interface_dir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Service.__init__"><a class="viewcode-back" href="../../index.html#varlink.Service.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vendor</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">interface_dir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the service with the data org.varlink.service.GetInfo() returns</span>
 
-<span class="sd">        Arguments:</span>
-<span class="sd">        interface_dir -- the directory with the *.varlink files for the interfaces</span>
+<span class="sd">        :param interface_dir: the directory with the \*.varlink files for the interfaces</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vendor</span> <span class="o">=</span> <span class="n">vendor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">product</span> <span class="o">=</span> <span class="n">product</span>
@@ -118,7 +118,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interfaces_handlers</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_interface</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;org.varlink.service.varlink&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_interface</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;org.varlink.service.varlink&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Service.GetInfo"><a class="viewcode-back" href="../../index.html#varlink.Service.GetInfo">[docs]</a>    <span class="k">def</span> <span class="nf">GetInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The standardized org.varlink.service.GetInfo() varlink method.&quot;&quot;&quot;</span>
@@ -343,7 +343,7 @@
     <span class="sd">&quot;&quot;&quot;Varlink request handler</span>
 
 <span class="sd">    To use as an argument for the VarlinkServer constructor.</span>
-<span class="sd">    Instantiate your own class and set the class variable service to your global L{varlink.Service} object.</span>
+<span class="sd">    Instantiate your own class and set the class variable service to your global :class:`Service` object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">service</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -371,7 +371,7 @@
 <div class="viewcode-block" id="Server"><a class="viewcode-back" href="../../index.html#varlink.Server">[docs]</a><span class="k">class</span> <span class="nc">Server</span><span class="p">(</span><span class="n">BaseServer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Server</span>
 
-<span class="sd">    The same as the standard socketserver.TCPServer, to initialize with a subclass of L{RequestHandler}.</span>
+<span class="sd">    The same as the standard socketserver.TCPServer, to initialize with a subclass of :class:`RequestHandler`.</span>
 
 <span class="sd">        &gt;&gt;&gt; import varlink</span>
 <span class="sd">        &gt;&gt;&gt; import os</span>
@@ -399,7 +399,7 @@
 
     <span class="n">allow_reuse_address</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_address</span><span class="p">,</span> <span class="n">RequestHandlerClass</span><span class="p">,</span> <span class="n">bind_and_activate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Server.__init__"><a class="viewcode-back" href="../../index.html#varlink.Server.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_address</span><span class="p">,</span> <span class="n">RequestHandlerClass</span><span class="p">,</span> <span class="n">bind_and_activate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_file</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">listen_fd</span> <span class="o">=</span> <span class="n">get_listen_fd</span><span class="p">()</span>
@@ -461,7 +461,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">server_activate</span><span class="p">()</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">server_close</span><span class="p">()</span>
-                <span class="k">raise</span>
+                <span class="k">raise</span></div>
 
 <div class="viewcode-block" id="Server.server_bind"><a class="viewcode-back" href="../../index.html#varlink.Server.server_bind">[docs]</a>    <span class="k">def</span> <span class="nf">server_bind</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Called by constructor to bind the socket.</span>
