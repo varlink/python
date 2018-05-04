@@ -1,6 +1,6 @@
 """An implementation of the varlink protocol
 
-See U{https://www.varlink.org} for more information about the varlink protocol and interface definition
+See https://www.varlink.org for more information about the varlink protocol and interface definition
 files.
 
 For server implementations use the :class:`varlink.Server` class.
@@ -8,7 +8,8 @@ For server implementations use the :class:`varlink.Server` class.
 For client implementations use the :class:`varlink.Client` class.
 
 For installation and examples, see the GIT repository https://github.com/varlink/python.
-or the source code of L{varlink.tests.test_orgexamplemore}
+or the `source code <_modules/varlink/tests/test_orgexamplemore.html>`_ of
+:mod:`varlink.tests.test_orgexamplemore`
 
 """
 
