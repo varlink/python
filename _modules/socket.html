@@ -1,0 +1,830 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>socket &#8212; varlink  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">varlink  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for socket</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Wrapper module for _socket, providing some additional facilities</span>
+<span class="c1"># implemented in Python.</span>
+
+<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">This module provides socket operations and some related functions.</span>
+<span class="sd">On Unix, it supports IP (Internet Protocol) and Unix domain sockets.</span>
+<span class="sd">On other systems, it only supports IP. Functions specific for a</span>
+<span class="sd">socket are available as methods of the socket object.</span>
+
+<span class="sd">Functions:</span>
+
+<span class="sd">socket() -- create a new socket object</span>
+<span class="sd">socketpair() -- create a pair of new socket objects [*]</span>
+<span class="sd">fromfd() -- create a socket object from an open file descriptor [*]</span>
+<span class="sd">fromshare() -- create a socket object from data received from socket.share() [*]</span>
+<span class="sd">gethostname() -- return the current hostname</span>
+<span class="sd">gethostbyname() -- map a hostname to its IP number</span>
+<span class="sd">gethostbyaddr() -- map an IP number or hostname to DNS info</span>
+<span class="sd">getservbyname() -- map a service name and a protocol name to a port number</span>
+<span class="sd">getprotobyname() -- map a protocol name (e.g. &#39;tcp&#39;) to a number</span>
+<span class="sd">ntohs(), ntohl() -- convert 16, 32 bit int from network to host byte order</span>
+<span class="sd">htons(), htonl() -- convert 16, 32 bit int from host to network byte order</span>
+<span class="sd">inet_aton() -- convert IP addr string (123.45.67.89) to 32-bit packed format</span>
+<span class="sd">inet_ntoa() -- convert 32-bit packed format IP to string (123.45.67.89)</span>
+<span class="sd">socket.getdefaulttimeout() -- get the default timeout value</span>
+<span class="sd">socket.setdefaulttimeout() -- set the default timeout value</span>
+<span class="sd">create_connection() -- connects to an address, with an optional timeout and</span>
+<span class="sd">                       optional source address.</span>
+
+<span class="sd"> [*] not available on all platforms!</span>
+
+<span class="sd">Special objects:</span>
+
+<span class="sd">SocketType -- type object for socket objects</span>
+<span class="sd">error -- exception raised for I/O errors</span>
+<span class="sd">has_ipv6 -- boolean value indicating if IPv6 is supported</span>
+
+<span class="sd">IntEnum constants:</span>
+
+<span class="sd">AF_INET, AF_UNIX -- socket domains (first argument to socket() call)</span>
+<span class="sd">SOCK_STREAM, SOCK_DGRAM, SOCK_RAW -- socket types (second argument)</span>
+
+<span class="sd">Integer constants:</span>
+
+<span class="sd">Many other constants may be defined; these may be used in calls to</span>
+<span class="sd">the setsockopt() and getsockopt() methods.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">_socket</span>
+<span class="kn">from</span> <span class="nn">_socket</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">io</span><span class="o">,</span> <span class="nn">selectors</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">IntFlag</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">errno</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">errno</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">EBADF</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">errno</span><span class="p">,</span> <span class="s1">&#39;EBADF&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+<span class="n">EAGAIN</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">errno</span><span class="p">,</span> <span class="s1">&#39;EAGAIN&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+<span class="n">EWOULDBLOCK</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">errno</span><span class="p">,</span> <span class="s1">&#39;EWOULDBLOCK&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fromfd&quot;</span><span class="p">,</span> <span class="s2">&quot;getfqdn&quot;</span><span class="p">,</span> <span class="s2">&quot;create_connection&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;AddressFamily&quot;</span><span class="p">,</span> <span class="s2">&quot;SocketKind&quot;</span><span class="p">]</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">_get_exports_list</span><span class="p">(</span><span class="n">_socket</span><span class="p">))</span>
+
+<span class="c1"># Set up the socket.AF_* socket.SOCK_* constants as members of IntEnums for</span>
+<span class="c1"># nicer string representations.</span>
+<span class="c1"># Note that _socket only knows about the integer values. The public interface</span>
+<span class="c1"># in this module understands the enums and translates them back from integers</span>
+<span class="c1"># where needed (e.g. .family property of a socket object).</span>
+
+<span class="n">IntEnum</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+        <span class="s1">&#39;AddressFamily&#39;</span><span class="p">,</span>
+        <span class="vm">__name__</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;AF_&#39;</span><span class="p">))</span>
+
+<span class="n">IntEnum</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+        <span class="s1">&#39;SocketKind&#39;</span><span class="p">,</span>
+        <span class="vm">__name__</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;SOCK_&#39;</span><span class="p">))</span>
+
+<span class="n">IntFlag</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+        <span class="s1">&#39;MsgFlag&#39;</span><span class="p">,</span>
+        <span class="vm">__name__</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;MSG_&#39;</span><span class="p">))</span>
+
+<span class="n">IntFlag</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+        <span class="s1">&#39;AddressInfo&#39;</span><span class="p">,</span>
+        <span class="vm">__name__</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;AI_&#39;</span><span class="p">))</span>
+
+<span class="n">_LOCALHOST</span>    <span class="o">=</span> <span class="s1">&#39;127.0.0.1&#39;</span>
+<span class="n">_LOCALHOST_V6</span> <span class="o">=</span> <span class="s1">&#39;::1&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_intenum_converter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">enum_klass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a numeric family value to an IntEnum member.</span>
+
+<span class="sd">    If it&#39;s not a known member, return the numeric value itself.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">enum_klass</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+<span class="n">_realsocket</span> <span class="o">=</span> <span class="n">socket</span>
+
+<span class="c1"># WSA error codes</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;win&quot;</span><span class="p">):</span>
+    <span class="n">errorTab</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10004</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The operation was interrupted.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10009</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;A bad file handle was passed.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10013</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Permission denied.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10014</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;A fault occurred on the network??&quot;</span> <span class="c1"># WSAEFAULT</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10022</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;An invalid operation was attempted.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10035</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The socket operation would block&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10036</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;A blocking operation is already in progress.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10048</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The network address is in use.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10054</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The connection has been reset.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10058</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The network has been shut down.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10060</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The operation timed out.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10061</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Connection refused.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10063</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The name is too long.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10064</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The host is down.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10065</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The host is unreachable.&quot;</span>
+    <span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;errorTab&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_GiveupOnSendfile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">socket</span><span class="p">(</span><span class="n">_socket</span><span class="o">.</span><span class="n">socket</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A subclass of _socket.socket adding the makefile() method.&quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;__weakref__&quot;</span><span class="p">,</span> <span class="s2">&quot;_io_refs&quot;</span><span class="p">,</span> <span class="s2">&quot;_closed&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">AF_INET</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">SOCK_STREAM</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fileno</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># For user code address family and type values are IntEnum members, but</span>
+        <span class="c1"># for the underlying _socket.socket they&#39;re just integers. The</span>
+        <span class="c1"># constructor of _socket.socket converts the given argument to an</span>
+        <span class="c1"># integer automatically.</span>
+        <span class="n">_socket</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">fileno</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_io_refs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrap __repr__() to reveal the real class name and socket</span>
+<span class="sd">        address(es).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">closed</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_closed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&lt;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s%s</span><span class="s2"> fd=</span><span class="si">%i</span><span class="s2">, family=</span><span class="si">%s</span><span class="s2">, type=</span><span class="si">%s</span><span class="s2">, proto=</span><span class="si">%i</span><span class="s2">&quot;</span> \
+            <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span>
+               <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__qualname__</span><span class="p">,</span>
+               <span class="s2">&quot; [closed]&quot;</span> <span class="k">if</span> <span class="n">closed</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+               <span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span>
+               <span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">,</span>
+               <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+               <span class="bp">self</span><span class="o">.</span><span class="n">proto</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">closed</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">laddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">laddr</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, laddr=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">laddr</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">raddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getpeername</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">raddr</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, raddr=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">raddr</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;&gt;&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot serialize socket object&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;dup() -&gt; socket object</span>
+
+<span class="sd">        Duplicate the socket. Return a new socket object connected to the same</span>
+<span class="sd">        system resource. The new socket is non-inheritable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="n">dup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+        <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proto</span><span class="p">,</span> <span class="n">fileno</span><span class="o">=</span><span class="n">fd</span><span class="p">)</span>
+        <span class="n">sock</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gettimeout</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">sock</span>
+
+    <span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;accept() -&gt; (socket object, address info)</span>
+
+<span class="sd">        Wait for an incoming connection.  Return a new socket</span>
+<span class="sd">        representing the connection, and the address of the client.</span>
+<span class="sd">        For IP sockets, the address info is a pair (hostaddr, port).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fd</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accept</span><span class="p">()</span>
+        <span class="c1"># If our type has the SOCK_NONBLOCK flag, we shouldn&#39;t pass it onto the</span>
+        <span class="c1"># new socket. We do not currently allow passing SOCK_NONBLOCK to</span>
+        <span class="c1"># accept4, so the returned socket is always blocking.</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">&amp;</span> <span class="o">~</span><span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SOCK_NONBLOCK&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proto</span><span class="p">,</span> <span class="n">fileno</span><span class="o">=</span><span class="n">fd</span><span class="p">)</span>
+        <span class="c1"># Issue #7995: if no default timeout is set and the listening</span>
+        <span class="c1"># socket had a (non-zero) timeout, force the new socket in blocking</span>
+        <span class="c1"># mode to override platform-specific socket flags inheritance.</span>
+        <span class="k">if</span> <span class="n">getdefaulttimeout</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">gettimeout</span><span class="p">():</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sock</span><span class="p">,</span> <span class="n">addr</span>
+
+    <span class="k">def</span> <span class="nf">makefile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">buffering</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+                 <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;makefile(...) -&gt; an I/O stream connected to the socket</span>
+
+<span class="sd">        The arguments are as for io.open() after the filename, except the only</span>
+<span class="sd">        supported mode values are &#39;r&#39; (default), &#39;w&#39; and &#39;b&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># XXX refactor to share code?</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">{</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invalid mode </span><span class="si">%r</span><span class="s2"> (only r, w, b allowed)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode</span><span class="p">,))</span>
+        <span class="n">writing</span> <span class="o">=</span> <span class="s2">&quot;w&quot;</span> <span class="ow">in</span> <span class="n">mode</span>
+        <span class="n">reading</span> <span class="o">=</span> <span class="s2">&quot;r&quot;</span> <span class="ow">in</span> <span class="n">mode</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">writing</span>
+        <span class="k">assert</span> <span class="n">reading</span> <span class="ow">or</span> <span class="n">writing</span>
+        <span class="n">binary</span> <span class="o">=</span> <span class="s2">&quot;b&quot;</span> <span class="ow">in</span> <span class="n">mode</span>
+        <span class="n">rawmode</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">reading</span><span class="p">:</span>
+            <span class="n">rawmode</span> <span class="o">+=</span> <span class="s2">&quot;r&quot;</span>
+        <span class="k">if</span> <span class="n">writing</span><span class="p">:</span>
+            <span class="n">rawmode</span> <span class="o">+=</span> <span class="s2">&quot;w&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">SocketIO</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rawmode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_io_refs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">buffering</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">buffering</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">buffering</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">buffering</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">DEFAULT_BUFFER_SIZE</span>
+        <span class="k">if</span> <span class="n">buffering</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">binary</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unbuffered streams must be binary&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">raw</span>
+        <span class="k">if</span> <span class="n">reading</span> <span class="ow">and</span> <span class="n">writing</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BufferedRWPair</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">raw</span><span class="p">,</span> <span class="n">buffering</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">reading</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BufferedReader</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">buffering</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">writing</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BufferedWriter</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">buffering</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buffer</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">TextIOWrapper</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">newline</span><span class="p">)</span>
+        <span class="n">text</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">return</span> <span class="n">text</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s1">&#39;sendfile&#39;</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">_sendfile_use_sendfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_sendfile_params</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+            <span class="n">sockno</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fileno</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="n">io</span><span class="o">.</span><span class="n">UnsupportedOperation</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">_GiveupOnSendfile</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>  <span class="c1"># not a regular file</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fsize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fstat</span><span class="p">(</span><span class="n">fileno</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">_GiveupOnSendfile</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>  <span class="c1"># not a regular file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">fsize</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># empty file</span>
+            <span class="n">blocksize</span> <span class="o">=</span> <span class="n">fsize</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">count</span> <span class="k">else</span> <span class="n">count</span>
+
+            <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gettimeout</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;non-blocking sockets are not supported&quot;</span><span class="p">)</span>
+            <span class="c1"># poll/select have the advantage of not requiring any</span>
+            <span class="c1"># extra file descriptor, contrarily to epoll/kqueue</span>
+            <span class="c1"># (also, they require a single syscall).</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">selectors</span><span class="p">,</span> <span class="s1">&#39;PollSelector&#39;</span><span class="p">):</span>
+                <span class="n">selector</span> <span class="o">=</span> <span class="n">selectors</span><span class="o">.</span><span class="n">PollSelector</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">selector</span> <span class="o">=</span> <span class="n">selectors</span><span class="o">.</span><span class="n">SelectSelector</span><span class="p">()</span>
+            <span class="n">selector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">sockno</span><span class="p">,</span> <span class="n">selectors</span><span class="o">.</span><span class="n">EVENT_WRITE</span><span class="p">)</span>
+
+            <span class="n">total_sent</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># localize variable access to minimize overhead</span>
+            <span class="n">selector_select</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">select</span>
+            <span class="n">os_sendfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sendfile</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">timeout</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">selector_select</span><span class="p">(</span><span class="n">timeout</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="n">_socket</span><span class="o">.</span><span class="n">timeout</span><span class="p">(</span><span class="s1">&#39;timed out&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
+                        <span class="n">blocksize</span> <span class="o">=</span> <span class="n">count</span> <span class="o">-</span> <span class="n">total_sent</span>
+                        <span class="k">if</span> <span class="n">blocksize</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">break</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">sent</span> <span class="o">=</span> <span class="n">os_sendfile</span><span class="p">(</span><span class="n">sockno</span><span class="p">,</span> <span class="n">fileno</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">blocksize</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">BlockingIOError</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">timeout</span><span class="p">:</span>
+                            <span class="c1"># Block until the socket is ready to send some</span>
+                            <span class="c1"># data; avoids hogging CPU resources.</span>
+                            <span class="n">selector_select</span><span class="p">()</span>
+                        <span class="k">continue</span>
+                    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">total_sent</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="c1"># We can get here for different reasons, the main</span>
+                            <span class="c1"># one being &#39;file&#39; is not a regular mmap(2)-like</span>
+                            <span class="c1"># file, in which case we&#39;ll fall back on using</span>
+                            <span class="c1"># plain send().</span>
+                            <span class="k">raise</span> <span class="n">_GiveupOnSendfile</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="n">err</span> <span class="kn">from</span> <span class="nn">None</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">sent</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">break</span>  <span class="c1"># EOF</span>
+                        <span class="n">offset</span> <span class="o">+=</span> <span class="n">sent</span>
+                        <span class="n">total_sent</span> <span class="o">+=</span> <span class="n">sent</span>
+                <span class="k">return</span> <span class="n">total_sent</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">total_sent</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;seek&#39;</span><span class="p">):</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">_sendfile_use_sendfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">_GiveupOnSendfile</span><span class="p">(</span>
+                <span class="s2">&quot;os.sendfile() not available on this platform&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sendfile_use_send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_sendfile_params</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gettimeout</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;non-blocking sockets are not supported&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">offset</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">blocksize</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="mi">8192</span><span class="p">)</span> <span class="k">if</span> <span class="n">count</span> <span class="k">else</span> <span class="mi">8192</span>
+        <span class="n">total_sent</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># localize variable access to minimize overhead</span>
+        <span class="n">file_read</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span>
+        <span class="n">sock_send</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
+                    <span class="n">blocksize</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="n">total_sent</span><span class="p">,</span> <span class="n">blocksize</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">blocksize</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="n">blocksize</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="k">break</span>  <span class="c1"># EOF</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">sent</span> <span class="o">=</span> <span class="n">sock_send</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">BlockingIOError</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">total_sent</span> <span class="o">+=</span> <span class="n">sent</span>
+                        <span class="k">if</span> <span class="n">sent</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">sent</span><span class="p">:]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">break</span>
+            <span class="k">return</span> <span class="n">total_sent</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">total_sent</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;seek&#39;</span><span class="p">):</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span> <span class="o">+</span> <span class="n">total_sent</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_sendfile_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;b&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;mode&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;file should be opened in binary mode&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">&amp;</span> <span class="n">SOCK_STREAM</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;only SOCK_STREAM type sockets are supported&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;count must be a positive integer (got </span><span class="si">{!r}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;count must be a positive integer (got </span><span class="si">{!r}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">sendfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;sendfile(file[, offset[, count]]) -&gt; sent</span>
+
+<span class="sd">        Send a file until EOF is reached by using high-performance</span>
+<span class="sd">        os.sendfile() and return the total number of bytes which</span>
+<span class="sd">        were sent.</span>
+<span class="sd">        *file* must be a regular file object opened in binary mode.</span>
+<span class="sd">        If os.sendfile() is not available (e.g. Windows) or file is</span>
+<span class="sd">        not a regular file socket.send() will be used instead.</span>
+<span class="sd">        *offset* tells from where to start reading the file.</span>
+<span class="sd">        If specified, *count* is the total number of bytes to transmit</span>
+<span class="sd">        as opposed to sending the file until EOF is reached.</span>
+<span class="sd">        File position is updated on return or also in case of error in</span>
+<span class="sd">        which case file.tell() can be used to figure out the number of</span>
+<span class="sd">        bytes which were sent.</span>
+<span class="sd">        The socket must be of SOCK_STREAM type.</span>
+<span class="sd">        Non-blocking sockets are not supported.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sendfile_use_sendfile</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">_GiveupOnSendfile</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sendfile_use_send</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_decref_socketios</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_refs</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_io_refs</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_real_close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_ss</span><span class="o">=</span><span class="n">_socket</span><span class="o">.</span><span class="n">socket</span><span class="p">):</span>
+        <span class="c1"># This function should not reference any globals. See issue #808164.</span>
+        <span class="n">_ss</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This function should not reference any globals. See issue #808164.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_refs</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_real_close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;detach() -&gt; file descriptor</span>
+
+<span class="sd">        Close the socket object without closing the underlying file descriptor.</span>
+<span class="sd">        The object cannot be used after this call, but the file descriptor</span>
+<span class="sd">        can be reused for other purposes.  The file descriptor is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">family</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read-only access to the address family for this socket.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_intenum_converter</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">family</span><span class="p">,</span> <span class="n">AddressFamily</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read-only access to the socket type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_intenum_converter</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">SocketKind</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;nt&#39;</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">get_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">get_handle_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+        <span class="k">def</span> <span class="nf">set_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inheritable</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">set_handle_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">inheritable</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">get_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">get_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+        <span class="k">def</span> <span class="nf">set_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inheritable</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">set_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">inheritable</span><span class="p">)</span>
+    <span class="n">get_inheritable</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;Get the inheritable flag of the socket&quot;</span>
+    <span class="n">set_inheritable</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;Set the inheritable flag of the socket&quot;</span>
+
+<span class="k">def</span> <span class="nf">fromfd</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; fromfd(fd, family, type[, proto]) -&gt; socket object</span>
+
+<span class="sd">    Create a socket object from a duplicate of the given file</span>
+<span class="sd">    descriptor.  The remaining arguments are the same as for socket().</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nfd</span> <span class="o">=</span> <span class="n">dup</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">socket</span><span class="p">(</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">nfd</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="s2">&quot;share&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fromshare</span><span class="p">(</span><span class="n">info</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; fromshare(info) -&gt; socket object</span>
+
+<span class="sd">        Create a socket object from the bytes object returned by</span>
+<span class="sd">        socket.share(pid).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">socket</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
+    <span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;fromshare&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="p">,</span> <span class="s2">&quot;socketpair&quot;</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">socketpair</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">SOCK_STREAM</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;socketpair([family[, type[, proto]]]) -&gt; (socket object, socket object)</span>
+
+<span class="sd">        Create a pair of socket objects from the sockets returned by the platform</span>
+<span class="sd">        socketpair() function.</span>
+<span class="sd">        The arguments are the same as for socket() except the default family is</span>
+<span class="sd">        AF_UNIX if defined on the platform; otherwise, the default is AF_INET.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">family</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">family</span> <span class="o">=</span> <span class="n">AF_UNIX</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="n">family</span> <span class="o">=</span> <span class="n">AF_INET</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">_socket</span><span class="o">.</span><span class="n">socketpair</span><span class="p">(</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+
+<span class="k">else</span><span class="p">:</span>
+
+    <span class="c1"># Origin: https://gist.github.com/4325783, by Geert Jansen.  Public domain.</span>
+    <span class="k">def</span> <span class="nf">socketpair</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="n">AF_INET</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">SOCK_STREAM</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">family</span> <span class="o">==</span> <span class="n">AF_INET</span><span class="p">:</span>
+            <span class="n">host</span> <span class="o">=</span> <span class="n">_LOCALHOST</span>
+        <span class="k">elif</span> <span class="n">family</span> <span class="o">==</span> <span class="n">AF_INET6</span><span class="p">:</span>
+            <span class="n">host</span> <span class="o">=</span> <span class="n">_LOCALHOST_V6</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only AF_INET and AF_INET6 socket address families &quot;</span>
+                             <span class="s2">&quot;are supported&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">!=</span> <span class="n">SOCK_STREAM</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only SOCK_STREAM socket type is supported&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">proto</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only protocol zero is supported&quot;</span><span class="p">)</span>
+
+        <span class="c1"># We create a connected TCP socket. Note the trick with</span>
+        <span class="c1"># setblocking(False) that prevents us from having to create a thread.</span>
+        <span class="n">lsock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">lsock</span><span class="o">.</span><span class="n">bind</span><span class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">lsock</span><span class="o">.</span><span class="n">listen</span><span class="p">()</span>
+            <span class="c1"># On IPv6, ignore flow_info and scope_id</span>
+            <span class="n">addr</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">lsock</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">csock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">csock</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">csock</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">addr</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">BlockingIOError</span><span class="p">,</span> <span class="ne">InterruptedError</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                <span class="n">csock</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">ssock</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">lsock</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">csock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">raise</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">lsock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ssock</span><span class="p">,</span> <span class="n">csock</span><span class="p">)</span>
+    <span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;socketpair&quot;</span><span class="p">)</span>
+
+<span class="n">socketpair</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;socketpair([family[, type[, proto]]]) -&gt; (socket object, socket object)</span>
+<span class="s2">Create a pair of socket objects from the sockets returned by the platform</span>
+<span class="s2">socketpair() function.</span>
+<span class="s2">The arguments are the same as for socket() except the default family is AF_UNIX</span>
+<span class="s2">if defined on the platform; otherwise, the default is AF_INET.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">_blocking_errnos</span> <span class="o">=</span> <span class="p">{</span> <span class="n">EAGAIN</span><span class="p">,</span> <span class="n">EWOULDBLOCK</span> <span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">SocketIO</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">RawIOBase</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Raw I/O implementation for stream sockets.</span>
+
+<span class="sd">    This class supports the makefile() method on sockets.  It provides</span>
+<span class="sd">    the raw I/O interface on top of a socket object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># One might wonder why not let FileIO do the job instead.  There are two</span>
+    <span class="c1"># main reasons why FileIO is not adapted:</span>
+    <span class="c1"># - it wouldn&#39;t work under Windows (where you can&#39;t used read() and</span>
+    <span class="c1">#   write() on a socket handle)</span>
+    <span class="c1"># - it wouldn&#39;t work with socket timeouts (FileIO would ignore the</span>
+    <span class="c1">#   timeout and consider the socket non-blocking)</span>
+
+    <span class="c1"># XXX More docs</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="s2">&quot;rw&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">,</span> <span class="s2">&quot;rwb&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invalid mode: </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="n">io</span><span class="o">.</span><span class="n">RawIOBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sock</span> <span class="o">=</span> <span class="n">sock</span>
+        <span class="k">if</span> <span class="s2">&quot;b&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mode</span><span class="p">:</span>
+            <span class="n">mode</span> <span class="o">+=</span> <span class="s2">&quot;b&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reading</span> <span class="o">=</span> <span class="s2">&quot;r&quot;</span> <span class="ow">in</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writing</span> <span class="o">=</span> <span class="s2">&quot;w&quot;</span> <span class="ow">in</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_occurred</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">readinto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read up to len(b) bytes into the writable buffer *b* and return</span>
+<span class="sd">        the number of bytes read.  If the socket is non-blocking and no bytes</span>
+<span class="sd">        are available, None is returned.</span>
+
+<span class="sd">        If *b* is non-empty, a 0 return value indicates that the connection</span>
+<span class="sd">        was shutdown at the other end.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkClosed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkReadable</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_occurred</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;cannot read from timed out object&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sock</span><span class="o">.</span><span class="n">recv_into</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">timeout</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_occurred</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">raise</span>
+            <span class="k">except</span> <span class="n">error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_blocking_errnos</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">raise</span>
+
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write the given bytes or bytearray object *b* to the socket</span>
+<span class="sd">        and return the number of bytes written.  This can be less than</span>
+<span class="sd">        len(b) if not all data could be written.  If the socket is</span>
+<span class="sd">        non-blocking and no bytes could be written None is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkClosed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkWritable</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sock</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># XXX what about EINTR?</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_blocking_errnos</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span> <span class="nf">readable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the SocketIO is open for reading.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;I/O operation on closed socket.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reading</span>
+
+    <span class="k">def</span> <span class="nf">writable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the SocketIO is open for writing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;I/O operation on closed socket.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writing</span>
+
+    <span class="k">def</span> <span class="nf">seekable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the SocketIO is open for seeking.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;I/O operation on closed socket.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">seekable</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">fileno</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the file descriptor of the underlying socket.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkClosed</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sock</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close the SocketIO object.  This doesn&#39;t close the underlying</span>
+<span class="sd">        socket, except if all references to it have disappeared.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">io</span><span class="o">.</span><span class="n">RawIOBase</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sock</span><span class="o">.</span><span class="n">_decref_socketios</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sock</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">getfqdn</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get fully qualified domain name from name.</span>
+
+<span class="sd">    An empty argument is interpreted as meaning the local host.</span>
+
+<span class="sd">    First the hostname returned by gethostbyaddr() is checked, then</span>
+<span class="sd">    possibly existing aliases. In case no FQDN is available, hostname</span>
+<span class="sd">    from gethostname() is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;0.0.0.0&#39;</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">gethostname</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">hostname</span><span class="p">,</span> <span class="n">aliases</span><span class="p">,</span> <span class="n">ipaddrs</span> <span class="o">=</span> <span class="n">gethostbyaddr</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">aliases</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">hostname</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">hostname</span>
+    <span class="k">return</span> <span class="n">name</span>
+
+
+<span class="n">_GLOBAL_DEFAULT_TIMEOUT</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">create_connection</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">_GLOBAL_DEFAULT_TIMEOUT</span><span class="p">,</span>
+                      <span class="n">source_address</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Connect to *address* and return the socket object.</span>
+
+<span class="sd">    Convenience function.  Connect to *address* (a 2-tuple ``(host,</span>
+<span class="sd">    port)``) and return the socket object.  Passing the optional</span>
+<span class="sd">    *timeout* parameter will set the timeout on the socket instance</span>
+<span class="sd">    before attempting to connect.  If no *timeout* is supplied, the</span>
+<span class="sd">    global default timeout setting returned by :func:`getdefaulttimeout`</span>
+<span class="sd">    is used.  If *source_address* is set it must be a tuple of (host, port)</span>
+<span class="sd">    for the socket to bind as a source address before making the connection.</span>
+<span class="sd">    A host of &#39;&#39; or port 0 tells the OS to use the default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">address</span>
+    <span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">getaddrinfo</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">):</span>
+        <span class="n">af</span><span class="p">,</span> <span class="n">socktype</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">canonname</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="n">sock</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="n">socktype</span><span class="p">,</span> <span class="n">proto</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">_GLOBAL_DEFAULT_TIMEOUT</span><span class="p">:</span>
+                <span class="n">sock</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">source_address</span><span class="p">:</span>
+                <span class="n">sock</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">source_address</span><span class="p">)</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">sa</span><span class="p">)</span>
+            <span class="c1"># Break explicitly a reference cycle</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="n">sock</span>
+
+        <span class="k">except</span> <span class="n">error</span> <span class="k">as</span> <span class="n">_</span><span class="p">:</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">_</span>
+            <span class="k">if</span> <span class="n">sock</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">err</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">err</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">error</span><span class="p">(</span><span class="s2">&quot;getaddrinfo returns an empty list&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">getaddrinfo</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Resolve host and port into list of address info entries.</span>
+
+<span class="sd">    Translate the host/port argument into a sequence of 5-tuples that contain</span>
+<span class="sd">    all the necessary arguments for creating a socket connected to that service.</span>
+<span class="sd">    host is a domain name, a string representation of an IPv4/v6 address or</span>
+<span class="sd">    None. port is a string service name such as &#39;http&#39;, a numeric port number or</span>
+<span class="sd">    None. By passing None as the value of host and port, you can pass NULL to</span>
+<span class="sd">    the underlying C API.</span>
+
+<span class="sd">    The family, type and proto arguments can be optionally specified in order to</span>
+<span class="sd">    narrow the list of addresses returned. Passing zero as a value for each of</span>
+<span class="sd">    these arguments selects the full range of results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># We override this function since we want to translate the numeric family</span>
+    <span class="c1"># and socket type values to enum constants.</span>
+    <span class="n">addrlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">_socket</span><span class="o">.</span><span class="n">getaddrinfo</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+        <span class="n">af</span><span class="p">,</span> <span class="n">socktype</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">canonname</span><span class="p">,</span> <span class="n">sa</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="n">addrlist</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">_intenum_converter</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="n">AddressFamily</span><span class="p">),</span>
+                         <span class="n">_intenum_converter</span><span class="p">(</span><span class="n">socktype</span><span class="p">,</span> <span class="n">SocketKind</span><span class="p">),</span>
+                         <span class="n">proto</span><span class="p">,</span> <span class="n">canonname</span><span class="p">,</span> <span class="n">sa</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">addrlist</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">varlink  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>
