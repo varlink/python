@@ -4,6 +4,12 @@ set -e
 
 version="$1"
 
+if [[ -z "$version" ]]; then
+    echo "Usage: $0 <version>" >&2
+    echo "No version set" >&2
+    exit 1
+fi
+
 sed -i -e "s/^Version.*/Version: \t${version}/" python-varlink.spec
 sed -i -e "s/^[ \t]*version.*=.*/    version = \"${version}\",/" setup.py
 git commit -m "version ${version}" python-varlink.spec setup.py
