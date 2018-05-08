@@ -46,9 +46,9 @@
 <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">str</span>
 
 <span class="k">try</span><span class="p">:</span>
-     <span class="kn">from</span> <span class="nn">types</span> <span class="k">import</span> <span class="n">SimpleNamespace</span>
-<span class="k">except</span><span class="p">:</span> <span class="c1"># Python 2</span>
-     <span class="kn">from</span> <span class="nn">argparse</span> <span class="k">import</span> <span class="n">Namespace</span> <span class="k">as</span> <span class="n">SimpleNamespace</span>
+    <span class="kn">from</span> <span class="nn">types</span> <span class="k">import</span> <span class="n">SimpleNamespace</span>
+<span class="k">except</span><span class="p">:</span>  <span class="c1"># Python 2</span>
+    <span class="kn">from</span> <span class="nn">argparse</span> <span class="k">import</span> <span class="n">Namespace</span> <span class="k">as</span> <span class="n">SimpleNamespace</span>
 
 <span class="kn">import</span> <span class="nn">collections</span>
 
@@ -64,6 +64,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ASCII</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">whitespace</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;([ \t\n]|#.*$)+&#39;</span><span class="p">,</span> <span class="n">ASCII</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">docstring</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?:.?)+#(.*)(?:\n|\r\n)&#39;</span><span class="p">)</span>
         <span class="c1"># FIXME: nested ()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">method_signature</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*-&gt;([ \t\n]|#.*$)*(\([^)]*\))&#39;</span><span class="p">,</span>
                                            <span class="n">ASCII</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
@@ -76,11 +77,15 @@
         <span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">string</span> <span class="o">=</span> <span class="n">string</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="Scanner.get"><a class="viewcode-back" href="../../index.html#varlink.Scanner.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
         <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">whitespace</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstring</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">doc</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span> <span class="o">+=</span> <span class="nb">str</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
 
         <span class="n">pattern</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span>
@@ -104,6 +109,9 @@
 <div class="viewcode-block" id="Scanner.end"><a class="viewcode-back" href="../../index.html#varlink.Scanner.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">whitespace</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstring</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">doc</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span> <span class="o">+=</span> <span class="nb">str</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">)</span></div>
@@ -201,7 +209,9 @@
                 <span class="n">_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_type</span><span class="p">()</span>
             <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s2">&quot;in &#39;</span><span class="si">{}</span><span class="s2">&#39;: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">_Alias</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="n">_type</span><span class="p">)</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">_Alias</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="n">_type</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">):</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s1">&#39;member-name&#39;</span><span class="p">)</span>
             <span class="c1"># FIXME</span>
@@ -211,9 +221,13 @@
             <span class="n">in_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_struct</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)</span>
             <span class="n">out_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_struct</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">_Method</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">_Method</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">_Error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s1">&#39;member-name&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_type</span><span class="p">())</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_doc</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">_Error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s1">&#39;member-name&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_type</span><span class="p">(),</span> <span class="n">doc</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;expected type, method, or error&#39;</span><span class="p">)</span></div></div>
 
@@ -260,25 +274,28 @@
 
 <span class="k">class</span> <span class="nc">_Alias</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">varlink_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
 
 
 <span class="k">class</span> <span class="nc">_Method</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">_signature</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">_signature</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span> <span class="o">=</span> <span class="n">in_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span> <span class="o">=</span> <span class="n">out_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">signature</span> <span class="o">=</span> <span class="n">_signature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
 
 
 <span class="k">class</span> <span class="nc">_Error</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">varlink_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
 
 
 <div class="viewcode-block" id="Interface"><a class="viewcode-back" href="../../index.html#varlink.Interface">[docs]</a><span class="k">class</span> <span class="nc">Interface</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -291,6 +308,8 @@
         <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
         <span class="n">scanner</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s1">&#39;interface&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">scanner</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="s1">&#39;interface-name&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">scanner</span><span class="o">.</span><span class="n">current_doc</span>
+        <span class="n">scanner</span><span class="o">.</span><span class="n">current_doc</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">scanner</span><span class="o">.</span><span class="n">end</span><span class="p">():</span>
             <span class="n">member</span> <span class="o">=</span> <span class="n">scanner</span><span class="o">.</span><span class="n">read_member</span><span class="p">()</span>
@@ -320,7 +339,8 @@
 
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">args</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">element_type</span><span class="p">,</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">args</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">element_type</span><span class="p">,</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span>
+                                                 <span class="kc">None</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">args</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">InvalidParameter</span><span class="p">(</span><span class="n">parent_name</span><span class="p">)</span>
@@ -344,7 +364,8 @@
             <span class="k">if</span> <span class="n">args</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[]</span>
 
-            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s1">&#39;[]&#39;</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">element_type</span><span class="p">,</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s1">&#39;[]&#39;</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">element_type</span><span class="p">,</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                    <span class="n">args</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">varlink_type</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
             <span class="c1"># print(&quot;Returned set:&quot;, set(args))</span>
@@ -370,7 +391,7 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">varlink_type</span><span class="p">,</span> <span class="n">_Struct</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">InvalidParameter</span><span class="p">(</span><span class="n">parent_name</span><span class="p">)</span>
-            <span class="c1">#SyntaxError(&quot;Expected type %s, got %s with value &#39;%s&#39;&quot; % (type(varlink_type), type(args),</span>
+            <span class="c1"># SyntaxError(&quot;Expected type %s, got %s with value &#39;%s&#39;&quot; % (type(varlink_type), type(args),</span>
             <span class="c1">#                                                                args))</span>
 
         <span class="k">if</span> <span class="n">_namespaced</span><span class="p">:</span>
@@ -391,7 +412,8 @@
                         <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">args</span> <span class="o">=</span> <span class="kc">None</span>
-                    <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span>
+                                             <span class="kc">None</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">ret</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="c1"># print(&quot;SetOUT:&quot;, name)</span>
                         <span class="k">if</span> <span class="n">_namespaced</span><span class="p">:</span>
@@ -401,7 +423,8 @@
                     <span class="k">continue</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-                        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span>
+                                                 <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">ret</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="c1"># print(&quot;SetOUT:&quot;, name)</span>
                             <span class="k">if</span> <span class="n">_namespaced</span><span class="p">:</span>
@@ -416,7 +439,8 @@
                         <span class="k">continue</span>
 
                     <span class="n">val</span> <span class="o">=</span> <span class="n">varlink_struct</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-                    <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span>
+                                             <span class="kc">None</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">ret</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="c1"># print(&quot;SetOUT:&quot;, name)</span>
                         <span class="k">if</span> <span class="n">_namespaced</span><span class="p">:</span>
@@ -425,7 +449,8 @@
                             <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
                 <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">varlink_struct</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
                     <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">varlink_struct</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-                    <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_params</span><span class="p">(</span><span class="n">parent_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">varlink_type</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">_namespaced</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span>
+                                             <span class="kc">None</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">ret</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="c1"># print(&quot;SetOUT:&quot;, name)</span>
                         <span class="k">if</span> <span class="n">_namespaced</span><span class="p">:</span>
@@ -434,7 +459,6 @@
                             <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">continue</span>
-
 
         <span class="k">return</span> <span class="n">out</span></div></div>
 </pre></div>

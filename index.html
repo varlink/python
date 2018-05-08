@@ -50,7 +50,7 @@ or the <a class="reference external" href="_modules/varlink/tests/test_orgexampl
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Varlink client class.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">varlink</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="s2">&quot;unix:/run/org.example.ping&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;org.example.ping&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">assert</span> <span class="n">con1</span><span class="o">.</span><span class="n">Ping</span><span class="p">(</span><span class="s2">&quot;Test&quot;</span><span class="p">)[</span><span class="s2">&quot;pong&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Test&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">assert</span> <span class="n">connection</span><span class="o">.</span><span class="n">Ping</span><span class="p">(</span><span class="s2">&quot;Test&quot;</span><span class="p">)[</span><span class="s2">&quot;pong&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Test&quot;</span>
 </pre></div>
 </div>
 <p>If the varlink resolver is running:</p>
