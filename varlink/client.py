@@ -245,7 +245,7 @@ class Client(object):
     """Varlink client class.
 
         >>> with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:
-        >>>     assert con1.Ping("Test")["pong"] == "Test"
+        >>>     assert connection.Ping("Test")["pong"] == "Test"
 
     If the varlink resolver is running:
 
