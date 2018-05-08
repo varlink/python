@@ -81,7 +81,12 @@ class ClientInterfaceHandler(object):
 
         # FIXME: add comments
         if method.signature:
-            _wrapped.__doc__ = "Varlink call: " + method.signature
+            if method.doc:
+                _wrapped.__doc__ = method.doc + "\n"
+            else:
+                _wrapped.__doc__ = ""
+                "\n"
+            _wrapped.__doc__ += method.signature
         setattr(self, method.name, _wrapped)
 
     def _next_varlink_message(self):

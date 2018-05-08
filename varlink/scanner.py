@@ -26,6 +26,7 @@ class Scanner(object):
         else:
             ASCII = 0
         self.whitespace = re.compile(r'([ \t\n]|#.*$)+', ASCII | re.MULTILINE)
+        self.docstring = re.compile(r'(?:.?)+#(.*)(?:\n|\r\n)')
         # FIXME: nested ()
         self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
                                            ASCII | re.MULTILINE)
@@ -39,10 +40,14 @@ class Scanner(object):
 
         self.string = string
         self.pos = 0
+        self.current_doc = ""
 
     def get(self, expected):
         m = self.whitespace.match(self.string, self.pos)
         if m:
+            doc = self.docstring.findall(self.string[m.start():m.end()])
+            if len(doc):
+                self.current_doc += str.join("\n", doc)
             self.pos = m.end()
 
         pattern = self.patterns.get(expected)
@@ -66,6 +71,9 @@ class Scanner(object):
     def end(self):
         m = self.whitespace.match(self.string, self.pos)
         if m:
+            doc = self.docstring.findall(self.string[m.start():m.end()])
+            if len(doc):
+                self.current_doc += str.join("\n", doc)
             self.pos = m.end()
 
         return self.pos >= len(self.string)
@@ -163,7 +171,9 @@ class Scanner(object):
                 _type = self.read_type()
             except SyntaxError as e:
                 raise SyntaxError("in '{}': {}".format(_name, e))
-            return _Alias(_name, _type)
+            doc = self.current_doc
+            self.current_doc = ""
+            return _Alias(_name, _type, doc)
         elif self.get('method'):
             name = self.expect('member-name')
             # FIXME
@@ -173,9 +183,13 @@ class Scanner(object):
             in_type = self.read_struct()
             self.expect('->')
             out_type = self.read_struct()
-            return _Method(name, in_type, out_type, sig)
+            doc = self.current_doc
+            self.current_doc = ""
+            return _Method(name, in_type, out_type, sig, doc)
         elif self.get('error'):
-            return _Error(self.expect('member-name'), self.read_type())
+            doc = self.current_doc
+            self.current_doc = ""
+            return _Error(self.expect('member-name'), self.read_type(), doc)
         else:
             raise SyntaxError('expected type, method, or error')
 
@@ -222,25 +236,28 @@ class _CustomType(object):
 
 class _Alias(object):
 
-    def __init__(self, name, varlink_type):
+    def __init__(self, name, varlink_type, doc=None):
         self.name = name
         self.type = varlink_type
+        self.doc = doc
 
 
 class _Method(object):
 
-    def __init__(self, name, in_type, out_type, _signature):
+    def __init__(self, name, in_type, out_type, _signature, doc=None):
         self.name = name
         self.in_type = in_type
         self.out_type = out_type
         self.signature = _signature
+        self.doc = doc
 
 
 class _Error(object):
 
-    def __init__(self, name, varlink_type):
+    def __init__(self, name, varlink_type, doc=None):
         self.name = name
         self.type = varlink_type
+        self.doc = doc
 
 
 class Interface(object):
@@ -253,6 +270,8 @@ class Interface(object):
         scanner = Scanner(description)
         scanner.expect('interface')
         self.name = scanner.expect('interface-name')
+        self.doc = scanner.current_doc
+        scanner.current_doc = ""
         self.members = collections.OrderedDict()
         while not scanner.end():
             member = scanner.read_member()
