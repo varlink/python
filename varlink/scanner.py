@@ -8,9 +8,9 @@ from builtins import object
 from builtins import str
 
 try:
-     from types import SimpleNamespace
-except: # Python 2
-     from argparse import Namespace as SimpleNamespace
+    from types import SimpleNamespace
+except:  # Python 2
+    from argparse import Namespace as SimpleNamespace
 
 import collections
 
@@ -301,7 +301,8 @@ class Interface(object):
 
             if isinstance(args, dict):
                 for (k, v) in args.items():
-                    args[k] = self.filter_params(parent_name + '[' + k + ']', varlink_type.element_type, _namespaced, v, None)
+                    args[k] = self.filter_params(parent_name + '[' + k + ']', varlink_type.element_type, _namespaced, v,
+                                                 None)
                 return args
             else:
                 InvalidParameter(parent_name)
@@ -325,7 +326,8 @@ class Interface(object):
             if args == None:
                 return []
 
-            return [self.filter_params(parent_name + '[]', varlink_type.element_type, _namespaced, x, None) for x in args]
+            return [self.filter_params(parent_name + '[]', varlink_type.element_type, _namespaced, x, None) for x in
+                    args]
 
         if isinstance(varlink_type, set):
             # print("Returned set:", set(args))
@@ -351,7 +353,7 @@ class Interface(object):
 
         if not isinstance(varlink_type, _Struct):
             raise InvalidParameter(parent_name)
-            #SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
+            # SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
             #                                                                args))
 
         if _namespaced:
@@ -372,7 +374,8 @@ class Interface(object):
                         args = args[1:]
                     else:
                         args = None
-                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None)
+                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
+                                             None)
                     if ret != None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -382,7 +385,8 @@ class Interface(object):
                     continue
                 else:
                     if name in kwargs:
-                        ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, kwargs[name], None)
+                        ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced,
+                                                 kwargs[name], None)
                         if ret != None:
                             # print("SetOUT:", name)
                             if _namespaced:
@@ -397,7 +401,8 @@ class Interface(object):
                         continue
 
                     val = varlink_struct[name]
-                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None)
+                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
+                                             None)
                     if ret != None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -406,7 +411,8 @@ class Interface(object):
                             out[name] = ret
                 elif hasattr(varlink_struct, name):
                     val = getattr(varlink_struct, name)
-                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None)
+                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
+                                             None)
                     if ret != None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -415,6 +421,5 @@ class Interface(object):
                             out[name] = ret
                 else:
                     continue
-
 
         return out
