@@ -1,23 +1,19 @@
 # /usr/bin/env python
+"""varlink cli tool
+
+Call with:
+$ python -m varlink.cli --help
+
+"""
 
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import int
-from builtins import next
-from builtins import object
-from builtins import range
-
-import os
-import sys
-import threading
-import time
-import unittest
 import argparse
 import json
+import sys
 
 import varlink
-from sys import platform
 
 
 def varlink_call(args):
