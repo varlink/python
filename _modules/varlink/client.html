@@ -415,9 +415,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
         <span class="n">_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;org.varlink.service&quot;</span><span class="p">)</span>
         <span class="c1"># noinspection PyUnresolvedReferences</span>
-        <span class="n">info</span> <span class="o">=</span> <span class="n">_connection</span><span class="o">.</span><span class="n">GetInfo</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">_connection</span><span class="o">.</span><span class="n">GetInfo</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">interface_name</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;interfaces&#39;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">interface_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;interfaces&#39;</span><span class="p">]:</span>
             <span class="c1"># noinspection PyUnresolvedReferences</span>
             <span class="n">desc</span> <span class="o">=</span> <span class="n">_connection</span><span class="o">.</span><span class="n">GetInterfaceDescription</span><span class="p">(</span><span class="n">interface_name</span><span class="p">)</span>
             <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">desc</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">])</span>
