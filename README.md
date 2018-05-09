@@ -34,9 +34,9 @@ or compile from https://github.com/varlink/libvarlink
 See the [tests](https://github.com/varlink/python-varlink/tree/master/varlink/tests) directory.
 
 ```bash
-$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test" &
+$ python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test" &
 [1] 6434
-$ varlink help unix:@test/org.example.more
+$ python -m varlink.cli help unix:/tmp/test/org.example.more
 # Example Varlink service
 interface org.example.more
 
@@ -63,13 +63,13 @@ error TestMoreError (reason: string)
 
 
 $ fg
-PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test"
+python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test"
 ^C
 ```
 
 ```bash
 $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py
-Connecting to exec:./varlink/tests/test_orgexamplemore.py
+Connecting to exec:./varlink/tests/test_orgexamplemore
 
 Listening on @0002c
 Ping:  Test
@@ -94,11 +94,11 @@ Ping:  Test
 ```
 
 ```bash
-$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test" &
-Listening on @test
+$ python3 -m varlink.tests.test_orgexamplemore.py --varlink="unix:/tmp/test" &
+Listening on /tmp/test
 [1] 6434
-$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --varlink="unix:@test"
-Connecting to unix:@test
+python3 -m varlink.tests.test_orgexamplemore.py --client --varlink="unix:/tmp/test"
+Connecting to unix:/tmp/test
 
 Ping:  Test
 --- Start ---
@@ -119,8 +119,24 @@ Ping:  Test
 Progress: 100
 Ping:  Test
 --- End ---
+
+$ python3 -m varlink.cli call --more unix:/tmp/test/org.example.more.TestMore '{ "n": 10 }'
+{'state': {'start': True}}
+{'state': {'progress': 0}}
+{'state': {'progress': 10}}
+{'state': {'progress': 20}}
+{'state': {'progress': 30}}
+{'state': {'progress': 40}}
+{'state': {'progress': 50}}
+{'state': {'progress': 60}}
+{'state': {'progress': 70}}
+{'state': {'progress': 80}}
+{'state': {'progress': 90}}
+{'state': {'progress': 100}}
+{'state': {'end': True}}
+
 $ fg
-PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --varlink="unix:@test"
+python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test"
 ^C
 ```
 
@@ -134,11 +150,11 @@ E.g.
 ### Varlink Certification Server
 
 ```
-$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_certification.py --varlink=tcp:127.0.0.1:12345
+$ python3 -m varlink.tests.test_certification --varlink=tcp:127.0.0.1:12345
 ```
 
 ### Varlink Certification Client
 
 ```
-$ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_certification.py --varlink=tcp:127.0.0.1:12345 --client
+$ python3 -m varlink.tests.test_certification --varlink=tcp:127.0.0.1:12345 --client
 ```
