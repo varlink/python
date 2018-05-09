@@ -18,16 +18,8 @@ $ pip3 install --user varlink
 
 With Fedora 28/rawhide:
 ```bash
-$ sudo dnf install python-varlink
+$ sudo dnf install python3-varlink
 ```
-
-## varlink tool installation
-
-With Fedora 28/rawhide:
-```bash
-$ sudo dnf install libvarlink-util
-```
-or compile from https://github.com/varlink/libvarlink
 
 ## Examples
 
