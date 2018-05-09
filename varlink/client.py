@@ -377,9 +377,9 @@ class Client(object):
         self.address = address
         _connection = self.open("org.varlink.service")
         # noinspection PyUnresolvedReferences
-        info = _connection.GetInfo()
+        self.info = _connection.GetInfo()
 
-        for interface_name in info['interfaces']:
+        for interface_name in self.info['interfaces']:
             # noinspection PyUnresolvedReferences
             desc = _connection.GetInterfaceDescription(interface_name)
             interface = Interface(desc['description'])
