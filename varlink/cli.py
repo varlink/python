@@ -79,7 +79,6 @@ def varlink_info(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--foo', action='store_true', help='foo help')
 
     subparsers = parser.add_subparsers(title="commands")
     parser.add_argument('-r', '--resolver', default=None, help='address of the resolver')
