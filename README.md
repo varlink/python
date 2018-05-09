@@ -94,10 +94,10 @@ Ping:  Test
 ```
 
 ```bash
-$ python3 -m varlink.tests.test_orgexamplemore.py --varlink="unix:/tmp/test" &
+$ python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test" &
 Listening on /tmp/test
 [1] 6434
-python3 -m varlink.tests.test_orgexamplemore.py --client --varlink="unix:/tmp/test"
+python3 -m varlink.tests.test_orgexamplemore --client --varlink="unix:/tmp/test"
 Connecting to unix:/tmp/test
 
 Ping:  Test
