@@ -20,6 +20,7 @@ def varlink_call(args):
     deli = args.METHOD.rfind(".")
     if deli == -1:
         print("No method found", file=sys.stderr)
+        sys.exit(1)
 
     method = args.METHOD[deli + 1:]
     interface = args.METHOD[:deli]
@@ -48,6 +49,7 @@ def varlink_call(args):
     except BrokenPipeError:
         if not got or args.more:
             print("Connection closed")
+            sys.exit(1)
 
 
 def varlink_help(args):
