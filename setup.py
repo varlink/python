@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name = "varlink",
     packages = ["varlink"],
-    version = "24",
+    version = "25",
     description = "Varlink",
     long_description = "Python implementation of the varlink protocol http://varlink.org",
     author = "Lars Karlitski<lars@karlitski.net>, Harald Hoyer<harald@redhat.com>",
