@@ -53,7 +53,7 @@ def varlink_call(args):
 
 
 def varlink_help(args):
-    deli = args.INTERFACE.find("/")
+    deli = args.INTERFACE.rfind("/")
     if deli != -1:
         address = args.INTERFACE[:deli]
         interface = args.INTERFACE[deli + 1:]
