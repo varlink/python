@@ -227,7 +227,8 @@ class Service(object):
         if message[-1] == 0:
             message = message[:-1]
 
-        handle = self._handle(json.loads(message), message, _server, _request)
+        string = message.decode('utf-8')
+        handle = self._handle(json.loads(string), message, _server, _request)
         for out in handle:
             if out == None:
                 return

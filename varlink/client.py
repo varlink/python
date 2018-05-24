@@ -177,7 +177,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         :param interface: an Interface object
         :param file_or_socket: an open socket or io stream
         :param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries
-        
+
         """
         ClientInterfaceHandler.__init__(self, interface, namespaced=namespaced)
         self._connection = file_or_socket
@@ -228,7 +228,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
                 message = None
 
             if message:
-                yield message
+                yield message.decode('utf-8')
                 continue
 
             if self._recv:
