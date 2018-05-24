@@ -299,7 +299,7 @@ class Interface(object):
             if args == None:
                 return {}
 
-            if isinstance(args, dict):
+            if isinstance(args, collections.Mapping):
                 for (k, v) in args.items():
                     args[k] = self.filter_params(parent_name + '[' + k + ']', varlink_type.element_type, _namespaced, v,
                                                  None)
@@ -329,7 +329,7 @@ class Interface(object):
             return [self.filter_params(parent_name + '[]', varlink_type.element_type, _namespaced, x, None) for x in
                     args]
 
-        if isinstance(varlink_type, set):
+        if isinstance(varlink_type, collections.Set):
             # print("Returned set:", set(args))
             return set(args)
 
@@ -396,7 +396,7 @@ class Interface(object):
                         continue
 
             if varlink_struct:
-                if isinstance(varlink_struct, dict):
+                if isinstance(varlink_struct, collections.Mapping):
                     if name not in varlink_struct:
                         continue
 
