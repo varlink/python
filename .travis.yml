@@ -9,6 +9,8 @@ install:
 - pip install -r test-requirements.txt
 script:
 - python -m unittest discover
+- PYTHONPATH=$(pwd) python ./varlink/tests/test_certification.py
+- PYTHONPATH=$(pwd) python ./varlink/tests/test_orgexamplemore.py
 - python -m coverage run --source varlink -m unittest discover
 after_success:
 - coveralls
