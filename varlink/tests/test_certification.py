@@ -413,7 +413,7 @@ if __name__ == '__main__':
         client_mode = True
         address = 'exec:' + __file__
 
-        if platform != "linux":
+        if not platform.startswith("linux"):
             print("varlink exec: not supported on platform %s" % platform, file=sys.stderr)
             usage()
             sys.exit(2)

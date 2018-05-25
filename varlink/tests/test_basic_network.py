@@ -53,7 +53,7 @@ class TestService(unittest.TestCase):
         self.do_run("tcp:127.0.0.1:23450")
 
     def test_anon_unix(self):
-        if platform == "linux":
+        if platform.startswith("linux"):
             self.do_run("unix:@org.varlink.service_anon_test"
                         + str(os.getpid())
                         + threading.current_thread().getName()
