@@ -215,7 +215,7 @@
 <span class="sd">        :param interface: an Interface object</span>
 <span class="sd">        :param file_or_socket: an open socket or io stream</span>
 <span class="sd">        :param namespaced: if True, varlink methods return SimpleNamespace objects instead of dictionaries</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ClientInterfaceHandler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="n">namespaced</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span> <span class="o">=</span> <span class="n">file_or_socket</span>
@@ -266,7 +266,7 @@
                 <span class="n">message</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="n">message</span>
+                <span class="k">yield</span> <span class="n">message</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recv</span><span class="p">:</span>
@@ -370,7 +370,7 @@
             <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">)</span>
             <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">listen</span><span class="p">()</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
             <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
