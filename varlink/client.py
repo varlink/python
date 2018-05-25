@@ -92,7 +92,7 @@ class ClientInterfaceHandler(object):
     def _next_varlink_message(self):
         message = next(self._next_message())
 
-        message = json.loads(message)
+        message = json.loads(message.decode('utf-8'))
         if not 'parameters' in message:
             message['parameters'] = {}
 

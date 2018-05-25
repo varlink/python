@@ -124,12 +124,12 @@ class CertService(object):
     def assert_raw(self, client_id, _server, _raw, _message, wants):
         if wants != _message:
             del _server.next_method[client_id]
-            raise CertificationError(wants, json.loads(_raw))
+            raise CertificationError(wants, json.loads(_raw.decode('utf-8')))
 
     def assert_cmp(self, client_id, _server, _raw, wants, _bool):
         if not _bool:
             del _server.next_method[client_id]
-            raise CertificationError(wants, json.loads(_raw))
+            raise CertificationError(wants, json.loads(_raw.decode('utf-8')))
 
     def assert_method(self, client_id, _server, from_method, next_method):
         if not hasattr(_server, "next_method") or client_id not in _server.next_method:
