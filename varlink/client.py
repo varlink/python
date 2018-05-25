@@ -92,7 +92,7 @@ class ClientInterfaceHandler(object):
     def _next_varlink_message(self):
         message = next(self._next_message())
 
-        message = json.loads(message.decode('utf-8'))
+        message = json.loads(message)
         if not 'parameters' in message:
             message['parameters'] = {}
 
@@ -332,7 +332,7 @@ class Client(object):
             s = socket.socket(socket.AF_UNIX)
             s.setblocking(False)
             s.bind("")
-            s.listen()
+            s.listen(100)
             address = s.getsockname().decode('ascii')
 
             self._child_pid = os.fork()
