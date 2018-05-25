@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name = "varlink",
     packages = ["varlink"],
-    version = "26.0.1",
+    version = "26.0.2",
     description = "Varlink",
     long_description = "Python implementation of the varlink protocol http://varlink.org",
     author = "Lars Karlitski<lars@karlitski.net>, Harald Hoyer<harald@redhat.com>",
@@ -11,7 +11,7 @@ setup(
     url = "https://github.com/varlink/python",
     license = "ASL 2.0",
     keywords = "ipc varlink rpc",
-    python_requires='>=2.7',
+    python_requires = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     package_data = {
         "varlink": [ "*.varlink" ]
     },
