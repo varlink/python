@@ -443,6 +443,8 @@ class Server(BaseServer):
 
         if self.server_address[0] == 0:
             self.server_address = '@' + self.server_address[1:].decode('utf-8')
+            if self.mode:
+                os.fchmod(self.socket.fileno(), mode=int(self.mode, 8))
         elif self.mode:
             os.chmod(self.server_address, mode=int(self.mode, 8))
 
