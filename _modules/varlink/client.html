@@ -344,6 +344,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">def</span> <span class="nf">_resolve_interface</span><span class="p">(</span><span class="n">_interface</span><span class="p">,</span> <span class="n">_resolver</span><span class="p">):</span>
             <span class="n">resolver_connection</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">_resolver</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;org.varlink.resolver&#39;</span><span class="p">)</span>
@@ -360,11 +362,27 @@
 
         <span class="k">if</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;unix:&quot;</span><span class="p">):</span>
             <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
-            <span class="n">mode</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;;mode=&#39;</span><span class="p">)</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">mode</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[:</span><span class="n">mode</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">address</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@&#39;</span><span class="p">:</span>
                 <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ssh://&quot;</span><span class="p">):</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">6</span><span class="p">:]</span>
+
+            <span class="n">colon</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">colon</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">port</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="n">colon</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[:</span><span class="n">colon</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_open</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="k">elif</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;exec:&quot;</span><span class="p">):</span>
             <span class="n">executable</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
             <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">)</span>
@@ -413,6 +431,8 @@
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Invalid address &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">address</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span><span class="p">:</span>
+            <span class="n">ssh_sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span>
         <span class="n">_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;org.varlink.service&quot;</span><span class="p">)</span>
         <span class="c1"># noinspection PyUnresolvedReferences</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">_connection</span><span class="o">.</span><span class="n">GetInfo</span><span class="p">()</span>
@@ -422,7 +442,48 @@
             <span class="n">desc</span> <span class="o">=</span> <span class="n">_connection</span><span class="o">.</span><span class="n">GetInterfaceDescription</span><span class="p">(</span><span class="n">interface_name</span><span class="p">)</span>
             <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">desc</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">[</span><span class="n">interface</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">interface</span>
-        <span class="n">_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="n">ssh_sock</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Client.ssh_open"><a class="viewcode-back" href="../../index.html#varlink.Client.ssh_open">[docs]</a>    <span class="k">def</span> <span class="nf">ssh_open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socketpair</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">sp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># child</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># without dup() the socket is closed with the python destructor</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">s</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+            <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ssh&quot;</span><span class="p">,</span> <span class="s2">&quot;-xTK&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;BatchMode=yes&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">)</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;varlink&quot;</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;bridge&quot;</span><span class="p">)</span>
+
+            <span class="n">os</span><span class="o">.</span><span class="n">execvp</span><span class="p">(</span><span class="s2">&quot;ssh&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># parent</span>
+        <span class="n">sp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
     <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
@@ -450,7 +511,14 @@
         <span class="k">if</span> <span class="n">interface_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InterfaceNotFound</span><span class="p">(</span><span class="n">interface_name</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_open</span><span class="p">()</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">)</span>
