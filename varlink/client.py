@@ -306,6 +306,8 @@ class Client(object):
         self._child_pid = 0
         self.port = None
         self.address = None
+        self.ssh_mode = False
+        self.ssh_sock = None
 
         def _resolve_interface(_interface, _resolver):
             resolver_connection = Client(_resolver).open('org.varlink.resolver')
@@ -322,11 +324,27 @@ class Client(object):
 
         if address.startswith("unix:"):
             address = address[5:]
-            mode = address.rfind(';mode=')
+            mode = address.find(';')
             if mode != -1:
                 address = address[:mode]
             if address[0] == '@':
                 address = address.replace('@', '\0', 1)
+        elif address.startswith("ssh://"):
+            address = address[6:]
+
+            colon = address.find(':')
+            if colon != -1:
+                port = address[colon + 1:]
+                address = address[:colon]
+            else:
+                port = None
+
+            self.ssh_mode = True
+            self.port = port
+            self.address = address
+            self.ssh_sock = self.ssh_open()
+            self.ssh_sock.setblocking(True)
+
         elif address.startswith("exec:"):
             executable = address[5:]
             s = socket.socket(socket.AF_UNIX)
@@ -375,6 +393,8 @@ class Client(object):
             raise ConnectionError("Invalid address '%s'" % address)
 
         self.address = address
+        if self.ssh_mode:
+            ssh_sock = self.ssh_sock
         _connection = self.open("org.varlink.service")
         # noinspection PyUnresolvedReferences
         self.info = _connection.GetInfo()
@@ -384,7 +404,48 @@ class Client(object):
             desc = _connection.GetInterfaceDescription(interface_name)
             interface = Interface(desc['description'])
             self._interfaces[interface.name] = interface
-        _connection.close()
+
+        if self.ssh_mode:
+            self.ssh_sock = ssh_sock
+        else:
+            _connection.close()
+
+    def ssh_open(self):
+        sp = socket.socketpair()
+        self._child_pid = os.fork()
+        if self._child_pid == 0:
+            sp[0].close()
+            s = sp[1]
+            # child
+            n = s.fileno()
+            if n == 0 or n == 1:
+                # without dup() the socket is closed with the python destructor
+                n = os.dup(n)
+                del s
+            else:
+                try:
+                    os.close(0)
+                    os.close(1)
+                except OSError:
+                    pass
+
+            os.dup2(n, 0)
+            os.dup2(n, 1)
+            args = ["ssh", "-xTK", "-o", "BatchMode=yes"]
+            if self.port != None:
+                args.append("-p")
+                args.append(self.port)
+
+            args.append("--")
+            args.append(self.address)
+            args.append("varlink")
+            args.append("bridge")
+
+            os.execvp("ssh", args)
+            sys.exit(1)
+        # parent
+        sp[1].close()
+        return sp[0]
 
     def __enter__(self):
         return self
@@ -412,7 +473,14 @@ class Client(object):
         if interface_name not in self._interfaces:
             raise InterfaceNotFound(interface_name)
 
-        if self.port:
+        if self.ssh_sock:
+            s = self.ssh_sock
+            s.setblocking(True)
+            self.ssh_sock = None
+        elif self.ssh_mode:
+            s = self.ssh_open()
+            s.setblocking(True)
+        elif self.port:
             s = socket.create_connection((self.address, int(self.port)))
         else:
             s = socket.socket(socket.AF_UNIX)

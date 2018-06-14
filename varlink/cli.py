@@ -25,7 +25,7 @@ def varlink_call(args):
     method = args.METHOD[deli + 1:]
     interface = args.METHOD[:deli]
 
-    deli = args.METHOD.find("/")
+    deli = args.METHOD.rfind("/")
     if deli != -1:
         address = interface[:deli]
         interface = interface[deli + 1:]
