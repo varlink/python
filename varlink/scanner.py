@@ -8,11 +8,16 @@ from builtins import object
 from builtins import str
 
 try:
+  basestring
+except NameError:
+  basestring = str
+
+try:
     from types import SimpleNamespace
 except:  # Python 2
     from argparse import Namespace as SimpleNamespace
 
-import collections
+from collections import (Set, OrderedDict, Mapping)
 
 from .error import (MethodNotFound, InvalidParameter)
 
@@ -116,7 +121,7 @@ class Scanner(object):
     def read_struct(self):
         _isenum = None
         self.expect('(')
-        fields = collections.OrderedDict()
+        fields = OrderedDict()
         if not self.get(')'):
             while True:
                 name = self.expect('identifier')
@@ -201,7 +206,7 @@ class _Object(object):
 class _Struct(object):
 
     def __init__(self, fields):
-        self.fields = collections.OrderedDict(fields)
+        self.fields = OrderedDict(fields)
 
 
 class _Enum(object):
@@ -272,7 +277,7 @@ class Interface(object):
         self.name = scanner.expect('interface-name')
         self.doc = scanner.current_doc
         scanner.current_doc = ""
-        self.members = collections.OrderedDict()
+        self.members = OrderedDict()
         while not scanner.end():
             member = scanner.read_member()
             self.members[member.name] = member
@@ -288,7 +293,7 @@ class Interface(object):
         raise MethodNotFound(name)
 
     def filter_params(self, parent_name, varlink_type, _namespaced, args, kwargs):
-        # print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs)
+        #print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs, type(args))
 
         if isinstance(varlink_type, _Maybe):
             if args == None:
@@ -299,7 +304,7 @@ class Interface(object):
             if args == None:
                 return {}
 
-            if isinstance(args, collections.Mapping):
+            if isinstance(args, Mapping):
                 for (k, v) in args.items():
                     args[k] = self.filter_params(parent_name + '[' + k + ']', varlink_type.element_type, _namespaced, v,
                                                  None)
@@ -329,12 +334,11 @@ class Interface(object):
             return [self.filter_params(parent_name + '[]', varlink_type.element_type, _namespaced, x, None) for x in
                     args]
 
-        if isinstance(varlink_type, collections.Set):
+        if isinstance(varlink_type, Set):
             # print("Returned set:", set(args))
             return set(args)
 
-        if isinstance(varlink_type, str) and isinstance(args, str):
-            # print("Returned str:", args)
+        if isinstance(varlink_type, basestring) and isinstance(args, basestring):
             return args
 
         if isinstance(varlink_type, float) and (isinstance(args, float) or isinstance(args, int)):
@@ -396,7 +400,7 @@ class Interface(object):
                         continue
 
             if varlink_struct:
-                if isinstance(varlink_struct, collections.Mapping):
+                if isinstance(varlink_struct, Mapping):
                     if name not in varlink_struct:
                         continue
 
