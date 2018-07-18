@@ -37,10 +37,10 @@ from sys import platform
 
 ######## CLIENT #############
 
-def run_client(address):
-    print('Connecting to %s\n' % address)
+def run_client(connection_builder):
+    print('Connecting to %s\n' % connection_builder.address)
     try:
-        with varlink.Client(address) as client, \
+        with varlink.Client(connection_builder) as client, \
                 client.open('org.example.more', namespaced=True) as con1, \
                 client.open('org.example.more', namespaced=True) as con2:
 
@@ -179,18 +179,26 @@ if __name__ == '__main__':
         elif opt == "--client":
             client_mode = True
 
-    if not address and not client_mode:
-        client_mode = True
-        address = 'exec:' + __file__
+    cb = None
 
+    if client_mode and address:
+        cb = varlink.ClientConnectionBuilder()
+        cb.with_address(address)
+
+    if not address and not client_mode:
         if not platform.startswith("linux"):
-            print("varlink exec: not supported on platform %s" % platform, file=sys.stderr)
+            print("varlink activate: not supported on platform %s" % platform, file=sys.stderr)
             usage()
             sys.exit(2)
 
-    if client_mode:
+        client_mode = True
+        with varlink.ClientConnectionBuilder() as cb:
+            cb.with_activate([__file__, "--varlink=$VARLINK_ADDRESS"])
+            run_client(cb)
+
+    elif client_mode:
         try:
-            run_client(address)
+            run_client(cb)
         except Exception as e:
             print("Exception: ", type(e), e)
             sys.exit(1)
@@ -211,9 +219,9 @@ class TestService(unittest.TestCase):
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
-
+        cb = varlink.ClientConnectionBuilder().with_address(address)
         try:
-            run_client(address)
+            run_client(cb)
 
             with varlink.Client(address=address) as client, \
                     client.open('org.example.more', namespaced=True) as con1, \

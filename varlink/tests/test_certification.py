@@ -24,9 +24,9 @@ import varlink
 
 ######## CLIENT #############
 
-def run_client(address):
-    print('Connecting to %s' % address)
-    with varlink.Client(address) as client, \
+def run_client(connection_builder):
+    print('Connecting to %s\n' % connection_builder.address)
+    with varlink.Client(connection_builder) as client, \
             client.open('org.varlink.certification') as con:
         ret = con.Start()
         client_id = ret["client_id"]
@@ -409,17 +409,24 @@ if __name__ == '__main__':
         elif opt == "--client":
             client_mode = True
 
-    if not address and not client_mode:
-        client_mode = True
-        address = 'exec:' + __file__
+    cb = None
 
+    if client_mode and address:
+        cb = varlink.ClientConnectionBuilder()
+        cb.with_address(address)
+
+    if not address and not client_mode:
         if not platform.startswith("linux"):
-            print("varlink exec: not supported on platform %s" % platform, file=sys.stderr)
+            print("varlink activate: not supported on platform %s" % platform, file=sys.stderr)
             usage()
             sys.exit(2)
 
-    if client_mode:
-        run_client(address)
+        client_mode = True
+        with varlink.ClientConnectionBuilder() as cb:
+            cb.with_activate([__file__, "--varlink=$VARLINK_ADDRESS"])
+            run_client(cb)
+    elif client_mode:
+        run_client(cb)
     else:
         run_server(address)
 
@@ -444,7 +451,7 @@ class TestService(unittest.TestCase):
         server_thread.start()
 
     def test_client(self):
-        run_client(self.address)
+        run_client(varlink.ClientConnectionBuilder().with_address(self.address))
 
     def test_01(self):
         with varlink.Client(self.address) as client, \

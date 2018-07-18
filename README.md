@@ -60,6 +60,17 @@ python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test"
 ```
 
 ```bash
+$ python3 -m varlink.cli -A 'python3 -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS' call org.example.more.Ping '{ "ping": "Ping"}'
+Listening on @00352
+{'pong': 'Ping'}
+```
+
+```bash
+# python3 -m varlink.cli -b "varlink bridge" call com.redhat.machine.GetInfo '{}'
+{'hostname': 'x240', 'system': {'id': 'fedora', 'kernel_version': '4.18.0-0.rc4.git4.1.fc29.x86_64', 'name': 'Fedora', 'version': '29'}, 'virtualization': {'name': 'none'}}
+```
+
+```bash
 $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py
 Connecting to exec:./varlink/tests/test_orgexamplemore
 

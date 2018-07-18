@@ -15,7 +15,6 @@ import sys
 
 import varlink
 
-
 def varlink_call(args):
     deli = args.METHOD.rfind(".")
     if deli == -1:
@@ -31,7 +30,14 @@ def varlink_call(args):
         interface = interface[deli + 1:]
         client = varlink.Client(address)
     else:
-        client = varlink.Client(resolve_interface=interface, resolver=args.resolver)
+        cb = varlink.ClientConnectionBuilder()
+        if args.resolver:
+            cb.with_resolver(args.resolver)
+        elif args.activate:
+            cb.with_activate(args.activate.split(" "))
+        elif args.bridge:
+            cb.with_bridge(args.bridge.split(" "))
+        client = varlink.Client(cb)
 
     got = False
     try:
@@ -68,7 +74,16 @@ def varlink_help(args):
 
 
 def varlink_info(args):
-    with varlink.Client(args.ADDRESS) as client:
+    if args.ADDRESS:
+        deli = args.ADDRESS.rfind("/")
+        if deli != -1:
+            address = args.ADDRESS
+            client = varlink.Client(address)
+        else:
+            interface = args.ADDRESS
+            client = varlink.Client(resolve_interface=interface, resolver=args.resolver)
+
+        client.get_interfaces()
         info = client.info
         print("Vendor:", info["vendor"])
         print("Product:", info["product"])
@@ -78,12 +93,28 @@ def varlink_info(args):
         for i in info["interfaces"]:
             print("  ", i)
 
+        del client
+    else:
+        address = "unix:/run/org.varlink.resolver"
+        with varlink.Client(address) as client:
+            info = client.open("org.varlink.resolver").GetInfo()
+            print("Vendor:", info["vendor"])
+            print("Product:", info["product"])
+            print("Version:", info["version"])
+            print("URL:", info["url"])
+            print("Interfaces:")
+            for i in info["interfaces"]:
+                print("  ", i)
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(title="commands")
     parser.add_argument('-r', '--resolver', default=None, help='address of the resolver')
+    parser.add_argument('-A', '--activate', default=None, help='Service to socket-activate and connect to. The temporary UNIX socket address is exported as $VARLINK_ADDRESS.')
+    parser.add_argument('-b', '--bridge', default=None, help='Command to execute and connect to')
 
     parser_info = subparsers.add_parser('info', help='Print information about a service')
     parser_info.add_argument('ADDRESS')

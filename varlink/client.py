@@ -241,6 +241,136 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
             self._in_buffer += data
 
 
+class ClientConnectionBuilder(object):
+    def __init__(self):
+        self.address = None
+        self.socket_fn = None
+        self.socket_fd = None
+        self.resolver = "unix:/run/org.varlink.resolver"
+        self._child_pid = 0
+        self.port = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _type, value, _traceback):
+        if hasattr(self, "_child_pid") and self._child_pid != 0:
+            try:
+                os.kill(self._child_pid, signal.SIGTERM)
+            except OSError:
+                pass
+            os.waitpid(self._child_pid, 0)
+
+    def with_activate(self, argv):
+        s = socket.socket(socket.AF_UNIX)
+        s.setblocking(False)
+        s.bind("")
+        s.listen(100)
+        address = s.getsockname().decode('ascii')
+        self.address = address
+
+        self._child_pid = os.fork()
+        if self._child_pid == 0:
+            # child
+            n = s.fileno()
+            if n == 3:
+                # without dup() the socket is closed with the python destructor
+                n = os.dup(3)
+                del s
+            else:
+                try:
+                    os.close(3)
+                except OSError:
+                    pass
+
+            os.dup2(n, 3)
+            address = address.replace('\0', '@', 1)
+
+            for i in range(1, len(argv)):
+                argv[i] = argv[i].replace("$VARLINK_ADDRESS", "unix:" + address)
+
+            os.environ["LISTEN_FDS"] = "1"
+            os.environ["LISTEN_FDNAMES"] = "varlink"
+            os.environ["LISTEN_PID"] = str(os.getpid())
+            os.execvp(argv[0], argv)
+            sys.exit(1)
+        # parent
+        s.close()
+        return self
+
+    def with_bridge(self, argv):
+        def new_bridge_socket():
+            sp = socket.socketpair()
+            child_pid = os.fork()
+            if child_pid == 0:
+                sp[0].close()
+                s = sp[1]
+                # child
+                n = s.fileno()
+                if n == 0 or n == 1:
+                    # without dup() the socket is closed with the python destructor
+                    n = os.dup(n)
+                    del s
+                else:
+                    try:
+                        os.close(0)
+                        os.close(1)
+                    except OSError:
+                        pass
+
+                os.dup2(n, 0)
+                os.dup2(n, 1)
+
+                os.execvp(argv[0], argv)
+                sys.exit(1)
+            # parent
+            sp[1].close()
+            return sp[0]
+
+        self.socket_fn = new_bridge_socket
+        return self
+
+    def with_address(self, address):
+        if address.startswith("unix:"):
+            address = address[5:]
+            mode = address.find(';')
+            if mode != -1:
+                address = address[:mode]
+            if address[0] == '@':
+                address = address.replace('@', '\0', 1)
+            self.address = address
+
+        elif address.startswith("tcp:"):
+            address = address[4:]
+            p = address.rfind(':')
+            if p != -1:
+                port = address[p + 1:]
+                address = address[:p]
+            else:
+                raise ConnectionError("Invalid address 'tcp:%s'" % address)
+            address = address.replace('[', '')
+            address = address.replace(']', '')
+            self.port = port
+            self.address = address
+
+        elif address is not None:
+            # FIXME: also accept other transports
+            raise ConnectionError("Invalid address '%s'" % address)
+        return self
+
+    def with_resolver(self, resolver_address):
+        self.resolver = resolver_address
+        return self
+
+    def with_interface(self, interface):
+        if interface == 'org.varlink.resolver':
+            return self.resolver
+        resolver_connection = Client(self.resolver).open('org.varlink.resolver')
+        # noinspection PyUnresolvedReferences
+        _r = resolver_connection.Resolve(interface)
+        self.address = _r['address']
+        return self
+
 class Client(object):
     """Varlink client class.
 
@@ -293,7 +423,7 @@ class Client(object):
     """
     handler = SimpleClientInterfaceHandler
 
-    def __init__(self, address=None, resolve_interface=None, resolver=None):
+    def __init__(self, address=None, resolve_interface=None, resolver=None, connection_builder=None):
         """Get the interface descriptions from a varlink service.
 
         :param address: the exact address like "unix:/run/org.varlink.resolver"
@@ -303,162 +433,45 @@ class Client(object):
 
         """
         self._interfaces = {}
-        self._child_pid = 0
-        self.port = None
-        self.address = None
-        self.ssh_mode = False
-        self.ssh_sock = None
-
-        def _resolve_interface(_interface, _resolver):
-            resolver_connection = Client(_resolver).open('org.varlink.resolver')
-            # noinspection PyUnresolvedReferences
-            _r = resolver_connection.Resolve(_interface)
-            return _r['address']
+        self.cb = None
+        self._socket = None
 
         with open(os.path.join(os.path.dirname(__file__), 'org.varlink.service.varlink')) as f:
             interface = Interface(f.read())
             self.add_interface(interface)
 
-        if address is None and not (resolve_interface is None):
-            address = _resolve_interface(resolve_interface, resolver or "unix:/run/org.varlink.resolver")
+        if isinstance(address, ClientConnectionBuilder):
+            connection_builder = address
+            address = None
 
-        if address.startswith("unix:"):
-            address = address[5:]
-            mode = address.find(';')
-            if mode != -1:
-                address = address[:mode]
-            if address[0] == '@':
-                address = address.replace('@', '\0', 1)
-        elif address.startswith("ssh://"):
-            address = address[6:]
-
-            colon = address.find(':')
-            if colon != -1:
-                port = address[colon + 1:]
-                address = address[:colon]
-            else:
-                port = None
-
-            self.ssh_mode = True
-            self.port = port
-            self.address = address
-            self.ssh_sock = self.ssh_open()
-            self.ssh_sock.setblocking(True)
-
-        elif address.startswith("exec:"):
-            executable = address[5:]
-            s = socket.socket(socket.AF_UNIX)
-            s.setblocking(False)
-            s.bind("")
-            s.listen(100)
-            address = s.getsockname().decode('ascii')
-
-            self._child_pid = os.fork()
-            if self._child_pid == 0:
-                # child
-                n = s.fileno()
-                if n == 3:
-                    # without dup() the socket is closed with the python destructor
-                    n = os.dup(3)
-                    del s
-                else:
-                    try:
-                        os.close(3)
-                    except OSError:
-                        pass
-
-                os.dup2(n, 3)
-                address = address.replace('\0', '@', 1)
-                address = "--varlink=unix:%s;mode=0600" % address
-                os.environ["LISTEN_FDS"] = "1"
-                os.environ["LISTEN_FDNAMES"] = "varlink"
-                os.environ["LISTEN_PID"] = str(os.getpid())
-                os.execlp(executable, executable, address)
-                sys.exit(1)
-            # parent
-            s.close()
-        elif address.startswith("tcp:"):
-            address = address[4:]
-            p = address.rfind(':')
-            if p != -1:
-                port = address[p + 1:]
-                address = address[:p]
-            else:
-                raise ConnectionError("Invalid address 'tcp:%s'" % address)
-            address = address.replace('[', '')
-            address = address.replace(']', '')
-            self.port = port
+        if connection_builder:
+            self.cb = connection_builder
         else:
-            # FIXME: also accept other transports
-            raise ConnectionError("Invalid address '%s'" % address)
+            self.cb = ClientConnectionBuilder()
 
-        self.address = address
-        if self.ssh_mode:
-            ssh_sock = self.ssh_sock
-        _connection = self.open("org.varlink.service")
-        # noinspection PyUnresolvedReferences
-        self.info = _connection.GetInfo()
+        if resolver:
+            self.cb.with_resolver(resolver)
 
-        for interface_name in self.info['interfaces']:
-            # noinspection PyUnresolvedReferences
-            desc = _connection.GetInterfaceDescription(interface_name)
-            interface = Interface(desc['description'])
-            self._interfaces[interface.name] = interface
+        if resolve_interface:
+            self.cb.with_interface(resolve_interface)
 
-        if self.ssh_mode:
-            self.ssh_sock = ssh_sock
-        else:
-            _connection.close()
-
-    def ssh_open(self):
-        sp = socket.socketpair()
-        self._child_pid = os.fork()
-        if self._child_pid == 0:
-            sp[0].close()
-            s = sp[1]
-            # child
-            n = s.fileno()
-            if n == 0 or n == 1:
-                # without dup() the socket is closed with the python destructor
-                n = os.dup(n)
-                del s
-            else:
-                try:
-                    os.close(0)
-                    os.close(1)
-                except OSError:
-                    pass
-
-            os.dup2(n, 0)
-            os.dup2(n, 1)
-            args = ["ssh", "-xTK", "-o", "BatchMode=yes"]
-            if self.port != None:
-                args.append("-p")
-                args.append(self.port)
-
-            args.append("--")
-            args.append(self.address)
-            args.append("varlink")
-            args.append("bridge")
-
-            os.execvp("ssh", args)
-            sys.exit(1)
-        # parent
-        sp[1].close()
-        return sp[0]
+        if address:
+            self.cb.with_address(address)
 
     def __enter__(self):
         return self
 
     def __exit__(self, _type, value, _traceback):
-        if hasattr(self, "_child_pid") and self._child_pid != 0:
-            try:
-                os.kill(self._child_pid, signal.SIGTERM)
-            except OSError:
-                pass
-            os.waitpid(self._child_pid, 0)
+        if hasattr(self, "cb") and self.cb:
+            if hasattr(self.cb, "_child_pid") and self.cb._child_pid != 0:
+                try:
+                    os.kill(self.cb._child_pid, signal.SIGTERM)
+                except OSError:
+                    pass
+                os.waitpid(self.cb._child_pid, 0)
+                self.cb._child_pid = 0
 
-    def open(self, interface_name, namespaced=False):
+    def open(self, interface_name, namespaced=False, connection=None):
         """Open a new connection and get a client interface handle with the varlink methods installed.
 
         :param interface_name: an interface name, which the service this client object is
@@ -470,28 +483,69 @@ class Client(object):
 
         """
 
+        if connection == None:
+            connection = self.open_connection()
+
+        if interface_name not in self._interfaces:
+            self.get_interface(interface_name, socket_connection=connection)
+
         if interface_name not in self._interfaces:
             raise InterfaceNotFound(interface_name)
 
-        if self.ssh_sock:
-            s = self.ssh_sock
+        return self.handler(self._interfaces[interface_name], connection, namespaced=namespaced)
+
+    def open_connection(self):
+        """Open a new connection and return the socket.
+        :exception OSError: anything socket.connect() throws
+
+        """
+
+        if self.cb and self.cb.socket_fn:
+            s = self.cb.socket_fn()
             s.setblocking(True)
-            self.ssh_sock = None
-        elif self.ssh_mode:
-            s = self.ssh_open()
+        elif self.cb.port:
+            s = socket.create_connection((self.cb.address, int(self.cb.port)))
             s.setblocking(True)
-        elif self.port:
-            s = socket.create_connection((self.address, int(self.port)))
         else:
             s = socket.socket(socket.AF_UNIX)
             s.setblocking(True)
-            s.connect(self.address)
+            s.connect(self.cb.address)
 
-        return self.handler(self._interfaces[interface_name], s, namespaced=namespaced)
+        return s
 
-    def get_interfaces(self):
+    def get_interfaces(self, socket_connection=None):
         """Returns the a list of Interface objects the service implements."""
-        return self._interfaces
+        if socket_connection == None:
+            socket_connection = self.open_connection()
+            close_socket = True
+        else:
+            close_socket = False
+
+        # noinspection PyUnresolvedReferences
+        _connection = self.handler(self._interfaces["org.varlink.service"], socket_connection)
+        self.info = _connection.GetInfo()
+
+        if close_socket:
+            socket_connection.close()
+
+        return self.info['interfaces']
+
+    def get_interface(self, interface_name, socket_connection=None):
+        if socket_connection == None:
+            socket_connection = self.open_connection()
+            close_socket = True
+        else:
+            close_socket = False
+
+        # noinspection PyUnresolvedReferences
+        _connection = self.handler(self._interfaces["org.varlink.service"], socket_connection)
+        # noinspection PyUnresolvedReferences
+        desc = _connection.GetInterfaceDescription(interface_name)
+        interface = Interface(desc['description'])
+        self._interfaces[interface.name] = interface
+
+        if close_socket:
+            socket_connection.close()
 
     def add_interface(self, interface):
         """Manually add or overwrite an interface definition from an Interface object.
