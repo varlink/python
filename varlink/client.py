@@ -20,6 +20,13 @@ from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder, BrokenPipeE
 from .scanner import (Interface, _Method)
 
 
+PY2 = sys.version_info[0] == 2
+PY3 = (sys.version_info[0] >= 3)
+
+if PY2:
+    FileNotFoundError = IOError
+    ChildProcessError = OSError
+
 class ConnectionError(OSError):
     pass
 
