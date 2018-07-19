@@ -344,7 +344,7 @@ class ClientConnectionBuilder(object):
             sp[1].close()
             return sp[0]
 
-        self._str = "Bridge with: '%s'" % argv.join(" ")
+        self._str = "Bridge with: '%s'" % " ".join(argv)
         self._socket_fn = new_bridge_socket
         return self
 
