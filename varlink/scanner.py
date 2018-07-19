@@ -8,9 +8,9 @@ from builtins import object
 from builtins import str
 
 try:
-  basestring
+    basestring
 except NameError:
-  basestring = str
+    basestring = str
 
 try:
     from types import SimpleNamespace
@@ -293,7 +293,7 @@ class Interface(object):
         raise MethodNotFound(name)
 
     def filter_params(self, parent_name, varlink_type, _namespaced, args, kwargs):
-        #print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs, type(args))
+        # print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs, type(args))
 
         if isinstance(varlink_type, _Maybe):
             if args == None:

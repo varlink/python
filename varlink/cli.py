@@ -24,38 +24,38 @@ def varlink_call(args):
     method = args.METHOD[deli + 1:]
     interface = args.METHOD[:deli]
 
-    cb = varlink.ClientConnectionBuilder()
-    deli = interface.rfind("/")
-    if deli != -1:
-        address = interface[:deli]
-        interface = interface[deli + 1:]
-        cb.with_address(address)
-    else:
-        if args.activate:
-            cb.with_activate(args.activate.split(" "))
-        elif args.bridge:
-            cb.with_bridge(args.bridge.split(" "))
+    with varlink.ClientConnectionBuilder() as cb:
+        deli = interface.rfind("/")
+        if deli != -1:
+            address = interface[:deli]
+            interface = interface[deli + 1:]
+            cb.with_address(address)
         else:
-            cb.with_resolved_interface(interface, args.resolver)
+            if args.activate:
+                cb.with_activate(args.activate.split(" "))
+            elif args.bridge:
+                cb.with_bridge(args.bridge.split(" "))
+            else:
+                cb.with_resolved_interface(interface, args.resolver)
 
-    client = varlink.Client(cb)
-    got = False
-    try:
-        with client.open(interface) as con:
-            out = {'method': interface + '.' + method, 'more': args.more, 'parameters': json.loads(args.ARGUMENTS)}
-            con._send_message(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8'))
-            more = True
-            while more:
-                (message, more) = con._next_varlink_message()
-                if message:
-                    print(message)
-                    got = True
-    except varlink.VarlinkError as e:
-        print(e, file=sys.stderr)
-    except BrokenPipeError:
-        if not got or args.more:
-            print("Connection closed")
-            sys.exit(1)
+        client = varlink.Client(cb)
+        got = False
+        try:
+            with client.open(interface) as con:
+                out = {'method': interface + '.' + method, 'more': args.more, 'parameters': json.loads(args.ARGUMENTS)}
+                con._send_message(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8'))
+                more = True
+                while more:
+                    (message, more) = con._next_varlink_message()
+                    if message:
+                        print(message)
+                        got = True
+        except varlink.VarlinkError as e:
+            print(e, file=sys.stderr)
+        except varlink.BrokenPipeError:
+            if not got or args.more:
+                print("Connection closed")
+                sys.exit(1)
 
 
 def varlink_help(args):

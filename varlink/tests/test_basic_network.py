@@ -1,13 +1,13 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import str
-
 import os
 import socket
 import threading
 import unittest
 from sys import platform
+
+from builtins import str
 
 import varlink
 

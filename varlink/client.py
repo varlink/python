@@ -3,21 +3,22 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import next
-from builtins import open
-from builtins import str
-from builtins import object
-
 import json
 import os
+import shutil
 import signal
 import socket
 import sys
+import tempfile
+
+from builtins import next
+from builtins import object
+from builtins import open
+from builtins import str
 
 from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder, BrokenPipeError)
 from .scanner import (Interface, _Method)
-import tempfile
-import shutil
+
 
 class ConnectionError(OSError):
     pass
@@ -397,8 +398,8 @@ class ClientConnectionBuilder(object):
         if interface == 'org.varlink.resolver':
             self.with_address(resolver_address)
         else:
-            with ClientConnectionBuilder().with_address(resolver_address) as cb,\
-                    Client(cb) as client,\
+            with ClientConnectionBuilder().with_address(resolver_address) as cb, \
+                    Client(cb) as client, \
                     client.open('org.varlink.resolver') as _rc:
                 # noinspection PyUnresolvedReferences
                 _r = _rc.Resolve(interface)
@@ -408,6 +409,7 @@ class ClientConnectionBuilder(object):
 
     def new_socket(self):
         return self._socket_fn()
+
 
 class Client(object):
     """Varlink client class.
@@ -497,8 +499,6 @@ class Client(object):
         return self
 
     def __exit__(self, _type, value, _traceback):
-        #if hasattr(self, "cb") and self.cb:
-        #    self.cb.cleanup()
         self.cleanup()
 
     def cleanup(self):

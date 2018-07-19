@@ -13,10 +13,11 @@ import sys
 import threading
 import time
 import unittest
+from sys import platform
+
 from builtins import object
 from builtins import range
 from builtins import str
-from sys import platform
 
 import varlink
 
