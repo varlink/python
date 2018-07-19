@@ -389,6 +389,8 @@ def usage():
     print('\tSelf Exec: $ %s' % sys.argv[0], file=sys.stderr)
     print('\tServer   : $ %s --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
     print('\tClient   : $ %s --client --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
+    print('\tClient   : $ %s --client --bridge=<bridge command>' % sys.argv[0], file=sys.stderr)
+    print('\tClient   : $ %s --client --activate=<activation command>' % sys.argv[0], file=sys.stderr)
 
 
 if __name__ == '__main__':
