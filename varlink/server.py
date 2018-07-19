@@ -80,7 +80,7 @@ class Service(object):
         self.interfaces = {}
         self.interfaces_handlers = {}
         directory = os.path.dirname(__file__)
-        self._add_interface(os.path.join(directory, 'org.varlink.service.varlink'), self)
+        self._add_interface(os.path.abspath(os.path.join(directory, 'org.varlink.service.varlink')), self)
 
     def GetInfo(self):
         """The standardized org.varlink.service.GetInfo() varlink method."""
