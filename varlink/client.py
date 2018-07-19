@@ -10,7 +10,6 @@ import signal
 import socket
 import sys
 import tempfile
-
 from builtins import next
 from builtins import object
 from builtins import open
@@ -566,6 +565,8 @@ class Client(object):
 
         if close_socket:
             socket_connection.close()
+
+        return interface
 
     def add_interface(self, interface):
         """Manually add or overwrite an interface definition from an Interface object.

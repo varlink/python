@@ -19,21 +19,21 @@ or::
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import int
-from builtins import next
-from builtins import object
-from builtins import range
-
+import getopt
 import os
+import shlex
+import socket
 import sys
 import threading
 import time
 import unittest
-import getopt
-import socket
+from builtins import int
+from builtins import next
+from builtins import object
+from builtins import range
+from sys import platform
 
 import varlink
-from sys import platform
 
 
 ######## CLIENT #############
@@ -191,9 +191,9 @@ if __name__ == '__main__':
     if client_mode:
         cb = varlink.ClientConnectionBuilder()
         if bridge:
-            cb.with_bridge(bridge.split(" "))
+            cb.with_bridge(shlex.split(bridge.split))
         if activate:
-            cb.with_activate(activate.split(" "))
+            cb.with_activate(shlex.split(activate))
         if address:
             cb.with_address(address)
 

@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 
 import argparse
 import json
+import shlex
 import sys
 
 import varlink
@@ -33,9 +34,9 @@ def varlink_call(args):
             cb.with_address(address)
         else:
             if args.activate:
-                cb.with_activate(args.activate.split(" "))
+                cb.with_activate(shlex.split(args.activate))
             elif args.bridge:
-                cb.with_bridge(args.bridge.split(" "))
+                cb.with_bridge(shlex.split(args.bridge))
             else:
                 cb.with_resolved_interface(interface, args.resolver)
 
@@ -60,45 +61,45 @@ def varlink_call(args):
 
 
 def varlink_help(args):
-    deli = args.INTERFACE.rfind("/")
-    if deli != -1:
-        address = args.INTERFACE[:deli]
-        interface = args.INTERFACE[deli + 1:]
-        client = varlink.Client(address)
-    else:
-        interface = args.INTERFACE
-        client = varlink.Client(resolve_interface=interface, resolver=args.resolver)
+    with varlink.ClientConnectionBuilder() as cb:
+        deli = args.INTERFACE.rfind("/")
+        if deli != -1:
+            address = args.INTERFACE[:deli]
+            interface = args.INTERFACE[deli + 1:]
+            cb.with_address(address)
+        else:
+            interface = args.INTERFACE
+            if args.activate:
+                cb.with_activate(shlex.split(args.activate))
+            elif args.bridge:
+                cb.with_bridge(shlex.split(args.bridge))
+            else:
+                cb.with_resolved_interface(interface, args.resolver)
 
-    ifaces = client.get_interfaces()
-    if interface in ifaces:
-        print(ifaces[interface].description)
+        client = varlink.Client(cb)
+        iface = client.get_interface(interface)
+        print(iface.description)
 
 
 def varlink_info(args):
-    if args.ADDRESS:
-        deli = args.ADDRESS.rfind("/")
-        if deli != -1:
-            address = args.ADDRESS
-            client = varlink.Client(address)
-        else:
-            interface = args.ADDRESS
-            client = varlink.Client(resolve_interface=interface, resolver=args.resolver)
+    with varlink.ClientConnectionBuilder() as cb:
+        if args.ADDRESS:
+            deli = args.ADDRESS.rfind("/")
+            if deli != -1:
+                address = args.ADDRESS
+                cb.with_address(address)
+            else:
+                interface = args.ADDRESS
+                if args.activate:
+                    cb.with_activate(shlex.split(args.activate))
+                elif args.bridge:
+                    cb.with_bridge(shlex.split(args.bridge))
+                else:
+                    cb.with_resolved_interface(interface, args.resolver)
 
-        client.get_interfaces()
-        info = client.info
-        print("Vendor:", info["vendor"])
-        print("Product:", info["product"])
-        print("Version:", info["version"])
-        print("URL:", info["url"])
-        print("Interfaces:")
-        for i in info["interfaces"]:
-            print("  ", i)
-
-        del client
-    else:
-        address = "unix:/run/org.varlink.resolver"
-        with varlink.Client(address) as client:
-            info = client.open("org.varlink.resolver").GetInfo()
+            client = varlink.Client(cb)
+            client.get_interfaces()
+            info = client.info
             print("Vendor:", info["vendor"])
             print("Product:", info["product"])
             print("Version:", info["version"])
@@ -106,6 +107,22 @@ def varlink_info(args):
             print("Interfaces:")
             for i in info["interfaces"]:
                 print("  ", i)
+
+            del client
+        else:
+            if args.bridge:
+                cb.with_bridge(shlex.split(args.bridge))
+            else:
+                cb.with_address("unix:/run/org.varlink.resolver")
+            with varlink.Client(cb) as client:
+                info = client.open("org.varlink.resolver").GetInfo()
+                print("Vendor:", info["vendor"])
+                print("Product:", info["product"])
+                print("Version:", info["version"])
+                print("URL:", info["url"])
+                print("Interfaces:")
+                for i in info["interfaces"]:
+                    print("  ", i)
 
 
 if __name__ == '__main__':
