@@ -163,13 +163,15 @@ def usage():
 
 if __name__ == '__main__':
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "", ["help", "client", "varlink="])
+        opts, args = getopt.getopt(sys.argv[1:], "", ["help", "client", "varlink=", "bridge=", "activate="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
 
     address = None
     client_mode = False
+    activate = None
+    bridge = None
 
     for opt, arg in opts:
         if opt == "--help":
@@ -177,14 +179,23 @@ if __name__ == '__main__':
             sys.exit(0)
         elif opt == "--varlink":
             address = arg
+        elif opt == "--bridge":
+            bridge = arg
+        elif opt == "--activate":
+            activate = arg
         elif opt == "--client":
             client_mode = True
 
     cb = None
 
-    if client_mode and address:
+    if client_mode:
         cb = varlink.ClientConnectionBuilder()
-        cb.with_address(address)
+        if bridge:
+            cb.with_bridge(bridge.split(" "))
+        if activate:
+            cb.with_activate(activate.split(" "))
+        if address:
+            cb.with_address(address)
 
     if not address and not client_mode:
         if not hasattr(socket, "AF_UNIX"):
