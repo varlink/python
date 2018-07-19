@@ -164,7 +164,7 @@ def usage():
 
 if __name__ == '__main__':
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "", ["help", "client", "varlink=", "bridge=", "activate="])
+        opts, args = getopt.getopt(sys.argv[1:], "b:A:", ["help", "client", "varlink=", "bridge=", "activate="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -180,9 +180,9 @@ if __name__ == '__main__':
             sys.exit(0)
         elif opt == "--varlink":
             address = arg
-        elif opt == "--bridge":
+        elif opt == "--bridge" or opt == "-b":
             bridge = arg
-        elif opt == "--activate":
+        elif opt == "--activate" or opt == "-A":
             activate = arg
         elif opt == "--client":
             client_mode = True
