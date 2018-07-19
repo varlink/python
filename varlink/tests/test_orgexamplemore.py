@@ -27,11 +27,12 @@ import sys
 import threading
 import time
 import unittest
+from sys import platform
+
 from builtins import int
 from builtins import next
 from builtins import object
 from builtins import range
-from sys import platform
 
 import varlink
 
@@ -191,7 +192,7 @@ if __name__ == '__main__':
     if client_mode:
         cb = varlink.ClientConnectionBuilder()
         if bridge:
-            cb.with_bridge(shlex.split(bridge.split))
+            cb.with_bridge(shlex.split(bridge))
         if activate:
             cb.with_activate(shlex.split(activate))
         if address:
