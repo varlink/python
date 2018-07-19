@@ -10,6 +10,7 @@ import signal
 import socket
 import sys
 import tempfile
+
 from builtins import next
 from builtins import object
 from builtins import open
@@ -303,6 +304,7 @@ class ClientConnectionBuilder(object):
             for i in range(1, len(argv)):
                 argv[i] = argv[i].replace("$VARLINK_ADDRESS", "unix:" + address)
 
+            os.environ["VARLINK_ADDRESS"] = "unix:" + address
             os.environ["LISTEN_FDS"] = "1"
             os.environ["LISTEN_FDNAMES"] = "varlink"
             os.environ["LISTEN_PID"] = str(os.getpid())
