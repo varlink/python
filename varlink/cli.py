@@ -131,7 +131,8 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(title="commands")
     parser.add_argument('-r', '--resolver', default=None, help='address of the resolver')
     parser.add_argument('-A', '--activate', default=None,
-                        help='Service to socket-activate and connect to. The temporary UNIX socket address is exported as $VARLINK_ADDRESS.')
+                        help='Service to socket-activate and connect to. '
+                             'The temporary UNIX socket address is exported as $VARLINK_ADDRESS.')
     parser.add_argument('-b', '--bridge', default=None, help='Command to execute and connect to')
 
     parser_info = subparsers.add_parser('info', help='Print information about a service')
