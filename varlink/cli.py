@@ -15,6 +15,7 @@ import sys
 
 import varlink
 
+
 def varlink_call(args):
     deli = args.METHOD.rfind(".")
     if deli == -1:
@@ -48,7 +49,7 @@ def varlink_call(args):
                 while more:
                     (message, more) = con._next_varlink_message()
                     if message:
-                        print(message)
+                        print(json.dumps(message, cls=varlink.VarlinkEncoder, indent=2, sort_keys=True))
                         got = True
         except varlink.VarlinkError as e:
             print(e, file=sys.stderr)
@@ -107,13 +108,13 @@ def varlink_info(args):
                 print("  ", i)
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(title="commands")
     parser.add_argument('-r', '--resolver', default=None, help='address of the resolver')
-    parser.add_argument('-A', '--activate', default=None, help='Service to socket-activate and connect to. The temporary UNIX socket address is exported as $VARLINK_ADDRESS.')
+    parser.add_argument('-A', '--activate', default=None,
+                        help='Service to socket-activate and connect to. The temporary UNIX socket address is exported as $VARLINK_ADDRESS.')
     parser.add_argument('-b', '--bridge', default=None, help='Command to execute and connect to')
 
     parser_info = subparsers.add_parser('info', help='Print information about a service')
