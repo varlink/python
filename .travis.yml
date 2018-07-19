@@ -9,6 +9,7 @@ install:
 - pip install -r test-requirements.txt
 script:
 - python -m unittest discover
+- python -m varlink.cli -A 'python -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS' call org.example.more.Ping '{ "ping": "Ping" }'
 - PYTHONPATH=$(pwd) python ./varlink/tests/test_certification.py
 - PYTHONPATH=$(pwd) python ./varlink/tests/test_orgexamplemore.py
 - python -m coverage run --source varlink -m unittest discover
