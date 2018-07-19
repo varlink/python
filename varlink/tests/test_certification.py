@@ -13,11 +13,10 @@ import sys
 import threading
 import time
 import unittest
-from sys import platform
-
 from builtins import object
 from builtins import range
 from builtins import str
+from sys import platform
 
 import varlink
 
@@ -25,7 +24,7 @@ import varlink
 ######## CLIENT #############
 
 def run_client(connection_builder):
-    print('Connecting to %s\n' % connection_builder.address)
+    print('Connecting to %s\n' % connection_builder)
     with varlink.Client(connection_builder) as client, \
             client.open('org.varlink.certification') as con:
         ret = con.Start()
@@ -416,7 +415,7 @@ if __name__ == '__main__':
         cb.with_address(address)
 
     if not address and not client_mode:
-        if not platform.startswith("linux"):
+        if not hasattr(socket, "AF_UNIX"):
             print("varlink activate: not supported on platform %s" % platform, file=sys.stderr)
             usage()
             sys.exit(2)

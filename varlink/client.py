@@ -16,7 +16,8 @@ import sys
 
 from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder, BrokenPipeError)
 from .scanner import (Interface, _Method)
-
+import tempfile
+import shutil
 
 class ConnectionError(OSError):
     pass
@@ -243,31 +244,44 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
 class ClientConnectionBuilder(object):
     def __init__(self):
-        self.address = None
-        self.socket_fn = None
-        self.socket_fd = None
-        self.resolver = "unix:/run/org.varlink.resolver"
+        self._socket_fn = None
+        self._tmpdir = None
         self._child_pid = 0
-        self.port = None
+        self._str = "ClientConnectionBuilder<uninitialized>"
 
     def __enter__(self):
         return self
 
-    def __exit__(self, _type, value, _traceback):
+    def __exit__(self, exc, value, tb):
+        self.cleanup()
+
+    def __str__(self):
+        return self._str
+
+    def cleanup(self):
+        if hasattr(self, "_tmpdir") and self._tmpdir != None:
+            try:
+                shutil.rmtree(self._tmpdir)
+            except FileNotFoundError:
+                pass
+
         if hasattr(self, "_child_pid") and self._child_pid != 0:
             try:
                 os.kill(self._child_pid, signal.SIGTERM)
             except OSError:
                 pass
-            os.waitpid(self._child_pid, 0)
+            try:
+                os.waitpid(self._child_pid, 0)
+            except ChildProcessError:
+                pass
 
     def with_activate(self, argv):
         s = socket.socket(socket.AF_UNIX)
         s.setblocking(False)
-        s.bind("")
+        self._tmpdir = tempfile.mkdtemp()
+        address = self._tmpdir + "/" + str(os.getpid())
+        s.bind(address)
         s.listen(100)
-        address = s.getsockname().decode('ascii')
-        self.address = address
 
         self._child_pid = os.fork()
         if self._child_pid == 0:
@@ -296,6 +310,9 @@ class ClientConnectionBuilder(object):
             sys.exit(1)
         # parent
         s.close()
+
+        self.with_address("unix:" + address)
+
         return self
 
     def with_bridge(self, argv):
@@ -327,20 +344,30 @@ class ClientConnectionBuilder(object):
             sp[1].close()
             return sp[0]
 
-        self.socket_fn = new_bridge_socket
+        self._str = "Bridge with: '%s'" % argv.join(" ")
+        self._socket_fn = new_bridge_socket
         return self
 
     def with_address(self, address):
         if address.startswith("unix:"):
+            self._str = address
             address = address[5:]
             mode = address.find(';')
             if mode != -1:
                 address = address[:mode]
             if address[0] == '@':
                 address = address.replace('@', '\0', 1)
-            self.address = address
+
+            def open_unix():
+                s = socket.socket(socket.AF_UNIX)
+                s.setblocking(True)
+                s.connect(address)
+                return s
+
+            self._socket_fn = open_unix
 
         elif address.startswith("tcp:"):
+            self._str = address
             address = address[4:]
             p = address.rfind(':')
             if p != -1:
@@ -350,26 +377,37 @@ class ClientConnectionBuilder(object):
                 raise ConnectionError("Invalid address 'tcp:%s'" % address)
             address = address.replace('[', '')
             address = address.replace(']', '')
-            self.port = port
-            self.address = address
+
+            def open_tcp():
+                s = socket.create_connection((address, int(port)))
+                s.setblocking(True)
+                return s
+
+            self._socket_fn = open_tcp
 
         elif address is not None:
-            # FIXME: also accept other transports
             raise ConnectionError("Invalid address '%s'" % address)
+
         return self
 
-    def with_resolver(self, resolver_address):
-        self.resolver = resolver_address
-        return self
+    def with_resolved_interface(self, interface, resolver_address=None):
+        if not resolver_address:
+            resolver_address = "unix:/run/org.varlink.resolver"
 
-    def with_interface(self, interface):
         if interface == 'org.varlink.resolver':
-            return self.resolver
-        resolver_connection = Client(self.resolver).open('org.varlink.resolver')
-        # noinspection PyUnresolvedReferences
-        _r = resolver_connection.Resolve(interface)
-        self.address = _r['address']
+            self.with_address(resolver_address)
+        else:
+            with ClientConnectionBuilder().with_address(resolver_address) as cb,\
+                    Client(cb) as client,\
+                    client.open('org.varlink.resolver') as _rc:
+                # noinspection PyUnresolvedReferences
+                _r = _rc.Resolve(interface)
+                self.with_address(_r['address'])
+
         return self
+
+    def new_socket(self):
+        return self._socket_fn()
 
 class Client(object):
     """Varlink client class.
@@ -449,11 +487,8 @@ class Client(object):
         else:
             self.cb = ClientConnectionBuilder()
 
-        if resolver:
-            self.cb.with_resolver(resolver)
-
         if resolve_interface:
-            self.cb.with_interface(resolve_interface)
+            self.cb.with_interface(resolve_interface, resolver)
 
         if address:
             self.cb.with_address(address)
@@ -462,14 +497,12 @@ class Client(object):
         return self
 
     def __exit__(self, _type, value, _traceback):
-        if hasattr(self, "cb") and self.cb:
-            if hasattr(self.cb, "_child_pid") and self.cb._child_pid != 0:
-                try:
-                    os.kill(self.cb._child_pid, signal.SIGTERM)
-                except OSError:
-                    pass
-                os.waitpid(self.cb._child_pid, 0)
-                self.cb._child_pid = 0
+        #if hasattr(self, "cb") and self.cb:
+        #    self.cb.cleanup()
+        self.cleanup()
+
+    def cleanup(self):
+        pass
 
     def open(self, interface_name, namespaced=False, connection=None):
         """Open a new connection and get a client interface handle with the varlink methods installed.
@@ -478,12 +511,12 @@ class Client(object):
                                connected to, provides.
         :param namespaced: If arguments and return values are instances of SimpleNamespace
                             rather than dictionaries.
+        :param connection: If set, get the interface handle for an already opened connection.
         :exception InterfaceNotFound: if the interface is not found
-        :exception OSError: anything socket.connect() throws
 
         """
 
-        if connection == None:
+        if not connection:
             connection = self.open_connection()
 
         if interface_name not in self._interfaces:
@@ -499,31 +532,19 @@ class Client(object):
         :exception OSError: anything socket.connect() throws
 
         """
-
-        if self.cb and self.cb.socket_fn:
-            s = self.cb.socket_fn()
-            s.setblocking(True)
-        elif self.cb.port:
-            s = socket.create_connection((self.cb.address, int(self.cb.port)))
-            s.setblocking(True)
-        else:
-            s = socket.socket(socket.AF_UNIX)
-            s.setblocking(True)
-            s.connect(self.cb.address)
-
-        return s
+        return self.cb.new_socket()
 
     def get_interfaces(self, socket_connection=None):
         """Returns the a list of Interface objects the service implements."""
-        if socket_connection == None:
+        if not socket_connection:
             socket_connection = self.open_connection()
             close_socket = True
         else:
             close_socket = False
 
         # noinspection PyUnresolvedReferences
-        _connection = self.handler(self._interfaces["org.varlink.service"], socket_connection)
-        self.info = _connection.GetInfo()
+        _service = self.handler(self._interfaces["org.varlink.service"], socket_connection)
+        self.info = _service.GetInfo()
 
         if close_socket:
             socket_connection.close()
@@ -531,16 +552,15 @@ class Client(object):
         return self.info['interfaces']
 
     def get_interface(self, interface_name, socket_connection=None):
-        if socket_connection == None:
+        if not socket_connection:
             socket_connection = self.open_connection()
             close_socket = True
         else:
             close_socket = False
 
+        _service = self.handler(self._interfaces["org.varlink.service"], socket_connection)
         # noinspection PyUnresolvedReferences
-        _connection = self.handler(self._interfaces["org.varlink.service"], socket_connection)
-        # noinspection PyUnresolvedReferences
-        desc = _connection.GetInterfaceDescription(interface_name)
+        desc = _service.GetInterfaceDescription(interface_name)
         interface = Interface(desc['description'])
         self._interfaces[interface.name] = interface
 

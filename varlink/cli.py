@@ -24,21 +24,21 @@ def varlink_call(args):
     method = args.METHOD[deli + 1:]
     interface = args.METHOD[:deli]
 
-    deli = args.METHOD.rfind("/")
+    cb = varlink.ClientConnectionBuilder()
+    deli = interface.rfind("/")
     if deli != -1:
         address = interface[:deli]
         interface = interface[deli + 1:]
-        client = varlink.Client(address)
+        cb.with_address(address)
     else:
-        cb = varlink.ClientConnectionBuilder()
-        if args.resolver:
-            cb.with_resolver(args.resolver)
-        elif args.activate:
+        if args.activate:
             cb.with_activate(args.activate.split(" "))
         elif args.bridge:
             cb.with_bridge(args.bridge.split(" "))
-        client = varlink.Client(cb)
+        else:
+            cb.with_resolved_interface(interface, args.resolver)
 
+    client = varlink.Client(cb)
     got = False
     try:
         with client.open(interface) as con:
