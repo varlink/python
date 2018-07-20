@@ -304,7 +304,7 @@ class Client(object):
 
     def __init__(self, address=None, resolve_interface=None, resolver=None):
         """Creates a Client object to reach the interfaces of a varlink service.
-        The preferred constructors are the class methods returning an object.
+        For more constructors see the class constructor methods new_with_*() returning an Client object.
 
         :param address: the exact address like "unix:/run/org.varlink.resolver"
         :param resolve_interface: an interface name, which is resolved with the system wide resolver
