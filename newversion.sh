@@ -13,7 +13,7 @@ fi
 sed -i -e "s/^Version.*/Version: \\t${version}/" python-varlink.spec
 sed -i -e "s/^[ \\t]*version.*=.*/    version = \"${version}\",/" setup.py
 git commit -m "version ${version}" python-varlink.spec setup.py
-git tag --sign "${version}"
+git tag -m "version ${version}" --sign "${version}"
 git push
 git push --tags
 rm -fr dist
