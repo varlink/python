@@ -60,22 +60,35 @@ python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test"
 ```
 
 ```bash
-$ python3 -m varlink.cli -A 'python3 -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS' call org.example.more.Ping '{ "ping": "Ping"}'
-Listening on @00352
-{'pong': 'Ping'}
-```
+$ python3 -m varlink.tests.test_orgexamplemore --client -A 'python3 -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS'
+Connecting to unix:/tmp/tmppxrbqk9p/4927
 
-```bash
-# python3 -m varlink.cli -b "varlink bridge" call com.redhat.machine.GetInfo '{}'
-{'hostname': 'x240', 'system': {'id': 'fedora', 'kernel_version': '4.18.0-0.rc4.git4.1.fc29.x86_64', 'name': 'Fedora', 'version': '29'}, 'virtualization': {'name': 'none'}}
+Listening on /tmp/tmppxrbqk9p/4927
+--- Start ---
+Progress: 0
+Progress: 10
+Progress: 20
+Progress: 30
+Progress: 40
+Progress: 50
+Progress: 60
+Ping:  Test
+Progress: 70
+Ping:  Test
+Progress: 80
+Ping:  Test
+Progress: 90
+Ping:  Test
+Progress: 100
+Ping:  Test
+--- End ---
 ```
 
 ```bash
 $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py
-Connecting to exec:./varlink/tests/test_orgexamplemore
+Connecting to unix:/tmp/tmp7n6zc67d/5257
 
-Listening on @0002c
-Ping:  Test
+Listening on /tmp/tmp7n6zc67d/5257
 --- Start ---
 Progress: 0
 Progress: 10
@@ -149,6 +162,40 @@ E.g.
 - unix:/run/myserver/socketfile
 - tcp:127.0.0.1:12345
 - tcp:[::1]:12345
+
+
+### Activation Mode
+
+Activation mode starts the service to connect to and passes the socket via socket activation.
+The ```VARLINK_ADDRESS``` environment variable contains the varlink address URI.
+
+```bash
+$ python3 -m varlink.cli --activate 'python3 -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS' call org.example.more.Ping '{ "ping": "Ping"}'
+Listening on @00352
+{'pong': 'Ping'}
+```
+
+
+### Bridge Mode
+
+Bridge mode allows to tunnel to a remote point via stdin/stdout and call a method.
+Running ```varlink bridge``` allows to connect stdio to the host services via ```org.varlink.resolver``` interface resolving.
+
+```bash
+# python3 -m varlink.cli -b "ssh host.example.org varlink bridge" call com.redhat.machine.GetInfo '{}'
+{
+  "hostname": "host.example.org",
+  "system": {
+    "id": "fedora",
+    "kernel_version": "4.18.0-0.rc5.git1.2.fc29.x86_64",
+    "name": "Fedora",
+    "version": "29"
+  },
+  "virtualization": {
+    "name": "none"
+  }
+}
+```
 
 ### Varlink Certification Server
 
