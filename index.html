@@ -9,7 +9,7 @@
     <title>varlink for python &#8212; varlink  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -98,7 +98,8 @@ in the generator’s .__next__() call.</p>
 <dl class="method">
 <dt id="varlink.Client.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>address=None</em>, <em>resolve_interface=None</em>, <em>resolver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the interface descriptions from a varlink service.</p>
+<dd><p>Creates a Client object to reach the interfaces of a varlink service.
+For more constructors see the class constructor methods new_with_*() returning an Client object.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -132,8 +133,18 @@ in the generator’s .__next__() call.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="varlink.Client.cleanup">
+<code class="descname">cleanup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="varlink.Client.get_interface">
+<code class="descname">get_interface</code><span class="sig-paren">(</span><em>interface_name</em>, <em>socket_connection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.get_interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.get_interface" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="varlink.Client.get_interfaces">
-<code class="descname">get_interfaces</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.get_interfaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.get_interfaces" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_interfaces</code><span class="sig-paren">(</span><em>socket_connection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.get_interfaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.get_interfaces" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the a list of Interface objects the service implements.</p>
 </dd></dl>
 
@@ -143,9 +154,78 @@ in the generator’s .__next__() call.</p>
 <dd><p>alias of <a class="reference internal" href="#varlink.SimpleClientInterfaceHandler" title="varlink.SimpleClientInterfaceHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleClientInterfaceHandler</span></code></a></p>
 </dd></dl>
 
+<dl class="classmethod">
+<dt id="varlink.Client.new_with_activate">
+<em class="property">classmethod </em><code class="descname">new_with_activate</code><span class="sig-paren">(</span><em>argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.new_with_activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.new_with_activate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Client object to a varlink service server started via socket activation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>argv</strong> – executable in argv[0] and parameters in argv[1:] to run the
+varlink service server via socket activation.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="varlink.Client.new_with_address">
+<em class="property">classmethod </em><code class="descname">new_with_address</code><span class="sig-paren">(</span><em>address</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.new_with_address"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.new_with_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Client object to reach the interfaces of a varlink service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>address</strong> – the exact address like “unix:/run/org.varlink.resolver”</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#varlink.ConnectionError" title="varlink.ConnectionError"><strong>ConnectionError</strong></a> – could not connect to the service or resolver</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="varlink.Client.new_with_bridge">
+<em class="property">classmethod </em><code class="descname">new_with_bridge</code><span class="sig-paren">(</span><em>argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.new_with_bridge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.new_with_bridge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Client object to a varlink service started via the bridge command.
+The bridge command like “ssh &lt;host&gt; varlink bridge” is executed for every connection.
+This client object will do IO via stdio to the bridge command.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>argv</strong> – executable in argv[0] and parameters in argv[1:] to run the
+varlink service server via the bridge connection.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="varlink.Client.new_with_resolved_interface">
+<em class="property">classmethod </em><code class="descname">new_with_resolved_interface</code><span class="sig-paren">(</span><em>interface</em>, <em>resolver_address=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.new_with_resolved_interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.new_with_resolved_interface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Client object to reach the interfaces of a varlink service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>interface</strong> – an interface name, which is resolved with the system wide resolver</li>
+<li><strong>resolver_address</strong> – the exact address of the resolver to be used to resolve the interface name</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#varlink.ConnectionError" title="varlink.ConnectionError"><strong>ConnectionError</strong></a> – could not connect to the service or resolver</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="varlink.Client.open">
-<code class="descname">open</code><span class="sig-paren">(</span><em>interface_name</em>, <em>namespaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.open" title="Permalink to this definition">¶</a></dt>
+<code class="descname">open</code><span class="sig-paren">(</span><em>interface_name</em>, <em>namespaced=False</em>, <em>connection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new connection and get a client interface handle with the varlink methods installed.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -156,13 +236,11 @@ in the generator’s .__next__() call.</p>
 connected to, provides.</li>
 <li><strong>namespaced</strong> – If arguments and return values are instances of SimpleNamespace
 rather than dictionaries.</li>
+<li><strong>connection</strong> – If set, get the interface handle for an already opened connection.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
-<li><a class="reference internal" href="#varlink.InterfaceNotFound" title="varlink.InterfaceNotFound"><strong>InterfaceNotFound</strong></a> – if the interface is not found</li>
-<li><strong>OSError</strong> – anything socket.connect() throws</li>
-</ul>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#varlink.InterfaceNotFound" title="varlink.InterfaceNotFound"><strong>InterfaceNotFound</strong></a> – if the interface is not found</p>
 </td>
 </tr>
 </tbody>
@@ -170,9 +248,11 @@ rather than dictionaries.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="varlink.Client.ssh_open">
-<code class="descname">ssh_open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.ssh_open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.ssh_open" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="varlink.Client.open_connection">
+<code class="descname">open_connection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/client.html#Client.open_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.Client.open_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new connection and return the socket.
+:exception OSError: anything socket.connect() throws</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -770,7 +850,7 @@ $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --va
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
     </div>
   </body>
 </html>

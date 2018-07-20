@@ -9,7 +9,7 @@
     <title>socket &#8212; varlink  documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
@@ -174,11 +174,18 @@
 
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;__weakref__&quot;</span><span class="p">,</span> <span class="s2">&quot;_io_refs&quot;</span><span class="p">,</span> <span class="s2">&quot;_closed&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">AF_INET</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">SOCK_STREAM</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fileno</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">type</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">proto</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">fileno</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># For user code address family and type values are IntEnum members, but</span>
         <span class="c1"># for the underlying _socket.socket they&#39;re just integers. The</span>
         <span class="c1"># constructor of _socket.socket converts the given argument to an</span>
         <span class="c1"># integer automatically.</span>
+        <span class="k">if</span> <span class="n">fileno</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">family</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">family</span> <span class="o">=</span> <span class="n">AF_INET</span>
+            <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="nb">type</span> <span class="o">=</span> <span class="n">SOCK_STREAM</span>
+            <span class="k">if</span> <span class="n">proto</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">proto</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">_socket</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">proto</span><span class="p">,</span> <span class="n">fileno</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_io_refs</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span>
@@ -241,11 +248,7 @@
 <span class="sd">        For IP sockets, the address info is a pair (hostaddr, port).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fd</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accept</span><span class="p">()</span>
-        <span class="c1"># If our type has the SOCK_NONBLOCK flag, we shouldn&#39;t pass it onto the</span>
-        <span class="c1"># new socket. We do not currently allow passing SOCK_NONBLOCK to</span>
-        <span class="c1"># accept4, so the returned socket is always blocking.</span>
-        <span class="nb">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">&amp;</span> <span class="o">~</span><span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SOCK_NONBLOCK&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proto</span><span class="p">,</span> <span class="n">fileno</span><span class="o">=</span><span class="n">fd</span><span class="p">)</span>
+        <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proto</span><span class="p">,</span> <span class="n">fileno</span><span class="o">=</span><span class="n">fd</span><span class="p">)</span>
         <span class="c1"># Issue #7995: if no default timeout is set and the listening</span>
         <span class="c1"># socket had a (non-zero) timeout, force the new socket in blocking</span>
         <span class="c1"># mode to override platform-specific socket flags inheritance.</span>
@@ -824,7 +827,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
     </div>
   </body>
 </html>

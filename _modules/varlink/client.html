@@ -9,7 +9,7 @@
     <title>varlink.client &#8212; varlink  documentation</title>
     <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
@@ -41,19 +41,28 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">unicode_literals</span>
 
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">next</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">open</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">str</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
-
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">signal</span>
 <span class="kn">import</span> <span class="nn">socket</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">next</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">open</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">str</span>
 
 <span class="kn">from</span> <span class="nn">.error</span> <span class="k">import</span> <span class="p">(</span><span class="n">VarlinkError</span><span class="p">,</span> <span class="n">InterfaceNotFound</span><span class="p">,</span> <span class="n">VarlinkEncoder</span><span class="p">,</span> <span class="ne">BrokenPipeError</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.scanner</span> <span class="k">import</span> <span class="p">(</span><span class="n">Interface</span><span class="p">,</span> <span class="n">_Method</span><span class="p">)</span>
+
+<span class="n">PY2</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
+<span class="n">PY3</span> <span class="o">=</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">PY2</span><span class="p">:</span>
+    <span class="ne">FileNotFoundError</span> <span class="o">=</span> <span class="ne">IOError</span>
+    <span class="ne">ChildProcessError</span> <span class="o">=</span> <span class="ne">OSError</span>
 
 
 <span class="k">class</span> <span class="nc">ConnectionError</span><span class="p">(</span><span class="ne">OSError</span><span class="p">):</span>
@@ -332,7 +341,8 @@
     <span class="n">handler</span> <span class="o">=</span> <span class="n">SimpleClientInterfaceHandler</span>
 
 <div class="viewcode-block" id="Client.__init__"><a class="viewcode-back" href="../../index.html#varlink.Client.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resolve_interface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the interface descriptions from a varlink service.</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Client object to reach the interfaces of a varlink service.</span>
+<span class="sd">        For more constructors see the class constructor methods new_with_*() returning an Client object.</span>
 
 <span class="sd">        :param address: the exact address like &quot;unix:/run/org.varlink.resolver&quot;</span>
 <span class="sd">        :param resolve_interface: an interface name, which is resolved with the system wide resolver</span>
@@ -341,81 +351,158 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_socket_fn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">def</span> <span class="nf">_resolve_interface</span><span class="p">(</span><span class="n">_interface</span><span class="p">,</span> <span class="n">_resolver</span><span class="p">):</span>
-            <span class="n">resolver_connection</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">_resolver</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;org.varlink.resolver&#39;</span><span class="p">)</span>
-            <span class="c1"># noinspection PyUnresolvedReferences</span>
-            <span class="n">_r</span> <span class="o">=</span> <span class="n">resolver_connection</span><span class="o">.</span><span class="n">Resolve</span><span class="p">(</span><span class="n">_interface</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">_r</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="s2">&quot;Client&lt;uninitialized&gt;&quot;</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s1">&#39;org.varlink.service.varlink&#39;</span><span class="p">))</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_interface</span><span class="p">(</span><span class="n">interface</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">address</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">resolve_interface</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="n">address</span> <span class="o">=</span> <span class="n">_resolve_interface</span><span class="p">(</span><span class="n">resolve_interface</span><span class="p">,</span> <span class="n">resolver</span> <span class="ow">or</span> <span class="s2">&quot;unix:/run/org.varlink.resolver&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resolve_interface</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_with_interface</span><span class="p">(</span><span class="n">resolve_interface</span><span class="p">,</span> <span class="n">resolver</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">address</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_with_address</span><span class="p">(</span><span class="n">address</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str</span>
+
+<div class="viewcode-block" id="Client.new_with_activate"><a class="viewcode-back" href="../../index.html#varlink.Client.new_with_activate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">new_with_activate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">argv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Client object to a varlink service server started via socket activation.</span>
+
+<span class="sd">        :param argv: executable in argv[0] and parameters in argv[1:] to run the</span>
+<span class="sd">                     varlink service server via socket activation.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">_with_activate</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_with_activate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argv</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+        <span class="n">address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">())</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># child</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="c1"># without dup() the socket is closed with the python destructor</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">s</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+            <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">argv</span><span class="p">)):</span>
+                <span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;$VARLINK_ADDRESS&quot;</span><span class="p">,</span> <span class="s2">&quot;unix:&quot;</span> <span class="o">+</span> <span class="n">address</span><span class="p">)</span>
+
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;VARLINK_ADDRESS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unix:&quot;</span> <span class="o">+</span> <span class="n">address</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LISTEN_FDS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LISTEN_FDNAMES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;varlink&quot;</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LISTEN_PID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">())</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">execvp</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">argv</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># parent</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_with_address</span><span class="p">(</span><span class="s2">&quot;unix:&quot;</span> <span class="o">+</span> <span class="n">address</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Client.new_with_bridge"><a class="viewcode-back" href="../../index.html#varlink.Client.new_with_bridge">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">new_with_bridge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">argv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Client object to a varlink service started via the bridge command.</span>
+<span class="sd">        The bridge command like &quot;ssh &lt;host&gt; varlink bridge&quot; is executed for every connection.</span>
+<span class="sd">        This client object will do IO via stdio to the bridge command.</span>
+
+<span class="sd">        :param argv: executable in argv[0] and parameters in argv[1:] to run the</span>
+<span class="sd">                     varlink service server via the bridge connection.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">_with_bridge</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_with_bridge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argv</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">new_bridge_socket</span><span class="p">():</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socketpair</span><span class="p">()</span>
+            <span class="n">child_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">child_pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">sp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># child</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># without dup() the socket is closed with the python destructor</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                    <span class="k">del</span> <span class="n">s</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+                <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">os</span><span class="o">.</span><span class="n">execvp</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">argv</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># parent</span>
+            <span class="n">sp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">sp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="s2">&quot;Bridge with: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_socket_fn</span> <span class="o">=</span> <span class="n">new_bridge_socket</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Client.new_with_address"><a class="viewcode-back" href="../../index.html#varlink.Client.new_with_address">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">new_with_address</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Client object to reach the interfaces of a varlink service.</span>
+
+<span class="sd">        :param address: the exact address like &quot;unix:/run/org.varlink.resolver&quot;</span>
+<span class="sd">        :exception ConnectionError: could not connect to the service or resolver</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">_with_address</span><span class="p">(</span><span class="n">address</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_with_address</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;unix:&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="n">address</span>
             <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">mode</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[:</span><span class="n">mode</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">address</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@&#39;</span><span class="p">:</span>
                 <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ssh://&quot;</span><span class="p">):</span>
-            <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">6</span><span class="p">:]</span>
 
-            <span class="n">colon</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">colon</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">port</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="n">colon</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
-                <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[:</span><span class="n">colon</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">def</span> <span class="nf">open_unix</span><span class="p">():</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">)</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">s</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_open</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_socket_fn</span> <span class="o">=</span> <span class="n">open_unix</span>
 
-        <span class="k">elif</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;exec:&quot;</span><span class="p">):</span>
-            <span class="n">executable</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">)</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-            <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># child</span>
-                <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                    <span class="c1"># without dup() the socket is closed with the python destructor</span>
-                    <span class="n">n</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-                    <span class="k">del</span> <span class="n">s</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-                        <span class="k">pass</span>
-
-                <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-                <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="n">address</span> <span class="o">=</span> <span class="s2">&quot;--varlink=unix:</span><span class="si">%s</span><span class="s2">;mode=0600&quot;</span> <span class="o">%</span> <span class="n">address</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LISTEN_FDS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LISTEN_FDNAMES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;varlink&quot;</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LISTEN_PID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">())</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">execlp</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
-                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-            <span class="c1"># parent</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;tcp:&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="n">address</span>
             <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
@@ -425,111 +512,127 @@
                 <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Invalid address &#39;tcp:</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">address</span><span class="p">)</span>
             <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
             <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># FIXME: also accept other transports</span>
+
+            <span class="k">def</span> <span class="nf">open_tcp</span><span class="p">():</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="n">address</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">)))</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">s</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_socket_fn</span> <span class="o">=</span> <span class="n">open_tcp</span>
+
+        <span class="k">elif</span> <span class="n">address</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Invalid address &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">address</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span><span class="p">:</span>
-            <span class="n">ssh_sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span>
-        <span class="n">_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;org.varlink.service&quot;</span><span class="p">)</span>
-        <span class="c1"># noinspection PyUnresolvedReferences</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">_connection</span><span class="o">.</span><span class="n">GetInfo</span><span class="p">()</span>
-
-        <span class="k">for</span> <span class="n">interface_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;interfaces&#39;</span><span class="p">]:</span>
-            <span class="c1"># noinspection PyUnresolvedReferences</span>
-            <span class="n">desc</span> <span class="o">=</span> <span class="n">_connection</span><span class="o">.</span><span class="n">GetInterfaceDescription</span><span class="p">(</span><span class="n">interface_name</span><span class="p">)</span>
-            <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">desc</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">[</span><span class="n">interface</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">interface</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="n">ssh_sock</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
-
-<div class="viewcode-block" id="Client.ssh_open"><a class="viewcode-back" href="../../index.html#varlink.Client.ssh_open">[docs]</a>    <span class="k">def</span> <span class="nf">ssh_open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">sp</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socketpair</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">sp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">sp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="c1"># child</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="c1"># without dup() the socket is closed with the python destructor</span>
-                <span class="n">n</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-                <span class="k">del</span> <span class="n">s</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-                    <span class="k">pass</span>
-
-            <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ssh&quot;</span><span class="p">,</span> <span class="s2">&quot;-xTK&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;BatchMode=yes&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">)</span>
-                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
-
-            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
-            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;varlink&quot;</span><span class="p">)</span>
-            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;bridge&quot;</span><span class="p">)</span>
-
-            <span class="n">os</span><span class="o">.</span><span class="n">execvp</span><span class="p">(</span><span class="s2">&quot;ssh&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="c1"># parent</span>
-        <span class="n">sp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">sp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
-
-    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">_traceback</span><span class="p">):</span>
+<div class="viewcode-block" id="Client.new_with_resolved_interface"><a class="viewcode-back" href="../../index.html#varlink.Client.new_with_resolved_interface">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">new_with_resolved_interface</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">resolver_address</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Client object to reach the interfaces of a varlink service.</span>
+
+<span class="sd">        :param interface: an interface name, which is resolved with the system wide resolver</span>
+<span class="sd">        :param resolver_address: the exact address of the resolver to be used to resolve the interface name</span>
+<span class="sd">        :exception ConnectionError: could not connect to the service or resolver</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">_with_resolved_interface</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">resolver_address</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_with_resolved_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">resolver_address</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">resolver_address</span><span class="p">:</span>
+            <span class="n">resolver_address</span> <span class="o">=</span> <span class="s2">&quot;unix:/run/org.varlink.resolver&quot;</span>
+
+        <span class="k">if</span> <span class="n">interface</span> <span class="o">==</span> <span class="s1">&#39;org.varlink.resolver&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_with_address</span><span class="p">(</span><span class="n">resolver_address</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Client</span><span class="o">.</span><span class="n">new_with_address</span><span class="p">(</span><span class="n">resolver_address</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">,</span> \
+                    <span class="n">client</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;org.varlink.resolver&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">_rc</span><span class="p">:</span>
+                <span class="c1"># noinspection PyUnresolvedReferences</span>
+                <span class="n">_r</span> <span class="o">=</span> <span class="n">_rc</span><span class="o">.</span><span class="n">Resolve</span><span class="p">(</span><span class="n">interface</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_with_address</span><span class="p">(</span><span class="n">_r</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Client.cleanup"><a class="viewcode-back" href="../../index.html#varlink.Client.cleanup">[docs]</a>    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_tmpdir&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_child_pid&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
                 <span class="k">pass</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">waitpid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">waitpid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ChildProcessError</span><span class="p">:</span>
+                <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="Client.open"><a class="viewcode-back" href="../../index.html#varlink.Client.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface_name</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Client.open"><a class="viewcode-back" href="../../index.html#varlink.Client.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface_name</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">connection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Open a new connection and get a client interface handle with the varlink methods installed.</span>
 
 <span class="sd">        :param interface_name: an interface name, which the service this client object is</span>
 <span class="sd">                               connected to, provides.</span>
 <span class="sd">        :param namespaced: If arguments and return values are instances of SimpleNamespace</span>
 <span class="sd">                            rather than dictionaries.</span>
+<span class="sd">        :param connection: If set, get the interface handle for an already opened connection.</span>
 <span class="sd">        :exception InterfaceNotFound: if the interface is not found</span>
-<span class="sd">        :exception OSError: anything socket.connect() throws</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">connection</span><span class="p">:</span>
+            <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_connection</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">interface_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_interface</span><span class="p">(</span><span class="n">interface_name</span><span class="p">,</span> <span class="n">socket_connection</span><span class="o">=</span><span class="n">connection</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">interface_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InterfaceNotFound</span><span class="p">(</span><span class="n">interface_name</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_sock</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_mode</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_open</span><span class="p">()</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">)</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">handler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">[</span><span class="n">interface_name</span><span class="p">],</span> <span class="n">connection</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="n">namespaced</span><span class="p">)</span></div>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">handler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">[</span><span class="n">interface_name</span><span class="p">],</span> <span class="n">s</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="n">namespaced</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Client.open_connection"><a class="viewcode-back" href="../../index.html#varlink.Client.open_connection">[docs]</a>    <span class="k">def</span> <span class="nf">open_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open a new connection and return the socket.</span>
+<span class="sd">        :exception OSError: anything socket.connect() throws</span>
 
-<div class="viewcode-block" id="Client.get_interfaces"><a class="viewcode-back" href="../../index.html#varlink.Client.get_interfaces">[docs]</a>    <span class="k">def</span> <span class="nf">get_interfaces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_socket_fn</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Client.get_interfaces"><a class="viewcode-back" href="../../index.html#varlink.Client.get_interfaces">[docs]</a>    <span class="k">def</span> <span class="nf">get_interfaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket_connection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the a list of Interface objects the service implements.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">socket_connection</span><span class="p">:</span>
+            <span class="n">socket_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_connection</span><span class="p">()</span>
+            <span class="n">close_socket</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">close_socket</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># noinspection PyUnresolvedReferences</span>
+        <span class="n">_service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">[</span><span class="s2">&quot;org.varlink.service&quot;</span><span class="p">],</span> <span class="n">socket_connection</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="n">GetInfo</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">close_socket</span><span class="p">:</span>
+            <span class="n">socket_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;interfaces&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Client.get_interface"><a class="viewcode-back" href="../../index.html#varlink.Client.get_interface">[docs]</a>    <span class="k">def</span> <span class="nf">get_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface_name</span><span class="p">,</span> <span class="n">socket_connection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">socket_connection</span><span class="p">:</span>
+            <span class="n">socket_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_connection</span><span class="p">()</span>
+            <span class="n">close_socket</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">close_socket</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">_service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">[</span><span class="s2">&quot;org.varlink.service&quot;</span><span class="p">],</span> <span class="n">socket_connection</span><span class="p">)</span>
+        <span class="c1"># noinspection PyUnresolvedReferences</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">_service</span><span class="o">.</span><span class="n">GetInterfaceDescription</span><span class="p">(</span><span class="n">interface_name</span><span class="p">)</span>
+        <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">desc</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interfaces</span><span class="p">[</span><span class="n">interface</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">interface</span>
+
+        <span class="k">if</span> <span class="n">close_socket</span><span class="p">:</span>
+            <span class="n">socket_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">interface</span></div>
 
 <div class="viewcode-block" id="Client.add_interface"><a class="viewcode-back" href="../../index.html#varlink.Client.add_interface">[docs]</a>    <span class="k">def</span> <span class="nf">add_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Manually add or overwrite an interface definition from an Interface object.</span>
@@ -579,7 +682,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
     </div>
   </body>
 </html>

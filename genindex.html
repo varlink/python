@@ -10,7 +10,7 @@
     <title>Index &#8212; varlink  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -113,18 +113,20 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#varlink.Client.cleanup">cleanup() (varlink.Client method)</a>
+</li>
       <li><a href="index.html#varlink.Client">Client (class in varlink)</a>
 </li>
       <li><a href="index.html#varlink.ClientInterfaceHandler">ClientInterfaceHandler (class in varlink)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#varlink.ClientInterfaceHandler.close">close() (varlink.ClientInterfaceHandler method)</a>
 
       <ul>
         <li><a href="index.html#varlink.SimpleClientInterfaceHandler.close">(varlink.SimpleClientInterfaceHandler method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#varlink.Server.close_request">close_request() (varlink.Server method)</a>
 </li>
       <li><a href="index.html#varlink.ConnectionError">ConnectionError</a>
@@ -175,12 +177,14 @@
 </li>
       <li><a href="index.html#varlink.Interface.get_description">get_description() (varlink.Interface method)</a>
 </li>
-      <li><a href="index.html#varlink.Client.get_interfaces">get_interfaces() (varlink.Client method)</a>
+      <li><a href="index.html#varlink.Client.get_interface">get_interface() (varlink.Client method)</a>
 </li>
-      <li><a href="index.html#varlink.get_listen_fd">get_listen_fd() (in module varlink)</a>
+      <li><a href="index.html#varlink.Client.get_interfaces">get_interfaces() (varlink.Client method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#varlink.get_listen_fd">get_listen_fd() (in module varlink)</a>
+</li>
       <li><a href="index.html#varlink.Interface.get_method">get_method() (varlink.Interface method)</a>
 </li>
       <li><a href="index.html#varlink.Server.get_request">get_request() (varlink.Server method)</a>
@@ -252,12 +256,26 @@
 </li>
       </ul></li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#varlink.Client.new_with_activate">new_with_activate() (varlink.Client class method)</a>
+</li>
+      <li><a href="index.html#varlink.Client.new_with_address">new_with_address() (varlink.Client class method)</a>
+</li>
+      <li><a href="index.html#varlink.Client.new_with_bridge">new_with_bridge() (varlink.Client class method)</a>
+</li>
+      <li><a href="index.html#varlink.Client.new_with_resolved_interface">new_with_resolved_interface() (varlink.Client class method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#varlink.Client.open">open() (varlink.Client method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#varlink.Client.open_connection">open_connection() (varlink.Client method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -301,10 +319,10 @@
 </li>
       <li><a href="index.html#varlink.Server.server_close">server_close() (varlink.Server method)</a>
 </li>
-      <li><a href="index.html#varlink.Service">Service (class in varlink)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#varlink.Service">Service (class in varlink)</a>
+</li>
       <li><a href="index.html#varlink.RequestHandler.service">service (varlink.RequestHandler attribute)</a>
 </li>
       <li><a href="index.html#varlink.tests.test_orgexamplemore.ServiceRequestHandler">ServiceRequestHandler (class in varlink.tests.test_orgexamplemore)</a>
@@ -314,8 +332,6 @@
       <li><a href="index.html#varlink.SimpleClientInterfaceHandler">SimpleClientInterfaceHandler (class in varlink)</a>
 </li>
       <li><a href="index.html#varlink.Server.socket_type">socket_type (varlink.Server attribute)</a>
-</li>
-      <li><a href="index.html#varlink.Client.ssh_open">ssh_open() (varlink.Client method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -385,7 +401,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
     </div>
   </body>
 </html>
