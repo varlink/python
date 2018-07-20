@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 import argparse
 import json
 import shlex
+import socket
 import sys
 
 import varlink
@@ -56,6 +57,109 @@ def varlink_call(args):
         if not got or args.more:
             print("Connection closed")
             sys.exit(1)
+
+
+def varlink_bridge(args):
+    message = b''
+    last_interface = None
+    con = None
+    client = None
+
+    if args.connect:
+        client = varlink.Client.new_with_address(args.connect)
+        con = client.open_connection()
+
+    if hasattr(sys.stdout, 'buffer'):
+        stdout = sys.stdout.buffer
+    else:
+        stdout = sys.stdout
+
+    if hasattr(sys.stdin, 'buffer'):
+        stdin = sys.stdin.buffer
+    else:
+        stdin = sys.stdin
+
+    while not sys.stdin.closed:
+        c = stdin.read(1)
+
+        if c == b'':
+            break
+
+        if c != b'\0':
+            message += c
+            continue
+
+        if not args.connect:
+            req = json.loads(message.decode('utf-8'))
+
+            if req['method'] == "org.varlink.service.GetInfo":
+                req['method'] = "org.varlink.resolver.GetInfo"
+
+            interface_name, _, method_name = req.get('method', '').rpartition('.')
+
+            if req['method'] == "org.varlink.service.GetInterfaceDescription":
+                resolving_interface = req['parameters']['interface']
+            else:
+                resolving_interface = interface_name
+
+            if not interface_name or not method_name:
+                stdout.write(json.dumps(varlink.InterfaceNotFound(interface_name), cls=varlink.VarlinkEncoder).encode(
+                    'utf-8') + b'\0')
+                sys.stdout.flush()
+                continue
+
+            if last_interface != resolving_interface:
+                if con:
+                    if hasattr(con, 'shutdown'):
+                        con.shutdown(socket.SHUT_RDWR)
+                    else:
+                        con.close()
+
+                if client:
+                    client.cleanup()
+
+                try:
+                    client = varlink.Client.new_with_resolved_interface(resolving_interface, resolver_address=args.resolver)
+                except varlink.VarlinkError as e:
+                    stdout.write(
+                        json.dumps(e, cls=varlink.VarlinkEncoder).encode(
+                            'utf-8') + b'\0')
+                    sys.stdout.flush()
+                    continue
+
+                con = client.open_connection()
+                last_interface = resolving_interface
+
+        if hasattr(con, "send"):
+            con.send(message + b'\0')
+        else:
+            con.write(message + b'\0')
+
+        message = b''
+
+        ret_message = b''
+        while True:
+            c = con.recv(1)
+
+            if c == b'':
+                break
+
+            if c != b'\0':
+                ret_message += c
+                continue
+
+            stdout.write(ret_message + b'\0')
+
+            sys.stdout.flush()
+
+            ret = json.loads(ret_message.decode('utf-8'))
+            ret_message = b''
+
+            if not ret.get('continues', False):
+                break
+
+            if ret.get('upgraded', False):
+                raise NotImplementedError("Bridging upgraded connection not yet supported")
 
 
 def varlink_help(args):
@@ -137,6 +241,11 @@ if __name__ == '__main__':
     parser_help = subparsers.add_parser('help', help='Print interface description or service information')
     parser_help.add_argument('INTERFACE')
     parser_help.set_defaults(func=varlink_help)
+
+    parser_bridge = subparsers.add_parser('bridge', help='Bridge varlink messages to services on this machine')
+    parser_bridge.add_argument('-c', '--connect', default=None, help='Optional varlink address to connect to, '
+                                                                     'without using the resolver.')
+    parser_bridge.set_defaults(func=varlink_bridge)
 
     parser_call = subparsers.add_parser('call', help='Call a method')
     parser_call.add_argument('-m', '--more', action='store_true', help='wait for multiple method returns if supported')
