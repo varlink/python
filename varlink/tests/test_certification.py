@@ -25,10 +25,9 @@ import varlink
 
 ######## CLIENT #############
 
-def run_client(connection_builder):
-    print('Connecting to %s\n' % connection_builder)
-    with varlink.Client(connection_builder) as client, \
-            client.open('org.varlink.certification') as con:
+def run_client(client):
+    print('Connecting to %s\n' % client)
+    with client.open('org.varlink.certification') as con:
         ret = con.Start()
         client_id = ret["client_id"]
         print("client_id:", client_id)
@@ -405,6 +404,7 @@ if __name__ == '__main__':
     activate = None
     bridge = None
 
+
     for opt, arg in opts:
         if opt == "--help":
             usage()
@@ -418,16 +418,15 @@ if __name__ == '__main__':
         elif opt == "--client":
             client_mode = True
 
-    cb = None
+    client = None
 
     if client_mode:
-        cb = varlink.ClientConnectionBuilder()
         if bridge:
-            cb.with_bridge(shlex.split(bridge))
+            client = varlink.Client.new_with_bridge(shlex.split(bridge))
         if activate:
-            cb.with_activate(shlex.split(activate))
+            client = varlink.Client.new_with_activate(shlex.split(activate))
         if address:
-            cb.with_address(address)
+            client = varlink.Client.new_with_address(address)
 
     if not address and not client_mode:
         if not hasattr(socket, "AF_UNIX"):
@@ -436,16 +435,15 @@ if __name__ == '__main__':
             sys.exit(2)
 
         client_mode = True
-        with varlink.ClientConnectionBuilder() as cb:
-            cb.with_activate([__file__, "--varlink=$VARLINK_ADDRESS"])
-            run_client(cb)
+        with varlink.Client.new_with_activate([__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
+            run_client(client)
     elif client_mode:
-        run_client(cb)
+        with client:
+            run_client(client)
     else:
         run_server(address)
 
     sys.exit(0)
-
 
 ######## UNITTEST #############
 
@@ -465,7 +463,7 @@ class TestService(unittest.TestCase):
         server_thread.start()
 
     def test_client(self):
-        run_client(varlink.ClientConnectionBuilder().with_address(self.address))
+        run_client(varlink.Client.new_with_address(self.address))
 
     def test_01(self):
         with varlink.Client(self.address) as client, \

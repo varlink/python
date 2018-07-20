@@ -39,10 +39,10 @@ import varlink
 
 ######## CLIENT #############
 
-def run_client(connection_builder):
-    print('Connecting to %s\n' % connection_builder)
+def run_client(client):
+    print('Connecting to %s\n' % client)
     try:
-        with varlink.Client(connection_builder) as client, \
+        with \
                 client.open('org.example.more', namespaced=True) as con1, \
                 client.open('org.example.more', namespaced=True) as con2:
 
@@ -189,16 +189,15 @@ if __name__ == '__main__':
         elif opt == "--client":
             client_mode = True
 
-    cb = None
+    client = None
 
     if client_mode:
-        cb = varlink.ClientConnectionBuilder()
         if bridge:
-            cb.with_bridge(shlex.split(bridge))
+            client = varlink.Client.new_with_bridge(shlex.split(bridge))
         if activate:
-            cb.with_activate(shlex.split(activate))
+            client = varlink.Client.new_with_activate(shlex.split(activate))
         if address:
-            cb.with_address(address)
+            client = varlink.Client.new_with_address(address)
 
     if not address and not client_mode:
         if not hasattr(socket, "AF_UNIX"):
@@ -207,16 +206,11 @@ if __name__ == '__main__':
             sys.exit(2)
 
         client_mode = True
-        with varlink.ClientConnectionBuilder() as cb:
-            cb.with_activate([__file__, "--varlink=$VARLINK_ADDRESS"])
-            run_client(cb)
-
+        with varlink.Client.new_with_activate([__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
+            run_client(client)
     elif client_mode:
-        try:
-            run_client(cb)
-        except Exception as e:
-            print("Exception: ", type(e), e)
-            sys.exit(1)
+        with client:
+            run_client(client)
     else:
         run_server(address)
 
@@ -234,11 +228,12 @@ class TestService(unittest.TestCase):
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
-        cb = varlink.ClientConnectionBuilder().with_address(address)
         try:
-            run_client(cb)
+            client = varlink.Client.new_with_address(address)
 
-            with varlink.Client(address=address) as client, \
+            run_client(client)
+
+            with \
                     client.open('org.example.more', namespaced=True) as con1, \
                     client.open('org.example.more', namespaced=True) as con2:
 

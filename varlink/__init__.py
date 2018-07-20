@@ -17,9 +17,9 @@ __all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
            'Service', 'RequestHandler', 'Server', 'ThreadingServer', 'ForkingServer',
            'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
            'ConnectionError', 'VarlinkEncoder', 'VarlinkError',
-           'Interface', 'Scanner', 'get_listen_fd', 'ClientConnectionBuilder']
+           'Interface', 'Scanner', 'get_listen_fd']
 
-from .client import (Client, ClientInterfaceHandler, SimpleClientInterfaceHandler, ClientConnectionBuilder)
+from .client import (Client, ClientInterfaceHandler, SimpleClientInterfaceHandler)
 from .error import (VarlinkEncoder, VarlinkError, InvalidParameter, InterfaceNotFound, MethodNotImplemented,
                     MethodNotFound, ConnectionError, BrokenPipeError)
 from .scanner import (Scanner, Interface)

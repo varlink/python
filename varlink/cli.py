@@ -26,80 +26,91 @@ def varlink_call(args):
     method = args.METHOD[deli + 1:]
     interface = args.METHOD[:deli]
 
-    with varlink.ClientConnectionBuilder() as cb:
-        deli = interface.rfind("/")
-        if deli != -1:
-            address = interface[:deli]
-            interface = interface[deli + 1:]
-            cb.with_address(address)
+    deli = interface.rfind("/")
+    if deli != -1:
+        address = interface[:deli]
+        interface = interface[deli + 1:]
+        client = varlink.Client.new_with_address(address)
+    else:
+        if args.activate:
+            client = varlink.Client.new_with_activate(shlex.split(args.activate))
+        elif args.bridge:
+            client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
         else:
-            if args.activate:
-                cb.with_activate(shlex.split(args.activate))
-            elif args.bridge:
-                cb.with_bridge(shlex.split(args.bridge))
-            else:
-                cb.with_resolved_interface(interface, args.resolver)
+            client = varlink.Client.new_with_resolved_interface(interface, args.resolver)
 
-        client = varlink.Client(cb)
-        got = False
-        try:
-            with client.open(interface) as con:
-                out = {'method': interface + '.' + method, 'more': args.more, 'parameters': json.loads(args.ARGUMENTS)}
-                con._send_message(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8'))
-                more = True
-                while more:
-                    (message, more) = con._next_varlink_message()
-                    if message:
-                        print(json.dumps(message, cls=varlink.VarlinkEncoder, indent=2, sort_keys=True))
-                        got = True
-        except varlink.VarlinkError as e:
-            print(e, file=sys.stderr)
-        except varlink.BrokenPipeError:
-            if not got or args.more:
-                print("Connection closed")
-                sys.exit(1)
+    got = False
+    try:
+        with client.open(interface) as con:
+            out = {'method': interface + '.' + method, 'more': args.more, 'parameters': json.loads(args.ARGUMENTS)}
+            con._send_message(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8'))
+            more = True
+            while more:
+                (message, more) = con._next_varlink_message()
+                if message:
+                    print(json.dumps(message, cls=varlink.VarlinkEncoder, indent=2, sort_keys=True))
+                    got = True
+    except varlink.VarlinkError as e:
+        print(e, file=sys.stderr)
+    except varlink.BrokenPipeError:
+        if not got or args.more:
+            print("Connection closed")
+            sys.exit(1)
 
 
 def varlink_help(args):
-    with varlink.ClientConnectionBuilder() as cb:
-        deli = args.INTERFACE.rfind("/")
-        if deli != -1:
-            address = args.INTERFACE[:deli]
-            interface = args.INTERFACE[deli + 1:]
-            cb.with_address(address)
+    deli = args.INTERFACE.rfind("/")
+    if deli != -1:
+        address = args.INTERFACE[:deli]
+        interface_name = args.INTERFACE[deli + 1:]
+        client = varlink.Client.new_with_address(address)
+    else:
+        interface_name = args.INTERFACE
+        if args.activate:
+            client = varlink.Client.new_with_activate(shlex.split(args.activate))
+        elif args.bridge:
+            client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
         else:
-            interface = args.INTERFACE
-            if args.activate:
-                cb.with_activate(shlex.split(args.activate))
-            elif args.bridge:
-                cb.with_bridge(shlex.split(args.bridge))
-            else:
-                cb.with_resolved_interface(interface, args.resolver)
+            client = varlink.Client.new_with_resolved_interface(interface_name, args.resolver)
 
-        client = varlink.Client(cb)
-        iface = client.get_interface(interface)
-        print(iface.description)
+    interface = client.get_interface(interface_name)
+    print(interface.description)
 
 
 def varlink_info(args):
-    with varlink.ClientConnectionBuilder() as cb:
-        if args.ADDRESS:
-            deli = args.ADDRESS.rfind("/")
-            if deli != -1:
-                address = args.ADDRESS
-                cb.with_address(address)
+    if args.ADDRESS:
+        deli = args.ADDRESS.rfind("/")
+        if deli != -1:
+            address = args.ADDRESS
+            client = varlink.Client.new_with_address(address)
+        else:
+            interface = args.ADDRESS
+            if args.activate:
+                client = varlink.Client.new_with_activate(shlex.split(args.activate))
+            elif args.bridge:
+                client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
             else:
-                interface = args.ADDRESS
-                if args.activate:
-                    cb.with_activate(shlex.split(args.activate))
-                elif args.bridge:
-                    cb.with_bridge(shlex.split(args.bridge))
-                else:
-                    cb.with_resolved_interface(interface, args.resolver)
+                client = varlink.Client.new_with_resolved_interface(interface, args.resolver)
 
-            client = varlink.Client(cb)
-            client.get_interfaces()
-            info = client.info
+        client.get_interfaces()
+        info = client.info
+        print("Vendor:", info["vendor"])
+        print("Product:", info["product"])
+        print("Version:", info["version"])
+        print("URL:", info["url"])
+        print("Interfaces:")
+        for i in info["interfaces"]:
+            print("  ", i)
+
+        del client
+    else:
+        if args.bridge:
+            client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
+        else:
+            client = varlink.Client.new_with_address("unix:/run/org.varlink.resolver")
+
+        with client:
+            info = client.open("org.varlink.resolver").GetInfo()
             print("Vendor:", info["vendor"])
             print("Product:", info["product"])
             print("Version:", info["version"])
@@ -107,22 +118,6 @@ def varlink_info(args):
             print("Interfaces:")
             for i in info["interfaces"]:
                 print("  ", i)
-
-            del client
-        else:
-            if args.bridge:
-                cb.with_bridge(shlex.split(args.bridge))
-            else:
-                cb.with_address("unix:/run/org.varlink.resolver")
-            with varlink.Client(cb) as client:
-                info = client.open("org.varlink.resolver").GetInfo()
-                print("Vendor:", info["vendor"])
-                print("Product:", info["product"])
-                print("Version:", info["version"])
-                print("URL:", info["url"])
-                print("Interfaces:")
-                for i in info["interfaces"]:
-                    print("  ", i)
 
 
 if __name__ == '__main__':
