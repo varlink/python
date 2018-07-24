@@ -43,7 +43,7 @@ def varlink_call(args):
     got = False
     try:
         with client.open(interface) as con:
-            out = {'method': interface + '.' + method, 'more': args.more, 'parameters': json.loads(args.ARGUMENTS)}
+            out = {'method': interface + '.' + method, 'more': args.more, 'parameters': json.loads(args.ARGUMENTS or "{}" )}
             con._send_message(json.dumps(out, cls=varlink.VarlinkEncoder).encode('utf-8'))
             more = True
             while more:
