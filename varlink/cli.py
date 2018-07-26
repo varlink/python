@@ -135,6 +135,9 @@ def varlink_bridge(args):
         else:
             con.write(message + b'\0')
 
+        if req.get("oneway", False):
+            continue
+
         message = b''
 
         ret_message = b''
