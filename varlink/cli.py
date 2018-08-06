@@ -89,9 +89,9 @@ def varlink_bridge(args):
             message += c
             continue
 
-        if not args.connect:
-            req = json.loads(message.decode('utf-8'))
+        req = json.loads(message.decode('utf-8'))
 
+        if not args.connect:
             if req['method'] == "org.varlink.service.GetInfo":
                 req['method'] = "org.varlink.resolver.GetInfo"
 
@@ -119,7 +119,8 @@ def varlink_bridge(args):
                     client.cleanup()
 
                 try:
-                    client = varlink.Client.new_with_resolved_interface(resolving_interface, resolver_address=args.resolver)
+                    client = varlink.Client.new_with_resolved_interface(resolving_interface,
+                                                                        resolver_address=args.resolver)
                 except varlink.VarlinkError as e:
                     stdout.write(
                         json.dumps(e, cls=varlink.VarlinkEncoder).encode(
