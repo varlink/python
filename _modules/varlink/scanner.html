@@ -9,10 +9,13 @@
     <title>varlink.scanner &#8212; varlink  documentation</title>
     <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -77,8 +80,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">keyword_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[a-z]+\b|[:,()</span><span class="si">{}</span><span class="s1">]|-&gt;|\[\]|\?|\[string\]\(\)|\[string\]&#39;</span><span class="p">,</span> <span class="n">ASCII</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;interface-name&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[a-z]+(\.[a-z0-9][a-z0-9-]*)+&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;member-name&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Z][A-Za-z0-9_]*\b&#39;</span><span class="p">,</span> <span class="n">ASCII</span><span class="p">),</span>
-            <span class="s1">&#39;identifier&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[a-z][A-Za-z0-9_]*\b&#39;</span><span class="p">,</span> <span class="n">ASCII</span><span class="p">),</span>
+            <span class="s1">&#39;member-name&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Z][A-Za-z0-9]*\b&#39;</span><span class="p">,</span> <span class="n">ASCII</span><span class="p">),</span>
+            <span class="s1">&#39;identifier&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z]([_]?[A-Za-z0-9])*\b&#39;</span><span class="p">,</span> <span class="n">ASCII</span><span class="p">),</span>
         <span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">string</span> <span class="o">=</span> <span class="n">string</span>
@@ -503,7 +506,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
     </div>
   </body>
 </html>
