@@ -38,7 +38,7 @@ class Scanner(object):
 
         self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]', ASCII)
         self.patterns = {
-            'interface-name': re.compile(r'[a-z]+(\.[a-z0-9][a-z0-9-]*)+'),
+            'interface-name': re.compile(r'[a-z]([-]*[a-z0-9])*([.][a-z0-9]([-]*[a-z0-9])*)+'),
             'member-name': re.compile(r'\b[A-Z][A-Za-z0-9]*\b', ASCII),
             'identifier': re.compile(r'\b[A-Za-z]([_]?[A-Za-z0-9])*\b', ASCII),
         }
