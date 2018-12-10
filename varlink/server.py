@@ -321,7 +321,10 @@ class RequestHandler(StreamRequestHandler):
 
         self.request.setblocking(True)
         while not self.rfile.closed:
-            c = self.rfile.read(1)
+            try:
+                c = self.rfile.read(1)
+            except BrokenPipeError:
+                break
 
             if c == b'':
                 break
