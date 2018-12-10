@@ -62,9 +62,15 @@
 <span class="kn">from</span> <span class="nn">.scanner</span> <span class="k">import</span> <span class="n">Interface</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">socketserver</span> <span class="k">import</span> <span class="p">(</span><span class="n">StreamRequestHandler</span><span class="p">,</span> <span class="n">BaseServer</span><span class="p">,</span> <span class="n">ThreadingMixIn</span><span class="p">,</span> <span class="n">ForkingMixIn</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">socketserver</span> <span class="k">import</span> <span class="p">(</span><span class="n">StreamRequestHandler</span><span class="p">,</span> <span class="n">BaseServer</span><span class="p">,</span> <span class="n">ThreadingMixIn</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># Python2</span>
-    <span class="kn">from</span> <span class="nn">SocketServer</span> <span class="k">import</span> <span class="p">(</span><span class="n">StreamRequestHandler</span><span class="p">,</span> <span class="n">BaseServer</span><span class="p">,</span> <span class="n">ThreadingMixIn</span><span class="p">,</span> <span class="n">ForkingMixIn</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">SocketServer</span> <span class="k">import</span> <span class="p">(</span><span class="n">StreamRequestHandler</span><span class="p">,</span> <span class="n">BaseServer</span><span class="p">,</span> <span class="n">ThreadingMixIn</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s2">&quot;fork&quot;</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">socketserver</span> <span class="k">import</span> <span class="n">ForkingMixIn</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># Python2</span>
+        <span class="kn">from</span> <span class="nn">SocketServer</span> <span class="k">import</span> <span class="n">ForkingMixIn</span>
 
 <span class="kn">from</span> <span class="nn">types</span> <span class="k">import</span> <span class="n">GeneratorType</span>
 
@@ -356,7 +362,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfile</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
-            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">BrokenPipeError</span><span class="p">:</span>
+                <span class="k">break</span>
 
             <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
                 <span class="k">break</span>
@@ -551,7 +560,8 @@
 <div class="viewcode-block" id="ThreadingServer"><a class="viewcode-back" href="../../index.html#varlink.ThreadingServer">[docs]</a><span class="k">class</span> <span class="nc">ThreadingServer</span><span class="p">(</span><span class="n">ThreadingMixIn</span><span class="p">,</span> <span class="n">Server</span><span class="p">):</span> <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="ForkingServer"><a class="viewcode-back" href="../../index.html#varlink.ForkingServer">[docs]</a><span class="k">class</span> <span class="nc">ForkingServer</span><span class="p">(</span><span class="n">ForkingMixIn</span><span class="p">,</span> <span class="n">Server</span><span class="p">):</span> <span class="k">pass</span></div>
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s2">&quot;fork&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="ForkingServer"><a class="viewcode-back" href="../../index.html#varlink.ForkingServer">[docs]</a>    <span class="k">class</span> <span class="nc">ForkingServer</span><span class="p">(</span><span class="n">ForkingMixIn</span><span class="p">,</span> <span class="n">Server</span><span class="p">):</span> <span class="k">pass</span></div>
 </pre></div>
 
           </div>
