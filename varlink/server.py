@@ -21,9 +21,15 @@ from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, V
 from .scanner import Interface
 
 try:
-    from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
+    from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn)
 except ImportError:  # Python2
-    from SocketServer import (StreamRequestHandler, BaseServer, ThreadingMixIn, ForkingMixIn)
+    from SocketServer import (StreamRequestHandler, BaseServer, ThreadingMixIn)
+
+if hasattr(os, "fork"):
+    try:
+        from socketserver import ForkingMixIn
+    except ImportError:  # Python2
+        from SocketServer import ForkingMixIn
 
 from types import GeneratorType
 
@@ -510,4 +516,5 @@ class Server(BaseServer):
 class ThreadingServer(ThreadingMixIn, Server): pass
 
 
-class ForkingServer(ForkingMixIn, Server): pass
+if hasattr(os, "fork"):
+    class ForkingServer(ForkingMixIn, Server): pass

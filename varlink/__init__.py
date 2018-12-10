@@ -12,18 +12,25 @@ or the `source code <_modules/varlink/tests/test_orgexamplemore.html>`_ of
 :mod:`varlink.tests.test_orgexamplemore`
 
 """
-
-__all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
-           'Service', 'RequestHandler', 'Server', 'ThreadingServer', 'ForkingServer',
-           'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
-           'ConnectionError', 'VarlinkEncoder', 'VarlinkError',
-           'Interface', 'Scanner', 'get_listen_fd']
+if hasattr(os, "fork"):
+    __all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
+               'Service', 'RequestHandler', 'Server', 'ThreadingServer', 'ForkingServer',
+               'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
+               'ConnectionError', 'VarlinkEncoder', 'VarlinkError',
+               'Interface', 'Scanner', 'get_listen_fd']
+    from .server import ForkingServer
+else:
+    __all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
+               'Service', 'RequestHandler', 'Server', 'ThreadingServer',
+               'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
+               'ConnectionError', 'VarlinkEncoder', 'VarlinkError',
+               'Interface', 'Scanner', 'get_listen_fd']
 
 from .client import (Client, ClientInterfaceHandler, SimpleClientInterfaceHandler)
 from .error import (VarlinkEncoder, VarlinkError, InvalidParameter, InterfaceNotFound, MethodNotImplemented,
                     MethodNotFound, ConnectionError, BrokenPipeError)
 from .scanner import (Scanner, Interface)
-from .server import (Service, get_listen_fd, Server, ThreadingServer, ForkingServer, RequestHandler)
+from .server import (Service, get_listen_fd, Server, ThreadingServer, RequestHandler)
 
 
 # There are no tests here, so don't try to run anything discovered from
