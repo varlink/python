@@ -12,6 +12,9 @@ or the `source code <_modules/varlink/tests/test_orgexamplemore.html>`_ of
 :mod:`varlink.tests.test_orgexamplemore`
 
 """
+
+import os
+
 if hasattr(os, "fork"):
     __all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
                'Service', 'RequestHandler', 'Server', 'ThreadingServer', 'ForkingServer',
