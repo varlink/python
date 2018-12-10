@@ -187,7 +187,7 @@ def varlink_help(args):
 
 def varlink_info(args):
     if args.ADDRESS:
-        deli = args.ADDRESS.rfind("/")
+        deli = args.ADDRESS.rfind(":")
         if deli != -1:
             address = args.ADDRESS
             client = varlink.Client.new_with_address(address)
