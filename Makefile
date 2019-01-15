@@ -10,8 +10,8 @@ clean:
 .PHONY: clean
 
 check:
-	python2 -m unittest discover
-	python3 -m unittest discover
+	if which python2 &>/dev/null; then python2 -m unittest discover;fi
+	if which python3 &>/dev/null; then python3 -m unittest discover;fi
 .PHONY: check
 
 docs:
