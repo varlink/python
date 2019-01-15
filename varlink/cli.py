@@ -192,12 +192,12 @@ def varlink_info(args):
             address = args.ADDRESS
             client = varlink.Client.new_with_address(address)
         else:
-            interface = args.ADDRESS
             if args.activate:
                 client = varlink.Client.new_with_activate(shlex.split(args.activate))
             elif args.bridge:
                 client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
             else:
+                interface = args.ADDRESS
                 client = varlink.Client.new_with_resolved_interface(interface, args.resolver)
 
         client.get_interfaces()
@@ -214,11 +214,8 @@ def varlink_info(args):
     else:
         if args.bridge:
             client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
-        else:
-            client = varlink.Client.new_with_address("unix:/run/org.varlink.resolver")
-
-        with client:
-            info = client.open("org.varlink.resolver").GetInfo()
+            client.get_interfaces()
+            info = client.info
             print("Vendor:", info["vendor"])
             print("Product:", info["product"])
             print("Version:", info["version"])
@@ -226,6 +223,17 @@ def varlink_info(args):
             print("Interfaces:")
             for i in info["interfaces"]:
                 print("  ", i)
+        else:
+            client = varlink.Client.new_with_address("unix:/run/org.varlink.resolver")
+            with client:
+                info = client.open("org.varlink.resolver").GetInfo()
+                print("Vendor:", info["vendor"])
+                print("Product:", info["product"])
+                print("Version:", info["version"])
+                print("URL:", info["url"])
+                print("Interfaces:")
+                for i in info["interfaces"]:
+                    print("  ", i)
 
 
 if __name__ == '__main__':
@@ -239,7 +247,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--bridge', default=None, help='Command to execute and connect to')
 
     parser_info = subparsers.add_parser('info', help='Print information about a service')
-    parser_info.add_argument('ADDRESS')
+    parser_info.add_argument('ADDRESS', nargs='?')
     parser_info.set_defaults(func=varlink_info)
 
     parser_help = subparsers.add_parser('help', help='Print interface description or service information')
@@ -254,7 +262,7 @@ if __name__ == '__main__':
     parser_call = subparsers.add_parser('call', help='Call a method')
     parser_call.add_argument('-m', '--more', action='store_true', help='wait for multiple method returns if supported')
     parser_call.add_argument('METHOD')
-    parser_call.add_argument('ARGUMENTS')
+    parser_call.add_argument('ARGUMENTS', nargs='?', default="")
     parser_call.set_defaults(func=varlink_call)
 
     args = parser.parse_args()
