@@ -8,6 +8,7 @@ import os
 import shutil
 import signal
 import socket
+import subprocess
 import sys
 import tempfile
 
@@ -25,6 +26,202 @@ PY3 = (sys.version_info[0] >= 3)
 if PY2:
     FileNotFoundError = IOError
     ChildProcessError = OSError
+
+"""
+Fix windows Popen for supporting socket as pipe
+"""
+if sys.platform == "win32":
+    import msvcrt
+
+    if sys.version_info < (3, 0):
+        import _subprocess
+    else:
+        import _winapi
+
+    SO_OPENTYPE = 0x7008
+    SO_SYNCHRONOUS_NONALERT = 0x20
+
+    PIPE = subprocess.PIPE
+    STDOUT = subprocess.STDOUT
+    if sys.version_info >= (3, 0):
+        DEVNULL = subprocess.DEVNULL
+
+    # Enable socket to be non overlapped
+    try:
+        dummy = socket.socket(0xDEAD, socket.SOCK_STREAM)  # After that python will not force WSA_FLAG_OVERLAPPED
+    except:
+        pass
+    dummy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    dummy.setsockopt(socket.SOL_SOCKET, SO_OPENTYPE, SO_SYNCHRONOUS_NONALERT)
+
+
+    class SocketPopen(subprocess.Popen):
+        def __init__(self, *args, **kwargs):
+            super(SocketPopen, self).__init__(*args, **kwargs)
+
+        if sys.version_info < (3, 0):
+            def _get_handles(self, stdin, stdout, stderr):
+                """Construct and return tuple with IO objects:
+                p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
+                """
+                to_close = set()
+                if stdin is None and stdout is None and stderr is None:
+                    return (None, None, None, None, None, None), to_close
+
+                p2cread, p2cwrite = None, None
+                c2pread, c2pwrite = None, None
+                errread, errwrite = None, None
+
+                if stdin is None:
+                    p2cread = _subprocess.GetStdHandle(_subprocess.STD_INPUT_HANDLE)
+                    if p2cread is None:
+                        p2cread, _ = _subprocess.CreatePipe(None, 0)
+                elif stdin == PIPE:
+                    p2cread, p2cwrite = _subprocess.CreatePipe(None, 0)
+                elif isinstance(stdin, int):
+                    p2cread = msvcrt.get_osfhandle(stdin)
+                else:
+                    # Assuming file-like object
+                    if not hasattr(stdin, 'recv'):
+                        p2cread = msvcrt.get_osfhandle(stdin.fileno())
+                    else:
+                        p2cread = stdin.fileno()
+                p2cread = self._make_inheritable(p2cread)
+                # We just duplicated the handle, it has to be closed at the end
+                to_close.add(p2cread)
+                if stdin == PIPE:
+                    to_close.add(p2cwrite)
+
+                if stdout is None:
+                    c2pwrite = _subprocess.GetStdHandle(_subprocess.STD_OUTPUT_HANDLE)
+                    if c2pwrite is None:
+                        _, c2pwrite = _subprocess.CreatePipe(None, 0)
+                elif stdout == PIPE:
+                    c2pread, c2pwrite = _subprocess.CreatePipe(None, 0)
+                elif isinstance(stdout, int):
+                    c2pwrite = msvcrt.get_osfhandle(stdout)
+                else:
+                    # Assuming file-like object
+                    if not hasattr(stdin, 'recv'):
+                        c2pwrite = msvcrt.get_osfhandle(stdout.fileno())
+                    else:
+                        c2pwrite = stdout.fileno()
+                c2pwrite = self._make_inheritable(c2pwrite)
+                # We just duplicated the handle, it has to be closed at the end
+                to_close.add(c2pwrite)
+                if stdout == PIPE:
+                    to_close.add(c2pread)
+
+                if stderr is None:
+                    errwrite = _subprocess.GetStdHandle(_subprocess.STD_ERROR_HANDLE)
+                    if errwrite is None:
+                        _, errwrite = _subprocess.CreatePipe(None, 0)
+                elif stderr == PIPE:
+                    errread, errwrite = _subprocess.CreatePipe(None, 0)
+                elif stderr == STDOUT:
+                    errwrite = c2pwrite
+                elif isinstance(stderr, int):
+                    errwrite = msvcrt.get_osfhandle(stderr)
+                else:
+                    # Assuming file-like object
+                    if not hasattr(stdin, 'recv'):
+                        errwrite = msvcrt.get_osfhandle(stderr.fileno())
+                    else:
+                        errwrite = stderr.fileno()
+                errwrite = self._make_inheritable(errwrite)
+                # We just duplicated the handle, it has to be closed at the end
+                to_close.add(errwrite)
+                if stderr == PIPE:
+                    to_close.add(errread)
+
+                return (p2cread, p2cwrite,
+                        c2pread, c2pwrite,
+                        errread, errwrite), to_close
+        else:
+            def _get_handles(self, stdin, stdout, stderr):
+                """Construct and return tuple with IO objects:
+                p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
+                """
+                if stdin is None and stdout is None and stderr is None:
+                    return (-1, -1, -1, -1, -1, -1)
+
+                p2cread, p2cwrite = -1, -1
+                c2pread, c2pwrite = -1, -1
+                errread, errwrite = -1, -1
+
+                if stdin is None:
+                    p2cread = _winapi.GetStdHandle(_winapi.STD_INPUT_HANDLE)
+                    if p2cread is None:
+                        p2cread, _ = _winapi.CreatePipe(None, 0)
+                        p2cread = subprocess.Handle(p2cread)
+                        _winapi.CloseHandle(_)
+                elif stdin == PIPE:
+                    p2cread, p2cwrite = _winapi.CreatePipe(None, 0)
+                    p2cread, p2cwrite = subprocess.Handle(p2cread), subprocess.Handle(p2cwrite)
+                elif stdin == DEVNULL:
+                    p2cread = msvcrt.get_osfhandle(self._get_devnull())
+                elif isinstance(stdin, int):
+                    p2cread = msvcrt.get_osfhandle(stdin)
+                else:
+                    # Assuming file-like object
+                    if not hasattr(stdin, 'recv'):
+                        p2cread = msvcrt.get_osfhandle(stdin.fileno())
+                    else:
+                        p2cread = stdin.fileno()
+                p2cread = self._make_inheritable(p2cread)
+
+                if stdout is None:
+                    c2pwrite = _winapi.GetStdHandle(_winapi.STD_OUTPUT_HANDLE)
+                    if c2pwrite is None:
+                        _, c2pwrite = _winapi.CreatePipe(None, 0)
+                        c2pwrite = subprocess.Handle(c2pwrite)
+                        _winapi.CloseHandle(_)
+                elif stdout == PIPE:
+                    c2pread, c2pwrite = _winapi.CreatePipe(None, 0)
+                    c2pread, c2pwrite = subprocess.Handle(c2pread), subprocess.Handle(c2pwrite)
+                elif stdout == DEVNULL:
+                    c2pwrite = msvcrt.get_osfhandle(self._get_devnull())
+                elif isinstance(stdout, int):
+                    c2pwrite = msvcrt.get_osfhandle(stdout)
+                else:
+                    # Assuming file-like object
+                    if not hasattr(stdin, 'recv'):
+                        c2pwrite = msvcrt.get_osfhandle(stdout.fileno())
+                    else:
+                        c2pwrite = stdout.fileno()
+                c2pwrite = self._make_inheritable(c2pwrite)
+
+                if stderr is None:
+                    errwrite = _winapi.GetStdHandle(_winapi.STD_ERROR_HANDLE)
+                    if errwrite is None:
+                        _, errwrite = _winapi.CreatePipe(None, 0)
+                        errwrite = subprocess.Handle(errwrite)
+                        _winapi.CloseHandle(_)
+                elif stderr == PIPE:
+                    errread, errwrite = _winapi.CreatePipe(None, 0)
+                    errread, errwrite = subprocess.Handle(errread), subprocess.Handle(errwrite)
+                elif stderr == STDOUT:
+                    errwrite = c2pwrite
+                elif stderr == DEVNULL:
+                    errwrite = msvcrt.get_osfhandle(self._get_devnull())
+                elif isinstance(stderr, int):
+                    errwrite = msvcrt.get_osfhandle(stderr)
+                else:
+                    # Assuming file-like object
+                    if not hasattr(stdin, 'recv'):
+                        errwrite = msvcrt.get_osfhandle(stderr.fileno())
+                    else:
+                        errwrite = stderr.fileno()
+                errwrite = self._make_inheritable(errwrite)
+
+                return (p2cread, p2cwrite,
+                        c2pread, c2pwrite,
+                        errread, errwrite)
+
+
+    _Popen = SocketPopen
+else:
+    _Popen = subprocess.Popen
 
 
 class ConnectionError(OSError):
@@ -191,19 +388,29 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         ClientInterfaceHandler.__init__(self, interface, namespaced=namespaced)
         self._connection = file_or_socket
 
-        if hasattr(self._connection, 'sendall'):
+        if hasattr(self._connection, 'send_bytes'):
+            self._send_bytes = True
+            self._sendall = False
+        elif hasattr(self._connection, 'sendall'):
+            self._send_bytes = False
             self._sendall = True
         else:
             if not hasattr(self._connection, 'write'):
                 raise TypeError
             self._sendall = False
+            self._send_bytes = False
 
-        if hasattr(self._connection, 'recv'):
+        if hasattr(self._connection, 'recv_bytes'):
+            self._recv_bytes = True
+            self._recv = False
+        elif hasattr(self._connection, 'recv'):
             self._recv = True
+            self._recv_bytes = False
         else:
             if not hasattr(self._connection, 'read'):
                 raise TypeError
             self._recv = False
+            self._recv_bytes = False
 
         self._in_buffer = b''
 
@@ -223,7 +430,9 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         self._connection.close()
 
     def _send_message(self, out):
-        if self._sendall:
+        if self._send_bytes:
+            self._connection.send_bytes(out + b'\0')
+        elif self._sendall:
             self._connection.sendall(out + b'\0')
         elif hasattr:
             self._connection.write(out + b'\0')
@@ -240,8 +449,16 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
                 yield message.decode('utf-8')
                 continue
 
-            if self._recv:
-                data = self._connection.recv(8192)
+            if self._recv_bytes:
+                try:
+                    data = self._connection.recv_bytes(8192)
+                except:
+                    data = []
+            elif self._recv:
+                try:
+                    data = self._connection.recv(8192)
+                except:
+                    data = []
             else:
                 data = self._connection.read(8192)
 
@@ -404,30 +621,9 @@ class Client(object):
     def _with_bridge(self, argv):
         def new_bridge_socket():
             sp = socket.socketpair()
-            child_pid = os.fork()
-            if child_pid == 0:
-                sp[0].close()
-                s = sp[1]
-                # child
-                n = s.fileno()
-                if n == 0 or n == 1:
-                    # without dup() the socket is closed with the python destructor
-                    n = os.dup(n)
-                    del s
-                else:
-                    try:
-                        os.close(0)
-                        os.close(1)
-                    except OSError:
-                        pass
+            p = _Popen(argv, stdin=sp[1], stdout=sp[1], close_fds=True)
 
-                os.dup2(n, 0)
-                os.dup2(n, 1)
-
-                os.execvp(argv[0], argv)
-                sys.exit(1)
-            # parent
-            sp[1].close()
+            self._child_pid = p.pid
             return sp[0]
 
         self._str = "Bridge with: '%s'" % " ".join(argv)
