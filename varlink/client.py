@@ -576,7 +576,7 @@ class Client(object):
                 pass
             try:
                 os.waitpid(self._child_pid, 0)
-            except ChildProcessError:
+            except:
                 pass
 
     def open(self, interface_name, namespaced=False, connection=None):
