@@ -617,7 +617,7 @@
                 <span class="k">pass</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">waitpid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_child_pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ChildProcessError</span><span class="p">:</span>
+            <span class="k">except</span><span class="p">:</span>
                 <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Client.open"><a class="viewcode-back" href="../../index.html#varlink.Client.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface_name</span><span class="p">,</span> <span class="n">namespaced</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">connection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
