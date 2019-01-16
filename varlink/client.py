@@ -367,7 +367,6 @@ class Client(object):
         """
         self._interfaces = {}
         self._socket = None
-        self._bridge_socket = None
         self._socket_fn = None
         self._tmpdir = None
         self._child_pid = 0
@@ -469,9 +468,9 @@ class Client(object):
                                  close_fds=True)
             self._child_pid = p.pid
 
-            thread1 = threading.Thread(target=pipe_bridge, args=(sp[1], p.stdin))
+            thread1 = threading.Thread(daemon=True, target=pipe_bridge, args=(sp[1], p.stdin))
             thread1.start()
-            thread2 = threading.Thread(target=pipe_bridge, args=(p.stdout, sp[1]))
+            thread2 = threading.Thread(daemon=True, target=pipe_bridge, args=(p.stdout, sp[1]))
             thread2.start()
             return sp[0]
 
