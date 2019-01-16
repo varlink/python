@@ -1,3 +1,7 @@
+PYTHON := $(shell python -c 'import platform;print(platform.python_version().split(".")[0])')
+PYTHON2 := $(shell if which python2 &>/dev/null;then which python2; elif "$(PYTHON)" == 2; then which python; fi)
+PYTHON3 := $(shell if which python3 &>/dev/null;then which python3; elif "$(PYTHON)" == 3; then which python; fi)
+
 all: build
 .PHONY: all
 
@@ -10,8 +14,8 @@ clean:
 .PHONY: clean
 
 check:
-	if which python2 &>/dev/null; then python2 -m unittest discover;fi
-	if which python3 &>/dev/null; then python3 -m unittest discover;fi
+	if [ -x $(PYTHON2) ]; then $(PYTHON2) -m unittest discover;fi
+	if [ -x $(PYTHON3) ]; then $(PYTHON3) -m unittest discover;fi
 .PHONY: check
 
 docs:
