@@ -404,7 +404,6 @@ if __name__ == '__main__':
     activate = None
     bridge = None
 
-
     for opt, arg in opts:
         if opt == "--help":
             usage()
@@ -445,13 +444,14 @@ if __name__ == '__main__':
 
     sys.exit(0)
 
+
 ######## UNITTEST #############
 
 class TestService(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if hasattr(socket, "AF_UNIX"):
-            cls.address = "unix:/tmp/org.varlink.certification_" \
+            cls.address = "unix:org.varlink.certification_" \
                           + str(os.getpid()) \
                           + threading.current_thread().getName()
         else:
