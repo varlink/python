@@ -70,6 +70,15 @@ def varlink_bridge(args):
     if args.connect:
         client = varlink.Client.new_with_address(args.connect)
         con = client.open_connection()
+    elif args.bridge:
+        client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
+        con = client.open_connection()
+    elif args.activate:
+        client = varlink.Client.new_with_activate(shlex.split(args.activate))
+        con = client.open_connection()
+    else:
+        print("No --connect or --bridge or --activate")
+
 
     if hasattr(sys.stdout, 'buffer'):
         stdout = sys.stdout.buffer
@@ -93,7 +102,7 @@ def varlink_bridge(args):
 
         req = json.loads(message.decode('utf-8'))
 
-        if not args.connect:
+        if not args.connect and not args.activate and not args.bridge:
             if req['method'] == "org.varlink.service.GetInfo":
                 req['method'] = "org.varlink.resolver.GetInfo"
 
@@ -192,8 +201,10 @@ def varlink_info(args):
         client = varlink.Client.new_with_address(args.ADDRESS)
     elif args.bridge:
         client = varlink.Client.new_with_bridge(shlex.split(args.bridge))
+    elif args.activate:
+        client = varlink.Client.new_with_activate(shlex.split(args.activate))
     else:
-        print("No ADDRESS or bridge")
+        print("No ADDRESS or --bridge or --activate")
 
 
     client.get_interfaces()
