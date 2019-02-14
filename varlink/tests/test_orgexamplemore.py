@@ -29,10 +29,13 @@ import time
 import unittest
 from sys import platform
 
-from builtins import int
-from builtins import next
-from builtins import object
-from builtins import range
+try:
+    from builtins import int
+    from builtins import next
+    from builtins import object
+    from builtins import range
+except ImportError:
+    pass
 
 import varlink
 

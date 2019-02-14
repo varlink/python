@@ -1,4 +1,7 @@
 *.pyc
+.tox/
+.stestr/
+*.egg-info/
 
 /MANIFEST
 /dist

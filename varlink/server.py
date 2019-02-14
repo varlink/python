@@ -11,10 +11,13 @@ import stat
 import string
 import sys
 
-from builtins import int
-from builtins import object
-from builtins import open
-from builtins import range
+try:
+    from builtins import int
+    from builtins import object
+    from builtins import open
+    from builtins import range
+except ImportError:
+    pass
 
 from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError,
                     ConnectionError)
