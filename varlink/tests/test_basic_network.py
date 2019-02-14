@@ -7,7 +7,10 @@ import threading
 import unittest
 from sys import platform
 
-from builtins import str
+try:
+    from builting import str
+except ImportError:
+    pass
 
 import varlink
 

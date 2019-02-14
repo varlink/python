@@ -1,11 +1,15 @@
+#!-*-coding:utf8-*-
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import re
+try:
+    from builtins import str
+    from builtins import int
+    from builtins import object
+except ImportError:
+    pass
 
-from builtins import int
-from builtins import object
-from builtins import str
+import re
 
 try:
     basestring
@@ -52,7 +56,11 @@ class Scanner(object):
         if m:
             doc = self.docstring.findall(self.string[m.start():m.end()])
             if len(doc):
-                self.current_doc += str.join("\n", doc)
+                try:
+                    self.current_doc += "\n".join(doc)
+                except UnicodeError:
+                    self.current_doc += "\n".join(
+                            [el.decode("utf-8") for el in doc])
             self.pos = m.end()
 
         pattern = self.patterns.get(expected)
@@ -78,7 +86,11 @@ class Scanner(object):
         if m:
             doc = self.docstring.findall(self.string[m.start():m.end()])
             if len(doc):
-                self.current_doc += str.join("\n", doc)
+                try:
+                    self.current_doc += "\n".join(doc)
+                except UnicodeError:
+                    self.current_doc += "\n".join(
+                            [el.decode("utf-8") for el in doc])
             self.pos = m.end()
 
         return self.pos >= len(self.string)

@@ -16,9 +16,12 @@ import time
 import unittest
 from sys import platform
 
-from builtins import object
-from builtins import range
-from builtins import str
+try:
+    from builtins import object
+    from builtins import range
+    from builtins import str
+except ImportError:
+    pass
 
 import varlink
 

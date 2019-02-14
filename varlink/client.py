@@ -13,10 +13,13 @@ import tempfile
 import subprocess
 import threading
 
-from builtins import next
-from builtins import object
-from builtins import open
-from builtins import str
+try:
+    from builtins import next
+    from builtins import object
+    from builtins import open
+    from builtins import str
+except ImportError:
+    pass
 
 from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder, BrokenPipeError)
 from .scanner import (Interface, _Method)
