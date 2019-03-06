@@ -17,7 +17,7 @@ method Ping(ping: string) -> (pong: string)
 method TestMore(n: int) -> (state: State)
 
 # Stop serving
-method StopServing() -> ()
+method StopServing(reason: ?string) -> ()
 
 # Something failed in TestMore
 error TestMoreError (reason: string)

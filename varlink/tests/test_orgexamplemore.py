@@ -120,7 +120,7 @@ class Example(object):
     def Ping(self, ping):
         return {'pong': ping}
 
-    def StopServing(self, _request=None, _server=None):
+    def StopServing(self, reason=None, _request=None, _server=None):
         print("Server ends.")
 
         if _request:
