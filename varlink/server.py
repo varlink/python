@@ -177,9 +177,11 @@ class Service(object):
                 kwargs["_request"] = _request
 
             if self._namespaced:
-                out = func(*(getattr(parameters, k) for k in method.in_type.fields.keys()), **kwargs)
+                # FIXME: check for Maybe before taking None as default value
+                out = func(*(getattr(parameters, k, default=None) for k in method.in_type.fields.keys()), **kwargs)
             else:
-                out = func(*(parameters[k] for k in method.in_type.fields.keys()), **kwargs)
+                # FIXME: check for Maybe before taking None as default value
+                out = func(*(parameters.get(k) for k in method.in_type.fields.keys()), **kwargs)
 
             if isinstance(out, GeneratorType):
                 try:
