@@ -149,7 +149,7 @@ class Service(object):
                              sig.parameters.keys()]
             else:
                 from itertools import izip
-                spec = inspect.getfullargspec(func)
+                spec = inspect.getargspec(func)
                 matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
                 arg_names = dict(izip(*matched_args))
 
