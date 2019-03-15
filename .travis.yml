@@ -2,14 +2,13 @@ language: python
 sudo: false
 dist: trusty
 python:
-- '3.8-dev'
-- '3.7'
 - '3.6'
 - '3.5'
 - '3.4'
 - '2.7'
 install:
 - pip install tox-travis .[devel]
+- pip install -r test-requirements.txt
 script:
 - tox
 - "python -m varlink.cli -A 'python -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS' call org.example.more.Ping '{  \"ping\": \"Ping\" }'"
@@ -19,10 +18,6 @@ script:
 - python -m varlink.tests.test_orgexamplemore -A 'python -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS' --client
 after_success:
 - coveralls
-before_install:
-- ip addr show
-- ls /proc/net
-- cat /proc/net/if_inet6
 env:
   global:
     secure: kikKJZDrlT8NMKi/sDPGCwgyOVrJW2xB/QkXvMu2bGqq9GFYpSBQSCLO2WIx3s1ANP07cNCI6LwmsEfJgxCcFwPwj4NyeBwLvC1M3tcJcnEqA1D8BPnUZZrcDJ60p7qT6Y2MUThM08UgptNFwoEXY2H+VeAKLPEj54DzugqPGV8tN3SbrApFWrrSOegAQovbcrmIt8pN5q4+GZXl1zhQFdc+VBHpOTGidTqoIRjDSFLf7+MmFCamUH6Tad+4UoUyFYA/2747nnwB3RRJobJkDD+tmAdpXwHNzAQ9PtZVfQlEzrl9fWds1/A0TiYfwVS5ASOcu2O292OTY9ZnVVDmmkGRbFq5sn9/XwwXv0JPL7egkU967BOsrS8GU09f5cd6AG/HcgXbr8EwdYgP7qa2upc2qEO0UrjgPgNVdhgWUNducwkBwlxHNpuL9Za4vhyF8YkFiWdoRKoRjvoySYoCUsn/MqlQuxn5H+m3lS71p3RKv2FYQYF4UzYXc0IWE7mRhJqdZdS1ZGVlnN4JzjNdItuy/0ZaX+xtFU+IVONwMxi3+vw4mFtJHnng+H6MAsYE8GHf77/IeBHA+2i0hwapiQSsAk2hnFkcPHC0RBVjfjhZvKcXXM9rGGRYImRyWsY3uggF7Eh5R9WCe4Yn9pqWmV/a7F4ngshCTjTvq4K/H/k=
