@@ -19,11 +19,12 @@ or::
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import getopt
+import argparse
 import os
 import shlex
 import socket
 import sys
+import textwrap
 import threading
 import time
 import unittest
@@ -158,39 +159,49 @@ def run_server(address):
 
 ######## MAIN #############
 
-def usage():
-    print('Usage: %s [[--client] --varlink=<varlink address>]' % sys.argv[0], file=sys.stderr)
-    print('\tSelf Exec: $ %s' % sys.argv[0], file=sys.stderr)
-    print('\tServer   : $ %s --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
-    print('\tClient   : $ %s --client --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
-    print('\tClient   : $ %s --client --bridge=<bridge command>' % sys.argv[0], file=sys.stderr)
-    print('\tClient   : $ %s --client --activate=<activation command>' % sys.argv[0], file=sys.stderr)
+def epilog():
+    return textwrap.dedent("""
+    Examples:
+        \tSelf Exec: $ {0}
+        \tServer   : $ {0} --varlink=<varlink address>
+        \tClient   : $ {0} --client --varlink=<varlink address>
+        \tClient   : $ {0} --client --bridge=<bridge command>
+        \tClient   : $ {0} --client --activate=<activation command>
+    """.format(sys.argv[0]))
 
 
 if __name__ == '__main__':
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "b:A:", ["help", "client", "varlink=", "bridge=", "activate="])
-    except getopt.GetoptError:
-        usage()
-        sys.exit(2)
+    parser = argparse.ArgumentParser(
+        description='Varlink org.example.more test case',
+        epilog=epilog(),
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        '--varlink',
+        type=str,
+        help='The varlink address'
+    )
+    parser.add_argument(
+        '-b', '--bridge',
+        type=str,
+        help='bridge command'
+    )
+    parser.add_argument(
+        '-A', '--activate',
+        type=str,
+        help='activation command'
+    )
+    parser.add_argument(
+        '--client',
+        action='store_true',
+        help='launch the client mode'
+    )
+    args = parser.parse_args()
 
-    address = None
-    client_mode = False
-    activate = None
-    bridge = None
-
-    for opt, arg in opts:
-        if opt == "--help":
-            usage()
-            sys.exit(0)
-        elif opt == "--varlink":
-            address = arg
-        elif opt == "--bridge" or opt == "-b":
-            bridge = arg
-        elif opt == "--activate" or opt == "-A":
-            activate = arg
-        elif opt == "--client":
-            client_mode = True
+    address = args.varlink
+    client_mode = args.client
+    activate = args.activate
+    bridge = args.bridge
 
     client = None
 
@@ -204,12 +215,14 @@ if __name__ == '__main__':
 
     if not address and not client_mode:
         if not hasattr(socket, "AF_UNIX"):
-            print("varlink activate: not supported on platform %s" % platform, file=sys.stderr)
-            usage()
+            print("varlink activate: not supported on platform %s" % platform,
+                  file=sys.stderr)
+            parser.print_help()
             sys.exit(2)
 
         client_mode = True
-        with varlink.Client.new_with_activate([__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
+        with varlink.Client.new_with_activate(
+            [__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
             run_client(client)
     elif client_mode:
         with client:
