@@ -260,6 +260,14 @@ class Service(object):
             self.interfaces[interface.name] = interface
             self.interfaces_handlers[interface.name] = handler
 
+    def _set_interface(self, filename, interface_class):
+        if 'class' in str(type(interface_class)):
+            ic = interface_class
+        else:
+            ic = interface_class()
+        self._add_interface(filename, ic)
+        return interface_class
+
     def interface(self, filename):
 
         def decorator(interface_class):
