@@ -10,6 +10,13 @@ install:
 - pip install tox-travis .[devel]
 - pip install -r test-requirements.txt
 script:
+# Check packaging first (README format etc...)
+- pip install -U setuptools
+- pip install -U wheel
+- pip install -U twine
+- python setup.py sdist
+- python setup.py bdist_wheel
+- twine check dist/*
 - tox
 - "python -m varlink.cli -A 'python -m varlink.tests.test_orgexamplemore --varlink=$VARLINK_ADDRESS' call org.example.more.Ping '{  \"ping\": \"Ping\" }'"
 - PYTHONPATH=$(pwd) python ./varlink/tests/test_certification.py
@@ -29,3 +36,11 @@ notifications:
     on_failure: always  # options: [always|never|change] default: always
     on_start: never     # options: [always|never|change] default: always
 
+deploy:
+  - provider: pypi
+    user: varlink
+    password: your-secure-password
+    on:
+      tags: true
+    distributions: sdist bdist_wheel
+    skip_existing: true
