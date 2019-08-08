@@ -6,6 +6,7 @@ all: build
 .PHONY: all
 
 build:
+	rm -fr build
 	python3 setup.py bdist_wheel --universal
 .PHONY: build
 
