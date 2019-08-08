@@ -1,0 +1,376 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>varlink.mock &#8212; varlink  documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">varlink  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for varlink.mock</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">import</span> <span class="nn">varlink</span>
+
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;The mock module isn&#39;t compatible with python 2&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">cast_type</span><span class="p">(</span><span class="n">typeof</span><span class="p">):</span>
+    <span class="n">cast</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;str&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">}</span>
+    <span class="n">typeof</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">typeof</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&lt;class &#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cast</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">typeof</span><span class="p">,</span> <span class="n">typeof</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_ignored</span><span class="p">():</span>
+    <span class="n">ignore</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">(</span><span class="n">MockedService</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ignore</span>
+
+
+<span class="k">def</span> <span class="nf">get_interface_attributs</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">ignored</span><span class="p">):</span>
+    <span class="n">attributs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;callables&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;others&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">interface</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">ignored</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">attribut</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">attribut</span><span class="p">):</span>
+            <span class="n">attributs</span><span class="p">[</span><span class="s2">&quot;callables&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attributs</span><span class="p">[</span><span class="s2">&quot;others&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">attributs</span>
+
+
+<span class="k">def</span> <span class="nf">generate_callable_interface</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+    <span class="n">attribut</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">attribut</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">signature</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;self&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">typeof</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">annotation</span>
+        <span class="n">sign</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cast_type</span><span class="p">(</span><span class="n">typeof</span><span class="p">)))</span>
+    <span class="n">returned</span> <span class="o">=</span> <span class="n">signature</span><span class="o">.</span><span class="n">return_annotation</span>
+    <span class="k">if</span> <span class="n">returned</span><span class="p">:</span>
+        <span class="n">returned</span> <span class="o">=</span> <span class="n">cast_type</span><span class="p">(</span><span class="n">returned</span><span class="p">)</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">attribut</span><span class="o">.</span><span class="vm">__doc__</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">doc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;docstring format must be:&quot;</span>
+                <span class="s2">&quot;return name: type&quot;</span><span class="p">)</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;return &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">returned</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">returned</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">returned</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;method </span><span class="si">{name}</span><span class="s2">(</span><span class="si">{signature}</span><span class="s2">) -&gt; (</span><span class="si">{returned}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">attr</span><span class="p">,</span>
+        <span class="n">signature</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sign</span><span class="p">),</span>
+        <span class="n">returned</span><span class="o">=</span><span class="n">returned</span>
+    <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MockedServiceProcess</span><span class="p">():</span>
+    <span class="n">address</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">vendor</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">interface</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">interface_file</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">interface_name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">interface_content</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">service_to_mock</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mocked_service</span> <span class="o">=</span> <span class="n">varlink</span><span class="o">.</span><span class="n">Service</span><span class="p">(</span>
+            <span class="n">vendor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vendor</span><span class="p">,</span>
+            <span class="n">product</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">product</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">instanciated_service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_to_mock</span><span class="p">()</span>
+        <span class="n">mocked_service</span><span class="o">.</span><span class="n">_set_interface</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interface_file</span><span class="p">,</span>
+            <span class="n">instanciated_service</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">ServiceRequestHandler</span><span class="p">(</span><span class="n">varlink</span><span class="o">.</span><span class="n">RequestHandler</span><span class="p">):</span>
+            <span class="n">service</span> <span class="o">=</span> <span class="n">mocked_service</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">varlink_server</span> <span class="o">=</span> <span class="n">varlink</span><span class="o">.</span><span class="n">ThreadingServer</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="n">ServiceRequestHandler</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">varlink_server</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">service_generator</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;mockedservice.py&quot;</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pyfp</span><span class="p">:</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">        &#39;&#39;&#39;</span>
+<span class="s2">            Generated by varlink mocking system</span>
+
+<span class="s2">            </span><span class="si">{datetime}</span><span class="s2"></span>
+<span class="s2">            Only for testing purpose and unit testing</span>
+<span class="s2">        &#39;&#39;&#39;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datetime</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())))</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;import varlink</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">service</span><span class="p">))</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">MockedServiceProcess</span><span class="p">))</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;if __name__ == &#39;__main__&#39;:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;    msp = MockedServiceProcess()</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">surround</span> <span class="o">=</span> <span class="s2">&quot;&#39;&quot;</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+                <span class="n">surround</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;    msp.</span><span class="si">{key}</span><span class="s2"> = </span><span class="si">{surround}{value}{surround}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">surround</span><span class="o">=</span><span class="n">surround</span><span class="p">))</span>
+        <span class="n">pyfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;    msp.run()</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mockedservice"><a class="viewcode-back" href="../../index.html#varlink.mock.mockedservice">[docs]</a><span class="k">def</span> <span class="nf">mockedservice</span><span class="p">(</span><span class="n">fake_service</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="s1">&#39;unix:@test&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">vendor</span><span class="o">=</span><span class="s1">&#39;varlink&#39;</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="s1">&#39;mock&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                  <span class="n">url</span><span class="o">=</span><span class="s1">&#39;http://localhost&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Varlink mocking service</span>
+
+<span class="sd">    To mock a fake service and merely test your varlink client against.</span>
+
+<span class="sd">    The mocking feature is for testing purpose, it&#39;s allow</span>
+<span class="sd">    you to test your varlink client against a fake service which will</span>
+<span class="sd">    returned self handed result defined in your object who will be mocked.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; import unittest</span>
+<span class="sd">    &gt;&gt;&gt; from varlink import mock</span>
+<span class="sd">    &gt;&gt;&gt; import varlink</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; class Service():</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;     def Test1(self, param1: int) -&gt; dict:</span>
+<span class="sd">    &gt;&gt;&gt;         &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt;         return (test: string)</span>
+<span class="sd">    &gt;&gt;&gt;         &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt;         return {&quot;test&quot;: param1}</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;     def Test2(self, param1: str) -&gt; dict:</span>
+<span class="sd">    &gt;&gt;&gt;         &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt;         return (test: string)</span>
+<span class="sd">    &gt;&gt;&gt;         &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt;         return {&quot;test&quot;: param1}</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;     def Test3(self, param1: int) -&gt; dict:</span>
+<span class="sd">    &gt;&gt;&gt;         &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt;         return (test: int, boom: string, foo: string, bar: 42)</span>
+<span class="sd">    &gt;&gt;&gt;         &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt;         return {</span>
+<span class="sd">    &gt;&gt;&gt;             &quot;test&quot;: param1 * 2,</span>
+<span class="sd">    &gt;&gt;&gt;             &quot;boom&quot;: &quot;foo&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;             &quot;foo&quot;: &quot;bar&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;             &quot;bar&quot;: 42,</span>
+<span class="sd">    &gt;&gt;&gt;         }</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; class TestMyClientWithMockedService(unittest.TestCase):</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;     @mock.mockedservice(</span>
+<span class="sd">    &gt;&gt;&gt;         fake_service=Service,</span>
+<span class="sd">    &gt;&gt;&gt;         name=&#39;org.service.com&#39;,</span>
+<span class="sd">    &gt;&gt;&gt;         address=&#39;unix:@foo&#39;</span>
+<span class="sd">    &gt;&gt;&gt;     )</span>
+<span class="sd">    &gt;&gt;&gt;     def test_my_client_against_a_mock(self):</span>
+<span class="sd">    &gt;&gt;&gt;         with varlink.Client(&quot;unix:@foo&quot;) as client:</span>
+<span class="sd">    &gt;&gt;&gt;             connection = client.open(&#39;org.service.com&#39;)</span>
+<span class="sd">    &gt;&gt;&gt;             self.assertEqual(</span>
+<span class="sd">    &gt;&gt;&gt;                 connection.Test1(param1=1)[&quot;test&quot;], 1)</span>
+<span class="sd">    &gt;&gt;&gt;             self.assertEqual(</span>
+<span class="sd">    &gt;&gt;&gt;                    connection.Test2(param1=&quot;foo&quot;)[&quot;test&quot;], &quot;foo&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;             self.assertEqual(</span>
+<span class="sd">    &gt;&gt;&gt;                    connection.Test3(param1=6)[&quot;test&quot;], 12)</span>
+<span class="sd">    &gt;&gt;&gt;             self.assertEqual(</span>
+<span class="sd">    &gt;&gt;&gt;                    connection.Test3(param1=6)[&quot;bar&quot;], 42)</span>
+
+<span class="sd">    First you need to define a sample class that will be passed to your</span>
+<span class="sd">    decorator `mock.mockedservice` and then a service will be initialized</span>
+<span class="sd">    and launched automatically, and after that you just need to connect your</span>
+<span class="sd">    client to him and to establish your connection then now you can</span>
+<span class="sd">    call your methods and it will give you the expected result.</span>
+
+<span class="sd">    The mocking module is only compatible with python 3 or higher version</span>
+<span class="sd">    of python because this module require annotation to generate interface</span>
+<span class="sd">    description.</span>
+
+<span class="sd">    If you try to use it with python 2.x it will raise an ``ImportError``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">MockedService</span><span class="p">(</span><span class="n">fake_service</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">address</span><span class="o">=</span><span class="n">address</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">BrokenPipeError</span><span class="p">:</span>
+                    <span class="c1"># manage fake service stoping</span>
+                    <span class="k">pass</span>
+            <span class="k">return</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+    <span class="k">return</span> <span class="n">decorator</span></div>
+
+
+<span class="k">class</span> <span class="nc">MockedService</span><span class="p">():</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="s1">&#39;unix:@test&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">vendor</span><span class="o">=</span><span class="s1">&#39;varlink&#39;</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="s1">&#39;mock&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">url</span><span class="o">=</span><span class="s1">&#39;http://localhost&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="vm">__module__</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">module</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_description</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service</span> <span class="o">=</span> <span class="n">service</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vendor</span> <span class="o">=</span> <span class="n">vendor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">product</span> <span class="o">=</span> <span class="n">product</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_info</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;inherited&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">address</span><span class="p">},</span>
+            <span class="s2">&quot;vendor&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;inherited&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">vendor</span><span class="p">},</span>
+            <span class="s2">&quot;product&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;inherited&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">product</span><span class="p">},</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;raw&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">version</span><span class="p">},</span>
+            <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;inherited&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">url</span><span class="p">},</span>
+            <span class="s2">&quot;interface_name&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;inherited&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">},</span>
+            <span class="s2">&quot;interface_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;inherited&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_interface_file_path</span><span class="p">()},</span>
+            <span class="s2">&quot;service_to_mock&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;raw&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">service</span><span class="o">.</span><span class="vm">__name__</span><span class="p">}</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_interface</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">generate_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ignore</span> <span class="o">=</span> <span class="n">get_ignored</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface_description</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;interface </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)]</span>
+        <span class="n">attributs</span> <span class="o">=</span> <span class="n">get_interface_attributs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="p">,</span> <span class="n">ignore</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attributs</span><span class="p">[</span><span class="s2">&quot;callables&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interface_description</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">generate_callable_interface</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_interface_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;/tmp/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">generate_interface_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tfp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_interface_file_path</span><span class="p">(),</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span>
+        <span class="n">tfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface_description</span><span class="p">))</span>
+        <span class="n">tfp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">delete_interface_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_interface_file_path</span><span class="p">())</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mocked_service_file</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">service_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_pid</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mocked_service_file</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">service_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_pid</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_pid</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mocked_service_file</span> <span class="o">=</span> <span class="s2">&quot;/tmp/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="n">service_generator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_info</span><span class="p">,</span>
+            <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mocked_service_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_interface_file</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_start</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_interface_files</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">varlink  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+  </body>
+</html>

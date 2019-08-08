@@ -788,6 +788,80 @@ $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --va
 <em class="property">class </em><code class="descclassname">varlink.tests.test_orgexamplemore.</code><code class="descname">TestService</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/tests/test_orgexamplemore.html#TestService"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.tests.test_orgexamplemore.TestService" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
+<div class="section" id="module-varlink.mock">
+<span id="testing"></span><h2>Testing<a class="headerlink" href="#module-varlink.mock" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="varlink.mock.mockedservice">
+<code class="descclassname">varlink.mock.</code><code class="descname">mockedservice</code><span class="sig-paren">(</span><em>fake_service=None</em>, <em>address='unix:&#64;test'</em>, <em>name=None</em>, <em>vendor='varlink'</em>, <em>product='mock'</em>, <em>version=1</em>, <em>url='http://localhost'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/varlink/mock.html#mockedservice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#varlink.mock.mockedservice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Varlink mocking service</p>
+<p>To mock a fake service and merely test your varlink client against.</p>
+<p>The mocking feature is for testing purpose, it’s allow
+you to test your varlink client against a fake service which will
+returned self handed result defined in your object who will be mocked.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">varlink</span> <span class="k">import</span> <span class="n">mock</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">varlink</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Service</span><span class="p">():</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">Test1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param1</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="sd">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sd">        return (test: string)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sd">        &#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">param1</span><span class="p">}</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">Test2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param1</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="sd">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sd">        return (test: string)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sd">        &#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">param1</span><span class="p">}</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">Test3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param1</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="sd">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sd">        return (test: int, boom: string, foo: string, bar: 42)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sd">        &#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">param1</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s2">&quot;boom&quot;</span><span class="p">:</span> <span class="s2">&quot;foo&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="s2">&quot;bar&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s2">&quot;bar&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="p">}</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">TestMyClientWithMockedService</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nd">@mock</span><span class="o">.</span><span class="n">mockedservice</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">fake_service</span><span class="o">=</span><span class="n">Service</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;org.service.com&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">address</span><span class="o">=</span><span class="s1">&#39;unix:@foo&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">test_my_client_against_a_mock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">with</span> <span class="n">varlink</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="s2">&quot;unix:@foo&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">connection</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;org.service.com&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>                <span class="n">connection</span><span class="o">.</span><span class="n">Test1</span><span class="p">(</span><span class="n">param1</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>                   <span class="n">connection</span><span class="o">.</span><span class="n">Test2</span><span class="p">(</span><span class="n">param1</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span><span class="p">)[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>                   <span class="n">connection</span><span class="o">.</span><span class="n">Test3</span><span class="p">(</span><span class="n">param1</span><span class="o">=</span><span class="mi">6</span><span class="p">)[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="mi">12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>                   <span class="n">connection</span><span class="o">.</span><span class="n">Test3</span><span class="p">(</span><span class="n">param1</span><span class="o">=</span><span class="mi">6</span><span class="p">)[</span><span class="s2">&quot;bar&quot;</span><span class="p">],</span> <span class="mi">42</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>First you need to define a sample class that will be passed to your
+decorator <cite>mock.mockedservice</cite> and then a service will be initialized
+and launched automatically, and after that you just need to connect your
+client to him and to establish your connection then now you can
+call your methods and it will give you the expected result.</p>
+<p>The mocking module is only compatible with python 3 or higher version
+of python because this module require annotation to generate interface
+description.</p>
+<p>If you try to use it with python 2.x it will raise an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code>.</p>
+</dd></dl>
+
 <div class="toctree-wrapper compound">
 </div>
 </div>
@@ -811,6 +885,7 @@ $ PYTHONPATH=$(pwd) python3 ./varlink/tests/test_orgexamplemore.py --client --va
   <ul>
 <li><a class="reference internal" href="#">varlink for python</a><ul>
 <li><a class="reference internal" href="#module-varlink.tests.test_orgexamplemore">Example</a></li>
+<li><a class="reference internal" href="#module-varlink.mock">Testing</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 </li>
