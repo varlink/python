@@ -41,6 +41,20 @@ from .server import (Service, get_listen_fd, Server, ThreadingServer, RequestHan
 # tests come from within varlink.tests.
 def load_tests(loader, tests, pattern):
     import os.path
+    import sys
+    from fnmatch import fnmatch
+
+    if pattern == None:
+        pattern = "test_*.py"
+
     # top level directory cached on loader instance
-    this_dir = os.path.dirname(__file__)
-    return loader.discover(start_dir=this_dir, pattern=pattern)
+    test_dir = os.path.dirname(__file__) + "/tests"
+    for fn in os.listdir(test_dir):
+        if fnmatch(fn, pattern):
+            if sys.version_info[0] == 2 and fn == "test_mocks.py":
+                continue
+            modname = "varlink.tests." + fn[:-3]
+            __import__(modname)
+            module = sys.modules[modname]
+            tests.addTest(loader.loadTestsFromModule(module))
+    return tests
