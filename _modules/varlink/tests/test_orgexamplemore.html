@@ -60,20 +60,24 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">unicode_literals</span>
 
-<span class="kn">import</span> <span class="nn">getopt</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 <span class="kn">import</span> <span class="nn">socket</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">unittest</span>
 <span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">platform</span>
 
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">int</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">next</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">int</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">next</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
 
 <span class="kn">import</span> <span class="nn">varlink</span>
 
@@ -196,39 +200,49 @@
 
 <span class="c1">######## MAIN #############</span>
 
-<span class="k">def</span> <span class="nf">usage</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Usage: </span><span class="si">%s</span><span class="s1"> [[--client] --varlink=&lt;varlink address&gt;]&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Self Exec: $ </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Server   : $ </span><span class="si">%s</span><span class="s1"> --varlink=&lt;varlink address&gt;&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Client   : $ </span><span class="si">%s</span><span class="s1"> --client --varlink=&lt;varlink address&gt;&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Client   : $ </span><span class="si">%s</span><span class="s1"> --client --bridge=&lt;bridge command&gt;&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Client   : $ </span><span class="si">%s</span><span class="s1"> --client --activate=&lt;activation command&gt;&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">epilog</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Examples:</span>
+<span class="s2">        </span><span class="se">\t</span><span class="s2">Self Exec: $ </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">        </span><span class="se">\t</span><span class="s2">Server   : $ </span><span class="si">{0}</span><span class="s2"> --varlink=&lt;varlink address&gt;</span>
+<span class="s2">        </span><span class="se">\t</span><span class="s2">Client   : $ </span><span class="si">{0}</span><span class="s2"> --client --varlink=&lt;varlink address&gt;</span>
+<span class="s2">        </span><span class="se">\t</span><span class="s2">Client   : $ </span><span class="si">{0}</span><span class="s2"> --client --bridge=&lt;bridge command&gt;</span>
+<span class="s2">        </span><span class="se">\t</span><span class="s2">Client   : $ </span><span class="si">{0}</span><span class="s2"> --client --activate=&lt;activation command&gt;</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">opts</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">getopt</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s2">&quot;b:A:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">,</span> <span class="s2">&quot;client&quot;</span><span class="p">,</span> <span class="s2">&quot;varlink=&quot;</span><span class="p">,</span> <span class="s2">&quot;bridge=&quot;</span><span class="p">,</span> <span class="s2">&quot;activate=&quot;</span><span class="p">])</span>
-    <span class="k">except</span> <span class="n">getopt</span><span class="o">.</span><span class="n">GetoptError</span><span class="p">:</span>
-        <span class="n">usage</span><span class="p">()</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Varlink org.example.more test case&#39;</span><span class="p">,</span>
+        <span class="n">epilog</span><span class="o">=</span><span class="n">epilog</span><span class="p">(),</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawTextHelpFormatter</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--varlink&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The varlink address&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="s1">&#39;--bridge&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;bridge command&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-A&#39;</span><span class="p">,</span> <span class="s1">&#39;--activate&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;activation command&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--client&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;launch the client mode&#39;</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-    <span class="n">address</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">client_mode</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">activate</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">bridge</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">for</span> <span class="n">opt</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">opt</span> <span class="o">==</span> <span class="s2">&quot;--help&quot;</span><span class="p">:</span>
-            <span class="n">usage</span><span class="p">()</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s2">&quot;--varlink&quot;</span><span class="p">:</span>
-            <span class="n">address</span> <span class="o">=</span> <span class="n">arg</span>
-        <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s2">&quot;--bridge&quot;</span> <span class="ow">or</span> <span class="n">opt</span> <span class="o">==</span> <span class="s2">&quot;-b&quot;</span><span class="p">:</span>
-            <span class="n">bridge</span> <span class="o">=</span> <span class="n">arg</span>
-        <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s2">&quot;--activate&quot;</span> <span class="ow">or</span> <span class="n">opt</span> <span class="o">==</span> <span class="s2">&quot;-A&quot;</span><span class="p">:</span>
-            <span class="n">activate</span> <span class="o">=</span> <span class="n">arg</span>
-        <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s2">&quot;--client&quot;</span><span class="p">:</span>
-            <span class="n">client_mode</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">address</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">varlink</span>
+    <span class="n">client_mode</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">client</span>
+    <span class="n">activate</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">activate</span>
+    <span class="n">bridge</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">bridge</span>
 
     <span class="n">client</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -242,12 +256,14 @@
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">client_mode</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="s2">&quot;AF_UNIX&quot;</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;varlink activate: not supported on platform </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">platform</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-            <span class="n">usage</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;varlink activate: not supported on platform </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">platform</span><span class="p">,</span>
+                  <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="n">client_mode</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">with</span> <span class="n">varlink</span><span class="o">.</span><span class="n">Client</span><span class="o">.</span><span class="n">new_with_activate</span><span class="p">([</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;--varlink=$VARLINK_ADDRESS&quot;</span><span class="p">])</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">varlink</span><span class="o">.</span><span class="n">Client</span><span class="o">.</span><span class="n">new_with_activate</span><span class="p">(</span>
+            <span class="p">[</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;--varlink=$VARLINK_ADDRESS&quot;</span><span class="p">])</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
             <span class="n">run_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">client_mode</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">client</span><span class="p">:</span>

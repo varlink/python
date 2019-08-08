@@ -52,10 +52,13 @@
 <span class="kn">import</span> <span class="nn">string</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">int</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">open</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">int</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">open</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
 
 <span class="kn">from</span> <span class="nn">.error</span> <span class="k">import</span> <span class="p">(</span><span class="n">InterfaceNotFound</span><span class="p">,</span> <span class="n">InvalidParameter</span><span class="p">,</span> <span class="n">MethodNotImplemented</span><span class="p">,</span> <span class="n">VarlinkEncoder</span><span class="p">,</span> <span class="n">VarlinkError</span><span class="p">,</span>
                     <span class="ne">ConnectionError</span><span class="p">)</span>
@@ -297,6 +300,14 @@
             <span class="n">interface</span> <span class="o">=</span> <span class="n">Interface</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span><span class="p">[</span><span class="n">interface</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">interface</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">interfaces_handlers</span><span class="p">[</span><span class="n">interface</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">handler</span>
+
+    <span class="k">def</span> <span class="nf">_set_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">interface_class</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;class&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">interface_class</span><span class="p">)):</span>
+            <span class="n">ic</span> <span class="o">=</span> <span class="n">interface_class</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ic</span> <span class="o">=</span> <span class="n">interface_class</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_interface</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">ic</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">interface_class</span>
 
 <div class="viewcode-block" id="Service.interface"><a class="viewcode-back" href="../../index.html#varlink.Service.interface">[docs]</a>    <span class="k">def</span> <span class="nf">interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
 

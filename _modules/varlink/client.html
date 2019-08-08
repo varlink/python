@@ -54,10 +54,13 @@
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">next</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">open</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">str</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">next</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">open</span>
+    <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">str</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
 
 <span class="kn">from</span> <span class="nn">.error</span> <span class="k">import</span> <span class="p">(</span><span class="n">VarlinkError</span><span class="p">,</span> <span class="n">InterfaceNotFound</span><span class="p">,</span> <span class="n">VarlinkEncoder</span><span class="p">,</span> <span class="ne">BrokenPipeError</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.scanner</span> <span class="k">import</span> <span class="p">(</span><span class="n">Interface</span><span class="p">,</span> <span class="n">_Method</span><span class="p">)</span>
