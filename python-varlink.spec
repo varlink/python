@@ -3,7 +3,7 @@
 %endif
 
 Name:           python-varlink
-Version: 	30.1.2
+Version: 	30.1.3
 Release:        1%{?dist}
 Summary:        Python implementation of Varlink
 License:        ASL 2.0
