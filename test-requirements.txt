@@ -1,3 +1,6 @@
 python-coveralls
 future
-stestr
+coverage
+fixtures
+nose
+nose-timer
