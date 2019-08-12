@@ -4,11 +4,24 @@ from varlink import mock
 import varlink
 
 
+types = """
+type MyPersonalType (
+    foo: string,
+    bar: string
+)
+"""
+
+
 class Service():
 
     def Test1(self, param1: int) -> str:
-        """return test"""
-        return {"test": "test1"}
+        """return test: MyPersonalType"""
+        return {
+            "test": {
+                "foo": "bim",
+                "bar": "boom"
+            }
+        }
 
     def Test2(self, param1: str="test") -> None:
         pass
@@ -22,13 +35,14 @@ class TestMockMechanisms(unittest.TestCase):
 
     @mock.mockedservice(
         fake_service=Service,
+        fake_types=types,
         name='org.service.com',
         address='unix:@foo'
     )
     def test_init(self):
         with varlink.Client("unix:@foo") as client:
             connection = client.open('org.service.com')
-            self.assertEqual(connection.Test1(param1=1)["test"], "test1")
+            self.assertEqual(connection.Test1(param1=1)["test"]["bar"], "boom")
             self.assertEqual(connection.Test3(param1="foo")["test"], "foo")
 
 
@@ -57,4 +71,8 @@ class TestMockUtilities(unittest.TestCase):
         generated_itf = mock.generate_callable_interface(service, 'Test1')
         self.assertEqual(
             generated_itf,
-            "method Test1(param1: int) -> (test: string)")
+            "method Test1(param1: int) -> (test: MyPersonalType)")
+        generated_itf = mock.generate_callable_interface(service, 'Test3')
+        self.assertEqual(
+            generated_itf,
+            "method Test3(param1: string) -> (test: string)")

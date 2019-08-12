@@ -57,7 +57,10 @@ def generate_callable_interface(interface, attr):
                 "docstring format must be:"
                 "return name: type")
         doc = doc.replace("return ", "")
-        returned = "{}: {}".format(doc, returned)
+        if ":" in doc:
+            returned = doc
+        else:
+            returned = "{}: {}".format(doc, returned)
     else:
         returned = ""
     return "method {name}({signature}) -> ({returned})".format(
@@ -124,7 +127,8 @@ def service_generator(service, info, filename="mockedservice.py"):
         pyfp.write("    msp.run()\n")
 
 
-def mockedservice(fake_service=None, address='unix:@test', name=None,
+def mockedservice(fake_service=None, fake_types=None,
+                  address='unix:@test', name=None,
                   vendor='varlink', product='mock', version=1,
                   url='http://localhost'):
     """
@@ -143,13 +147,26 @@ def mockedservice(fake_service=None, address='unix:@test', name=None,
     >>> import varlink
     >>>
     >>>
+    >>> types = '''
+    >>> type MyPersonalType (
+    >>>     foo: string,
+    >>>     bar: string,
+    >>> )
+    >>> '''
+    >>>
+    >>>
     >>> class Service():
     >>>
     >>>     def Test1(self, param1: int) -> dict:
     >>>         '''
-    >>>         return (test: string)
+    >>>         return test: MyPersonalType
     >>>         '''
-    >>>         return {"test": param1}
+    >>>         return {
+    >>>             "test": {
+    >>>                 "foo": "bim",
+    >>>                 "bar": "boom"
+    >>>             }
+    >>>         }
     >>>
     >>>     def Test2(self, param1: str) -> dict:
     >>>         '''
@@ -173,6 +190,7 @@ def mockedservice(fake_service=None, address='unix:@test', name=None,
     >>>
     >>>     @mock.mockedservice(
     >>>         fake_service=Service,
+    >>>         fake_types=types,
     >>>         name='org.service.com',
     >>>         address='unix:@foo'
     >>>     )
@@ -180,7 +198,7 @@ def mockedservice(fake_service=None, address='unix:@test', name=None,
     >>>         with varlink.Client("unix:@foo") as client:
     >>>             connection = client.open('org.service.com')
     >>>             self.assertEqual(
-    >>>                 connection.Test1(param1=1)["test"], 1)
+    >>>                 connection.Test1(param1=1)["test"]["bar"], "boom")
     >>>             self.assertEqual(
     >>>                    connection.Test2(param1="foo")["test"], "foo")
     >>>             self.assertEqual(
@@ -194,6 +212,12 @@ def mockedservice(fake_service=None, address='unix:@test', name=None,
     client to him and to establish your connection then now you can
     call your methods and it will give you the expected result.
 
+    You can also mock some types too, to help you to mock more complex service
+    and interfaces like podman by example.
+
+    You can define the return type by using the method docstring like
+    the method Test1 in our previous example.
+
     The mocking module is only compatible with python 3 or higher version
     of python because this module require annotation to generate interface
     description.
@@ -202,7 +226,7 @@ def mockedservice(fake_service=None, address='unix:@test', name=None,
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
-            with MockedService(fake_service, name=name,
+            with MockedService(fake_service, fake_types, name=name,
                                address=address):
                 try:
                     func(*args, **kwargs)
@@ -216,7 +240,7 @@ def mockedservice(fake_service=None, address='unix:@test', name=None,
 
 class MockedService():
 
-    def __init__(self, service, address='unix:@test', name=None,
+    def __init__(self, service, types, address='unix:@test', name=None,
                  vendor='varlink', product='mock', version=1,
                  url='http://localhost'):
         if not name:
@@ -230,6 +254,7 @@ class MockedService():
         self.identifier = str(uuid.uuid4())
         self.interface_description = None
         self.service = service
+        self.types = types
         self.address = address
         self.vendor = vendor
         self.product = product
@@ -245,13 +270,16 @@ class MockedService():
             "interface_file": {
                 'type': 'inherited',
                 'value': self.get_interface_file_path()},
-            "service_to_mock": {'type': 'raw', 'value': service.__name__}
+            "service_to_mock": {'type': 'raw', 'value': service.__name__},
         }
         self.generate_interface()
 
     def generate_interface(self):
         ignore = get_ignored()
         self.interface_description = ["interface {}".format(self.name)]
+        if self.types:
+            for line in self.types.split("\n"):
+                self.interface_description.append(line)
         attributs = get_interface_attributs(self.service, ignore)
         for attr in attributs["callables"]:
             self.interface_description.append(generate_callable_interface(
