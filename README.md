@@ -1,9 +1,9 @@
 [![Varlink Certified](https://img.shields.io/badge/varlink-certified-green.svg)](https://www.varlink.org/Language-Bindings)
 [![Build Status](https://travis-ci.org/varlink/python.svg?branch=master)](https://travis-ci.org/varlink/python)
 [![Coverage Status](https://coveralls.io/repos/github/varlink/python/badge.svg?branch=master)](https://coveralls.io/github/varlink/python?branch=master)
-![PyPI](https://img.shields.io/pypi/v/varlink.svg)]
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/varlink.svg)
-![PyPI - Status](https://img.shields.io/pypi/status/varlink.svg)
+[![PyPI](https://img.shields.io/pypi/v/varlink.svg)](https://pypi.org/project/varlink/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/varlink.svg)](https://pypi.org/project/varlink/)
+[![PyPI - Status](https://img.shields.io/pypi/status/varlink.svg)](https://pypi.org/project/varlink/)
 
 # python-varlink
 
