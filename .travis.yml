@@ -39,8 +39,9 @@ notifications:
 deploy:
   - provider: pypi
     user: varlink
-    password: your-secure-password
     on:
       tags: true
     distributions: sdist bdist_wheel
     skip_existing: true
+    password:
+      secure: AnvsE0P1thGN9Xv3kg1kZRsb1K6fy3iqUK23LGvwes3d1CjeCoFfc7e1Q5t66/Ajb3tWWcE4oovHD8BUUQS1VWE1jcqKILhAlDgYdDsMenBWHMjVyEIcSKR5z02BBfU8Zhf/E3mCQIj+Oa6l22XHF4WLPgF4nkNWUTYACkQzUCoJg2MMtYK0CVh1VP5bgAm0Tq31/H1M1h7ik7r5OzGVPn82eVZUxndRJ3GFLuZVJLt+vlo9JrdXqhoPvquK1FSljKIHNbflw39OoUhVkOoe/eksuRkd1jbAnFlZjr3DXcauTVTTzXc1p8m0q+Zaaaw8/WlDCnzRkdnAqYxTfznXO1p/UGPJ/pzvx1mTlZEbgGjx4Q7CtbpHFldWO4bgCI5rZd213/08QtV4bA8jj3cWMpzgsYkgNC2ruaGkVCmKxTJLWupadD+V9jmeJpIaXpjRI/dZWKkMw2cHX74qqpPSHCgJ+zkzbQdpSr+0US12NBayShfp8lTO5Umm6UyxGSKgH/OgGO1SmduEqaPjOH0KV8W11zRtMRuPA7KH0soo1mDgduEzTYZc4Oq4SWf4HPRIh21eNIlLERBnGTloGfSfvP7CYXD2XtcPEGswSZnq3Dj85cUaFzcD8cLFmbShwnlEWc1s9s3PN/DCz5TQhPl9E1zkIKaZGtDFJUOaPliOnSY=
