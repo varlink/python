@@ -159,7 +159,7 @@ python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test"
 ^C
 ```
 
-You can also start the clients and server with URLs following the [varlink URL standard](https://github.com/varlink/documentation/wiki#address).
+You can also start the clients and server with URLs following the [varlink URL standard](https://varlink.org/#address) with `unix:` and `tcp:`.
 E.g.
 - unix:@anonuds
 - unix:/run/myserver/socketfile
