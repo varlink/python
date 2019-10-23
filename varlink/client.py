@@ -125,6 +125,10 @@ class ClientInterfaceHandler(object):
         if "_oneway" in kwargs and kwargs.pop("_oneway"):
             oneway = True
 
+        upgrade = False
+        if "_upgrade" in kwargs and kwargs.pop("_upgrade"):
+            upgrade = True
+
         method = self._interface.get_method(method_name)
 
         parameters = self._interface.filter_params("client.call", method.in_type, False, args, kwargs)
@@ -133,6 +137,9 @@ class ClientInterfaceHandler(object):
 
         if oneway:
             out['oneway'] = True
+
+        if upgrade:
+            out['upgrade'] = True
 
         if parameters:
             out['parameters'] = parameters
