@@ -27,11 +27,15 @@ def varlink_call(args):
     method = args.METHOD[deli + 1:]
     interface = args.METHOD[:deli]
 
-    def new_client(interface):
-        deli = interface.rfind("/")
-        if deli != -1:
-            address = interface[:deli]
-            interface = interface[deli + 1:]
+    deli = interface.rfind("/")
+    if deli != -1:
+        address = interface[:deli]
+        interface = interface[deli + 1:]
+    else:
+        address = None
+
+    def new_client(address):
+        if address:
             client = varlink.Client.new_with_address(address)
         else:
             if args.activate:
@@ -42,7 +46,7 @@ def varlink_call(args):
                 client = varlink.Client.new_with_resolved_interface(interface, args.resolver)
         return client
 
-    with new_client(interface) as client:
+    with new_client(address) as client:
         got = False
         try:
             with client.open(interface) as con:
