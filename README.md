@@ -56,6 +56,11 @@ method StopServing() -> ()
 # Something failed in TestMore
 error TestMoreError (reason: string)
 
+$ python -m varlink.cli call unix:/tmp/test/org.example.more.Ping '{ "ping": "Ping"}'
+{
+  "pong": "Ping"
+}
+ 
 
 $ fg
 python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test"
