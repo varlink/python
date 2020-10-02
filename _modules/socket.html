@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>socket &#8212; varlink  documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +12,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
@@ -101,8 +99,8 @@
 <span class="n">EAGAIN</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">errno</span><span class="p">,</span> <span class="s1">&#39;EAGAIN&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
 <span class="n">EWOULDBLOCK</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">errno</span><span class="p">,</span> <span class="s1">&#39;EWOULDBLOCK&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fromfd&quot;</span><span class="p">,</span> <span class="s2">&quot;getfqdn&quot;</span><span class="p">,</span> <span class="s2">&quot;create_connection&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;AddressFamily&quot;</span><span class="p">,</span> <span class="s2">&quot;SocketKind&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fromfd&quot;</span><span class="p">,</span> <span class="s2">&quot;getfqdn&quot;</span><span class="p">,</span> <span class="s2">&quot;create_connection&quot;</span><span class="p">,</span> <span class="s2">&quot;create_server&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;has_dualstack_ipv6&quot;</span><span class="p">,</span> <span class="s2">&quot;AddressFamily&quot;</span><span class="p">,</span> <span class="s2">&quot;SocketKind&quot;</span><span class="p">]</span>
 <span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">_get_exports_list</span><span class="p">(</span><span class="n">_socket</span><span class="p">))</span>
 
 <span class="c1"># Set up the socket.AF_* socket.SOCK_* constants as members of IntEnums for</span>
@@ -111,22 +109,22 @@
 <span class="c1"># in this module understands the enums and translates them back from integers</span>
 <span class="c1"># where needed (e.g. .family property of a socket object).</span>
 
-<span class="n">IntEnum</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+<span class="n">IntEnum</span><span class="o">.</span><span class="n">_convert_</span><span class="p">(</span>
         <span class="s1">&#39;AddressFamily&#39;</span><span class="p">,</span>
         <span class="vm">__name__</span><span class="p">,</span>
         <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;AF_&#39;</span><span class="p">))</span>
 
-<span class="n">IntEnum</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+<span class="n">IntEnum</span><span class="o">.</span><span class="n">_convert_</span><span class="p">(</span>
         <span class="s1">&#39;SocketKind&#39;</span><span class="p">,</span>
         <span class="vm">__name__</span><span class="p">,</span>
         <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;SOCK_&#39;</span><span class="p">))</span>
 
-<span class="n">IntFlag</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+<span class="n">IntFlag</span><span class="o">.</span><span class="n">_convert_</span><span class="p">(</span>
         <span class="s1">&#39;MsgFlag&#39;</span><span class="p">,</span>
         <span class="vm">__name__</span><span class="p">,</span>
         <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;MSG_&#39;</span><span class="p">))</span>
 
-<span class="n">IntFlag</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+<span class="n">IntFlag</span><span class="o">.</span><span class="n">_convert_</span><span class="p">(</span>
         <span class="s1">&#39;AddressInfo&#39;</span><span class="p">,</span>
         <span class="vm">__name__</span><span class="p">,</span>
         <span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">C</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;AI_&#39;</span><span class="p">))</span>
@@ -150,21 +148,101 @@
 <span class="c1"># WSA error codes</span>
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;win&quot;</span><span class="p">):</span>
     <span class="n">errorTab</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Specified event object handle is invalid.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Insufficient memory available.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">87</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;One or more parameters are invalid.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">995</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Overlapped operation aborted.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">996</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Overlapped I/O event object not in signaled state.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">997</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Overlapped operation will complete later.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10004</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The operation was interrupted.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10009</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;A bad file handle was passed.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10013</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Permission denied.&quot;</span>
-    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10014</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;A fault occurred on the network??&quot;</span> <span class="c1"># WSAEFAULT</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10014</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;A fault occurred on the network??&quot;</span>  <span class="c1"># WSAEFAULT</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10022</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;An invalid operation was attempted.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10024</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Too many open files.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10035</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The socket operation would block&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10036</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;A blocking operation is already in progress.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10037</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Operation already in progress.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10038</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Socket operation on nonsocket.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10039</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Destination address required.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10040</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Message too long.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10041</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Protocol wrong type for socket.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10042</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Bad protocol option.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10043</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Protocol not supported.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10044</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Socket type not supported.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10045</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Operation not supported.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10046</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Protocol family not supported.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10047</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Address family not supported by protocol family.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10048</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The network address is in use.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10049</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Cannot assign requested address.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10050</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Network is down.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10051</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Network is unreachable.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10052</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Network dropped connection on reset.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10053</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Software caused connection abort.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10054</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The connection has been reset.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10055</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;No buffer space available.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10056</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Socket is already connected.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10057</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Socket is not connected.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10058</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The network has been shut down.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10059</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Too many references.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10060</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The operation timed out.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10061</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Connection refused.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10062</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Cannot translate name.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10063</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The name is too long.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10064</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The host is down.&quot;</span>
     <span class="n">errorTab</span><span class="p">[</span><span class="mi">10065</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;The host is unreachable.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10066</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Directory not empty.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10067</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Too many processes.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10068</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;User quota exceeded.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10069</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Disk quota exceeded.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10070</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Stale file handle reference.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10071</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Item is remote.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10091</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Network subsystem is unavailable.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10092</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Winsock.dll version out of range.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10093</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Successful WSAStartup not yet performed.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10101</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Graceful shutdown in progress.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10102</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;No more results from WSALookupServiceNext.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10103</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Call has been canceled.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10104</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Procedure call table is invalid.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10105</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Service provider is invalid.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10106</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Service provider failed to initialize.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10107</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;System call failure.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10108</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Service not found.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10109</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Class type not found.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10110</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;No more results from WSALookupServiceNext.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10111</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Call was canceled.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">10112</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Database query was refused.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11001</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Host not found.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11002</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Nonauthoritative host not found.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11003</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;This is a nonrecoverable error.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11004</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Valid name, no data record requested type.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11005</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS receivers.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11006</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS senders.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11007</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;No QoS senders.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11008</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS no receivers.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11009</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS request confirmed.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11010</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS admission error.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11011</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS policy failure.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11012</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS bad style.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11013</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS bad object.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11014</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS traffic control error.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11015</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS generic error.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11016</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS service type error.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11017</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;QoS flowspec error.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11018</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS provider buffer.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11019</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS filter style.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11020</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS filter style.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11021</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Incorrect QoS filter count.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11022</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS object length.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11023</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Incorrect QoS flow count.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11024</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Unrecognized QoS object.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11025</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS policy object.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11026</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS flow descriptor.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11027</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS provider-specific flowspec.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11028</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS provider-specific filterspec.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11029</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS shape discard mode object.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11030</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Invalid QoS shaping rate object.&quot;</span>
+    <span class="n">errorTab</span><span class="p">[</span><span class="mi">11031</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Reserved policy QoS element type.&quot;</span>
     <span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;errorTab&quot;</span><span class="p">)</span>
 
 
@@ -230,7 +308,7 @@
         <span class="k">return</span> <span class="n">s</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot serialize socket object&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;cannot pickle </span><span class="si">{self.__class__.__name__!r}</span><span class="s2"> object&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;dup() -&gt; socket object</span>
@@ -316,8 +394,8 @@
                 <span class="k">raise</span> <span class="n">_GiveupOnSendfile</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>  <span class="c1"># not a regular file</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">fsize</span><span class="p">:</span>
                 <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># empty file</span>
-            <span class="n">blocksize</span> <span class="o">=</span> <span class="n">fsize</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">count</span> <span class="k">else</span> <span class="n">count</span>
-
+            <span class="c1"># Truncate to 1GiB to avoid OverflowError, see bpo-38319.</span>
+            <span class="n">blocksize</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">count</span> <span class="ow">or</span> <span class="n">fsize</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">30</span><span class="p">)</span>
             <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gettimeout</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;non-blocking sockets are not supported&quot;</span><span class="p">)</span>
@@ -765,9 +843,99 @@
                 <span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">err</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">err</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">err</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Break explicitly a reference cycle</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">error</span><span class="p">(</span><span class="s2">&quot;getaddrinfo returns an empty list&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">has_dualstack_ipv6</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return True if the platform supports creating a SOCK_STREAM socket</span>
+<span class="sd">    which can handle both AF_INET and AF_INET6 (IPv4 / IPv6) connections.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_ipv6</span> \
+            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="p">,</span> <span class="s1">&#39;IPPROTO_IPV6&#39;</span><span class="p">)</span> \
+            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="p">,</span> <span class="s1">&#39;IPV6_V6ONLY&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET6</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">)</span> <span class="k">as</span> <span class="n">sock</span><span class="p">:</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">IPPROTO_IPV6</span><span class="p">,</span> <span class="n">IPV6_V6ONLY</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">create_server</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">backlog</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reuse_port</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">dualstack_ipv6</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience function which creates a SOCK_STREAM type socket</span>
+<span class="sd">    bound to *address* (a 2-tuple (host, port)) and return the socket</span>
+<span class="sd">    object.</span>
+
+<span class="sd">    *family* should be either AF_INET or AF_INET6.</span>
+<span class="sd">    *backlog* is the queue size passed to socket.listen().</span>
+<span class="sd">    *reuse_port* dictates whether to use the SO_REUSEPORT socket option.</span>
+<span class="sd">    *dualstack_ipv6*: if true and the platform supports it, it will</span>
+<span class="sd">    create an AF_INET6 socket able to accept both IPv4 or IPv6</span>
+<span class="sd">    connections. When false it will explicitly disable this option on</span>
+<span class="sd">    platforms that enable it by default (e.g. Linux).</span>
+
+<span class="sd">    &gt;&gt;&gt; with create_server((&#39;&#39;, 8000)) as server:</span>
+<span class="sd">    ...     while True:</span>
+<span class="sd">    ...         conn, addr = server.accept()</span>
+<span class="sd">    ...         # handle new connection</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">reuse_port</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="p">,</span> <span class="s2">&quot;SO_REUSEPORT&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SO_REUSEPORT not supported on this platform&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dualstack_ipv6</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_dualstack_ipv6</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dualstack_ipv6 not supported on this platform&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">family</span> <span class="o">!=</span> <span class="n">AF_INET6</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dualstack_ipv6 requires AF_INET6 family&quot;</span><span class="p">)</span>
+    <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">family</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Note about Windows. We don&#39;t set SO_REUSEADDR because:</span>
+        <span class="c1"># 1) It&#39;s unnecessary: bind() will succeed even in case of a</span>
+        <span class="c1"># previous closed socket on the same address and still in</span>
+        <span class="c1"># TIME_WAIT state.</span>
+        <span class="c1"># 2) If set, another socket is free to bind() on the same</span>
+        <span class="c1"># address, effectively preventing this one from accepting</span>
+        <span class="c1"># connections. Also, it may set the process in a state where</span>
+        <span class="c1"># it&#39;ll no longer respond to any signals or graceful kills.</span>
+        <span class="c1"># See: msdn2.microsoft.com/en-us/library/ms740621(VS.85).aspx</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;nt&#39;</span><span class="p">,</span> <span class="s1">&#39;cygwin&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="p">,</span> <span class="s1">&#39;SO_REUSEADDR&#39;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sock</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_REUSEADDR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">error</span><span class="p">:</span>
+                <span class="c1"># Fail later on bind(), for platforms which may not</span>
+                <span class="c1"># support this option.</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">reuse_port</span><span class="p">:</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_REUSEPORT</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_ipv6</span> <span class="ow">and</span> <span class="n">family</span> <span class="o">==</span> <span class="n">AF_INET6</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dualstack_ipv6</span><span class="p">:</span>
+                <span class="n">sock</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">IPPROTO_IPV6</span><span class="p">,</span> <span class="n">IPV6_V6ONLY</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="p">,</span> <span class="s2">&quot;IPV6_V6ONLY&quot;</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="nb">hasattr</span><span class="p">(</span><span class="n">_socket</span><span class="p">,</span> <span class="s2">&quot;IPPROTO_IPV6&quot;</span><span class="p">):</span>
+                <span class="n">sock</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">IPPROTO_IPV6</span><span class="p">,</span> <span class="n">IPV6_V6ONLY</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">error</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (while attempting to bind on address </span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">strerror</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">error</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">errno</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">None</span>
+        <span class="k">if</span> <span class="n">backlog</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">listen</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="n">backlog</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sock</span>
+    <span class="k">except</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">raise</span>
+
 
 <span class="k">def</span> <span class="nf">getaddrinfo</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Resolve host and port into list of address info entries.</span>
@@ -800,13 +968,11 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -830,7 +996,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Harald Hoyer&lt;harald@redhat.com&gt;, Lars Karlitski&lt;lars@karlitski.net&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
     </div>
   </body>
 </html>
