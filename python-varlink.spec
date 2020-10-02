@@ -14,6 +14,7 @@ BuildArch:      noarch
 BuildRequires:  python2-devel
 BuildRequires:  python-rpm-macros
 BuildRequires:  python-setuptools
+BuildRequires:  python-setuptools_scm
 
 %if 0%{?build_py3}
 BuildRequires:  python3-devel
