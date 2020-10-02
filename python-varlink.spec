@@ -3,7 +3,7 @@
 %endif
 
 Name:           python-varlink
-Version: 	30.2.0
+Version: 	30.3.1
 Release:        1%{?dist}
 Summary:        Python implementation of Varlink
 License:        ASL 2.0
@@ -48,6 +48,7 @@ Summary:       %summary
 %autosetup -n python-%{version}
 
 %build
+export SETUPTOOLS_SCM_PRETEND_VERSION=%{version}
 %py2_build
 %if 0%{?build_py3}
 %py3_build
@@ -56,10 +57,12 @@ Summary:       %summary
 
 %if 0%{?build_py3}
 %check
+export SETUPTOOLS_SCM_PRETEND_VERSION=%{version}
 CFLAGS="%{optflags}" %{__python3} %{py_setup} %{?py_setup_args} check
 %endif
 
 %install
+export SETUPTOOLS_SCM_PRETEND_VERSION=%{version}
 %py2_install
 %if 0%{?build_py3}
 %py3_install
