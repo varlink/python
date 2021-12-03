@@ -6,6 +6,7 @@ try:
     from builtins import str
     from builtins import int
     from builtins import object
+    from builtins import unicode
 except ImportError:
     pass
 
@@ -21,7 +22,12 @@ try:
 except:  # Python 2
     from argparse import Namespace as SimpleNamespace
 
-from collections import (Set, OrderedDict, Mapping)
+try:
+    from collections.abc import (Set, Mapping)
+except:  # Python 2
+    from collections import (Set, Mapping)
+
+from collections import OrderedDict
 
 from .error import (MethodNotFound, InvalidParameter)
 
@@ -335,7 +341,7 @@ class Interface(object):
         if isinstance(varlink_type, _Object):
             return args
 
-        if isinstance(varlink_type, _Enum) and isinstance(args, str):
+        if isinstance(varlink_type, _Enum) and ( isinstance(args, str) or isinstance(args, unicode) ):
             # print("Returned str:", args)
             return args
 
