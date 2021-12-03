@@ -299,7 +299,8 @@ class MockedService():
 
     def service_start(self):
         self.service_pid = subprocess.Popen(
-            [sys.executable, self.mocked_service_file]
+            [sys.executable, self.mocked_service_file],
+            env = { "PYTHONPATH": ':'.join(sys.path) }
         )
         time.sleep(2)
 
