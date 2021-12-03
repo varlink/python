@@ -456,7 +456,7 @@ class TestService(unittest.TestCase):
         if hasattr(socket, "AF_UNIX"):
             cls.address = "unix:org.varlink.certification_" \
                           + str(os.getpid()) \
-                          + threading.current_thread().getName()
+                          + threading.current_thread().name
         else:
             cls.address = "tcp:127.0.0.1:23456"
 
