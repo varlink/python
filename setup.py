@@ -8,5 +8,6 @@ def local_scheme(_):
     return ""
 
 setup(
-    use_scm_version={"local_scheme": local_scheme},
+    use_scm_version={"local_scheme": "no-local-version"},
+    setup_requires=['setuptools_scm'],
 )
