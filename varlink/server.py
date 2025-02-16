@@ -76,7 +76,7 @@ class Service(object):
     def __init__(self, vendor='', product='', version='', url='', interface_dir='.', namespaced=False):
         """Initialize the service with the data org.varlink.service.GetInfo() returns
 
-        :param interface_dir: the directory with the \*.varlink files for the interfaces
+        :param interface_dir: the directory with the \\*.varlink files for the interfaces
 
         """
         self.vendor = vendor
