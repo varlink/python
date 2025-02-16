@@ -231,7 +231,7 @@ def mockedservice(fake_service=None, fake_types=None,
                 try:
                     func(*args, **kwargs)
                 except BrokenPipeError:
-                    # manage fake service stoping
+                    # manage fake service stopping
                     pass
             return
         return wrapper
