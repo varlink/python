@@ -143,7 +143,7 @@ class Scanner(object):
         if not self.get(')'):
             while True:
                 name = self.expect('identifier')
-                if _isenum == None:
+                if _isenum is None:
                     if self.get(':'):
                         _isenum = False
                         fields[name] = self.read_type()
@@ -314,12 +314,12 @@ class Interface(object):
         # print("filter_params", type(varlink_type), repr(varlink_type), args, kwargs, type(args))
 
         if isinstance(varlink_type, _Maybe):
-            if args == None:
+            if args is None:
                 return None
             return self.filter_params(parent_name, varlink_type.element_type, _namespaced, args, kwargs)
 
         if isinstance(varlink_type, _Dict):
-            if args == None:
+            if args is None:
                 return {}
 
             if isinstance(args, Mapping):
@@ -346,7 +346,7 @@ class Interface(object):
             return args
 
         if isinstance(varlink_type, _Array):
-            if args == None:
+            if args is None:
                 return []
 
             return [self.filter_params(parent_name + '[]', varlink_type.element_type, _namespaced, x, None) for x in
@@ -398,7 +398,7 @@ class Interface(object):
                         args = None
                     ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
                                              None)
-                    if ret != None:
+                    if ret is not None:
                         # print("SetOUT:", name)
                         if _namespaced:
                             setattr(out, name, ret)
@@ -409,7 +409,7 @@ class Interface(object):
                     if name in kwargs:
                         ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced,
                                                  kwargs[name], None)
-                        if ret != None:
+                        if ret is not None:
                             # print("SetOUT:", name)
                             if _namespaced:
                                 setattr(out, name, ret)
@@ -425,7 +425,7 @@ class Interface(object):
                     val = varlink_struct[name]
                     ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
                                              None)
-                    if ret != None:
+                    if ret is not None:
                         # print("SetOUT:", name)
                         if _namespaced:
                             setattr(out, name, ret)
@@ -435,7 +435,7 @@ class Interface(object):
                     val = getattr(varlink_struct, name)
                     ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
                                              None)
-                    if ret != None:
+                    if ret is not None:
                         # print("SetOUT:", name)
                         if _namespaced:
                             setattr(out, name, ret)

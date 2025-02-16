@@ -329,11 +329,11 @@ class CertService(object):
         }
 
         if "nullable" in mytype:
-            self.assert_cmp(client_id, _server, _raw, wants, mytype["nullable"] == None)
+            self.assert_cmp(client_id, _server, _raw, wants, mytype["nullable"] is None)
             del mytype["nullable"]
 
         if "nullable_array_struct" in mytype:
-            self.assert_cmp(client_id, _server, _raw, wants, mytype["nullable_array_struct"] == None)
+            self.assert_cmp(client_id, _server, _raw, wants, mytype["nullable_array_struct"] is None)
             del mytype["nullable_array_struct"]
 
         self.assert_cmp(client_id, _server, _raw, wants, mytype == wants["parameters"]["mytype"])

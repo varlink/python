@@ -110,7 +110,7 @@ class ClientInterfaceHandler(object):
         if 'parameters' not in message:
             message['parameters'] = {}
 
-        if 'error' in message and message["error"] != None:
+        if 'error' in message and message["error"] is not None:
             self._in_use = False
             e = VarlinkError.new(message, self._namespaced)
             raise e
@@ -566,7 +566,7 @@ class Client(object):
         return self
 
     def cleanup(self):
-        if hasattr(self, "_tmpdir") and self._tmpdir != None:
+        if hasattr(self, "_tmpdir") and self._tmpdir is not None:
             try:
                 shutil.rmtree(self._tmpdir)
             except FileNotFoundError:
