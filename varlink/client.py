@@ -107,7 +107,7 @@ class ClientInterfaceHandler(object):
         message = next(self._next_message())
 
         message = json.loads(message)
-        if not 'parameters' in message:
+        if 'parameters' not in message:
             message['parameters'] = {}
 
         if 'error' in message and message["error"] != None:
