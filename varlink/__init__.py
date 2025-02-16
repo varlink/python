@@ -44,7 +44,7 @@ def load_tests(loader, tests, pattern):
     import sys
     from fnmatch import fnmatch
 
-    if pattern == None:
+    if pattern is None:
         pattern = "test_*.py"
 
     # top level directory cached on loader instance

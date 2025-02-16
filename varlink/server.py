@@ -122,7 +122,7 @@ class Service(object):
             method = interface.get_method(method_name)
 
             parameters = message.get('parameters', {})
-            if parameters == None:
+            if parameters is None:
                 parameters = {}
 
             handler = self.interfaces_handlers[interface.name]
@@ -240,7 +240,7 @@ class Service(object):
         string = message.decode('utf-8')
         handle = self._handle(json.loads(string), message, _server, _request)
         for out in handle:
-            if out == None:
+            if out is None:
                 return
             try:
                 yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
@@ -346,7 +346,7 @@ class RequestHandler(StreamRequestHandler):
                 continue
 
             for reply in self.service.handle(message, _server=self.server, _request=self.request):
-                if reply != None:
+                if reply is not None:
                     self.wfile.write(reply + b'\0')
 
             message = b''

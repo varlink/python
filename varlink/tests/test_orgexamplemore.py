@@ -51,15 +51,15 @@ def run_client(client):
                 client.open('org.example.more', namespaced=True) as con2:
 
             for m in con1.TestMore(10, _more=True):
-                if hasattr(m.state, 'start') and m.state.start != None:
+                if hasattr(m.state, 'start') and m.state.start is not None:
                     if m.state.start:
                         print("--- Start ---", file=sys.stderr)
 
-                if hasattr(m.state, 'end') and m.state.end != None:
+                if hasattr(m.state, 'end') and m.state.end is not None:
                     if m.state.end:
                         print("--- End ---", file=sys.stderr)
 
-                if hasattr(m.state, 'progress') and m.state.progress != None:
+                if hasattr(m.state, 'progress') and m.state.progress is not None:
                     print("Progress:", m.state.progress, file=sys.stderr)
                     if m.state.progress > 50:
                         ret = con2.Ping("Test")
