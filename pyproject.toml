@@ -1,9 +1,7 @@
 [build-system]
 requires = [
-    "setuptools >= 44; python_version < '3'",
-    "setuptools >= 48; python_version > '3'",
-    "setuptools_scm >= 4, <6; python_version < '3'",
-    "setuptools_scm[toml]; python_version > '3'",
+    "setuptools >= 48",
+    "setuptools_scm[toml]",
     "setuptools_scm_git_archive",
     "wheel >= 0.29.0",
 ]
