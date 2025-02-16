@@ -1,4 +1,3 @@
-import time
 import unittest
 from varlink import mock
 import varlink
