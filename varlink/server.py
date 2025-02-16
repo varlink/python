@@ -9,7 +9,6 @@ import os
 import socket
 import stat
 import string
-import sys
 
 try:
     from builtins import int
@@ -360,6 +359,7 @@ class Server(BaseServer):
 
         >>> import varlink
         >>> import os
+        >>> import sys
         >>>
         >>> service = varlink.Service(vendor='Example', product='Examples', version='1', url='http://example.com',
         >>>    interface_dir=os.path.dirname(__file__))
