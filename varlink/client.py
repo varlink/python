@@ -14,7 +14,7 @@ from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder)
 from .scanner import (Interface, _Method)
 
 
-class ClientInterfaceHandler(object):
+class ClientInterfaceHandler:
     """Base class for varlink client, which wraps varlink methods of an interface to the class"""
 
     def __init__(self, interface, namespaced=False):
@@ -281,7 +281,7 @@ def pipe_bridge(reader, writer):
             return
 
 
-class Client(object):
+class Client:
     """Varlink client class.
 
         >>> with varlink.Client("unix:/run/org.example.ping") as client, client.open('org.example.ping') as connection:

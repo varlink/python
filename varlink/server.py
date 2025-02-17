@@ -19,7 +19,7 @@ if hasattr(os, "fork"):
 from types import GeneratorType
 
 
-class Service(object):
+class Service:
     """Varlink service server handler
 
     To use the Service, a global object is instantiated:

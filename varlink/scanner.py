@@ -10,7 +10,7 @@ from collections import OrderedDict
 from .error import (MethodNotFound, InvalidParameter)
 
 
-class Scanner(object):
+class Scanner:
     """Class for scanning a varlink interface definition."""
 
     def __init__(self, string):
@@ -195,47 +195,47 @@ class Scanner(object):
             raise SyntaxError('expected type, method, or error')
 
 
-class _Object(object):
+class _Object:
     pass
 
 
-class _Struct(object):
+class _Struct:
 
     def __init__(self, fields):
         self.fields = OrderedDict(fields)
 
 
-class _Enum(object):
+class _Enum:
 
     def __init__(self, fields):
         self.fields = fields
 
 
-class _Array(object):
+class _Array:
 
     def __init__(self, element_type):
         self.element_type = element_type
 
 
-class _Maybe(object):
+class _Maybe:
 
     def __init__(self, element_type):
         self.element_type = element_type
 
 
-class _Dict(object):
+class _Dict:
 
     def __init__(self, element_type):
         self.element_type = element_type
 
 
-class _CustomType(object):
+class _CustomType:
 
     def __init__(self, name):
         self.name = name
 
 
-class _Alias(object):
+class _Alias:
 
     def __init__(self, name, varlink_type, doc=None):
         self.name = name
@@ -243,7 +243,7 @@ class _Alias(object):
         self.doc = doc
 
 
-class _Method(object):
+class _Method:
 
     def __init__(self, name, in_type, out_type, _signature, doc=None):
         self.name = name
@@ -253,7 +253,7 @@ class _Method(object):
         self.doc = doc
 
 
-class _Error(object):
+class _Error:
 
     def __init__(self, name, varlink_type, doc=None):
         self.name = name
@@ -261,7 +261,7 @@ class _Error(object):
         self.doc = doc
 
 
-class Interface(object):
+class Interface:
     """Class for a parsed varlink interface definition."""
 
     def __init__(self, description):
