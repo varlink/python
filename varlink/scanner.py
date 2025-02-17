@@ -1,31 +1,9 @@
 #!-*-coding:utf8-*-
-from __future__ import print_function
-from __future__ import unicode_literals
-
-try:
-    from builtins import str
-    from builtins import int
-    from builtins import object
-    from builtins import unicode
-except ImportError:
-    pass
 
 import re
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
-try:
-    from types import SimpleNamespace
-except:  # Python 2
-    from argparse import Namespace as SimpleNamespace
-
-try:
-    from collections.abc import (Set, Mapping)
-except:  # Python 2
-    from collections import (Set, Mapping)
+from types import SimpleNamespace
+from collections.abc import (Set, Mapping)
 
 from collections import OrderedDict
 
@@ -341,7 +319,7 @@ class Interface(object):
         if isinstance(varlink_type, _Object):
             return args
 
-        if isinstance(varlink_type, _Enum) and ( isinstance(args, str) or isinstance(args, unicode) ):
+        if isinstance(varlink_type, _Enum) and isinstance(args, str):
             # print("Returned str:", args)
             return args
 
@@ -356,7 +334,7 @@ class Interface(object):
             # print("Returned set:", set(args))
             return set(args)
 
-        if isinstance(varlink_type, basestring) and isinstance(args, basestring):
+        if isinstance(varlink_type, str) and isinstance(args, str):
             return args
 
         if isinstance(varlink_type, float) and (isinstance(args, float) or isinstance(args, int)):

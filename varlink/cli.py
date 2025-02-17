@@ -6,9 +6,6 @@ $ python -m varlink.cli --help
 
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import json
 import shlex
@@ -60,7 +57,7 @@ def varlink_call(args):
                         got = True
         except varlink.VarlinkError as e:
             print(e, file=sys.stderr)
-        except varlink.BrokenPipeError:
+        except BrokenPipeError:
             if not got or args.more:
                 print("Connection closed")
                 sys.exit(1)

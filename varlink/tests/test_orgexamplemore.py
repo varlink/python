@@ -16,9 +16,6 @@ or::
 
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import os
 import shlex
@@ -29,14 +26,6 @@ import threading
 import time
 import unittest
 from sys import platform
-
-try:
-    from builtins import int
-    from builtins import next
-    from builtins import object
-    from builtins import range
-except ImportError:
-    pass
 
 import varlink
 
@@ -65,7 +54,7 @@ def run_client(client):
                         ret = con2.Ping("Test")
                         print("Ping: ", ret.pong)
 
-    except varlink.ConnectionError as e:
+    except ConnectionError as e:
         print("ConnectionError:", e)
         raise e
     except varlink.VarlinkError as e:
@@ -285,7 +274,7 @@ class TestService(unittest.TestCase):
 
                 con1.StopServing(_oneway=True)
                 time.sleep(0.5)
-                self.assertRaises(varlink.ConnectionError, con1.Ping, "Test")
+                self.assertRaises(ConnectionError, con1.Ping, "Test")
         finally:
             server.shutdown()
             server.server_close()

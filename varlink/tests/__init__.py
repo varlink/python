@@ -8,9 +8,6 @@ loader = unittest.defaultTestLoader
 def suite():
     suite = unittest.TestSuite()
     for fn in os.listdir(here):
-        if fn.startswith("test_mocks") and sys.version_info.major < 3:
-            continue
-
         if fn.startswith("test") and fn.endswith(".py"):
             modname = "varlink.tests." + fn[:-3]
             __import__(modname)

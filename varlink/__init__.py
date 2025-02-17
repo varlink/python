@@ -19,19 +19,19 @@ if hasattr(os, "fork"):
     __all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
                'Service', 'RequestHandler', 'Server', 'ThreadingServer', 'ForkingServer',
                'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
-               'ConnectionError', 'VarlinkEncoder', 'VarlinkError',
+               'VarlinkEncoder', 'VarlinkError',
                'Interface', 'Scanner', 'get_listen_fd']
     from .server import ForkingServer
 else:
     __all__ = ['Client', 'ClientInterfaceHandler', 'SimpleClientInterfaceHandler',
                'Service', 'RequestHandler', 'Server', 'ThreadingServer',
                'InterfaceNotFound', 'MethodNotFound', 'MethodNotImplemented', 'InvalidParameter',
-               'ConnectionError', 'VarlinkEncoder', 'VarlinkError',
+               'VarlinkEncoder', 'VarlinkError',
                'Interface', 'Scanner', 'get_listen_fd']
 
 from .client import (Client, ClientInterfaceHandler, SimpleClientInterfaceHandler)
 from .error import (VarlinkEncoder, VarlinkError, InvalidParameter, InterfaceNotFound, MethodNotImplemented,
-                    MethodNotFound, ConnectionError, BrokenPipeError)
+                    MethodNotFound)
 from .scanner import (Scanner, Interface)
 from .server import (Service, get_listen_fd, Server, ThreadingServer, RequestHandler)
 
@@ -51,8 +51,6 @@ def load_tests(loader, tests, pattern):
     test_dir = os.path.dirname(__file__) + "/tests"
     for fn in os.listdir(test_dir):
         if fnmatch(fn, pattern):
-            if sys.version_info[0] == 2 and fn == "test_mocks.py":
-                continue
             modname = "varlink.tests." + fn[:-3]
             __import__(modname)
             module = sys.modules[modname]

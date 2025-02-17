@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import codecs
 import getopt
 import json
@@ -15,13 +12,6 @@ import threading
 import time
 import unittest
 from sys import platform
-
-try:
-    from builtins import object
-    from builtins import range
-    from builtins import str
-except ImportError:
-    pass
 
 import varlink
 

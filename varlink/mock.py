@@ -10,10 +10,6 @@ import uuid
 import varlink
 
 
-if sys.version_info[0] == 2:
-    raise ImportError("The mock module isn't compatible with python 2")
-
-
 def cast_type(typeof):
     cast = {'str': 'string'}
     typeof = str(typeof).replace("<class '", "").replace("'>", "")
