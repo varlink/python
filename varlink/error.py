@@ -1,23 +1,7 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import json
 
-try:
-    from types import SimpleNamespace
 
-    ConnectionError = ConnectionError
-    BrokenPipeError = BrokenPipeError
-except:  # Python 2
-    from argparse import Namespace as SimpleNamespace
-
-
-    class ConnectionError(OSError):
-        pass
-
-
-    class BrokenPipeError(ConnectionError):
-        pass
+from types import SimpleNamespace
 
 
 class VarlinkEncoder(json.JSONEncoder):

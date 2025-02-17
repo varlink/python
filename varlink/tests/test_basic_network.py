@@ -1,16 +1,9 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import os
 import socket
 import threading
 import unittest
 from sys import platform
 
-try:
-    from builting import str
-except ImportError:
-    pass
 
 import varlink
 
@@ -70,5 +63,5 @@ class TestService(unittest.TestCase):
                         )
 
     def test_wrong_url(self):
-        self.assertRaises(varlink.ConnectionError, self.do_run,
+        self.assertRaises(ConnectionError, self.do_run,
                           "uenix:org.varlink.service_wrong_url_test_%d" % os.getpid())

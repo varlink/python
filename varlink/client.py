@@ -1,8 +1,5 @@
 # coding=utf-8
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import json
 import os
 import shutil
@@ -13,27 +10,8 @@ import tempfile
 import subprocess
 import threading
 
-try:
-    from builtins import next
-    from builtins import object
-    from builtins import open
-    from builtins import str
-except ImportError:
-    pass
-
-from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder, BrokenPipeError)
+from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder)
 from .scanner import (Interface, _Method)
-
-PY2 = sys.version_info[0] == 2
-PY3 = (sys.version_info[0] >= 3)
-
-if PY2:
-    FileNotFoundError = IOError
-    ChildProcessError = OSError
-
-
-class ConnectionError(OSError):
-    pass
 
 
 class ClientInterfaceHandler(object):
@@ -88,10 +66,7 @@ class ClientInterfaceHandler(object):
             else:
                 return self._call(method.name, *args, **kwargs)
 
-        if sys.version_info.major >= 3:
-            _wrapped.__name__ = method.name
-        else:
-            _wrapped.__name__ = method.name.encode("latin-1")
+        _wrapped.__name__ = method.name
 
         # FIXME: add comments
         if method.signature:

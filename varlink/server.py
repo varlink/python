@@ -1,8 +1,5 @@
 # coding=utf-8
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import inspect
 import json
 import os
@@ -10,28 +7,14 @@ import socket
 import stat
 import string
 
-try:
-    from builtins import int
-    from builtins import object
-    from builtins import open
-    from builtins import range
-except ImportError:
-    pass
-
-from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError,
-                    ConnectionError)
+from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError)
 from .scanner import Interface
 
-try:
-    from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn)
-except ImportError:  # Python2
-    from SocketServer import (StreamRequestHandler, BaseServer, ThreadingMixIn)
+
+from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn)
 
 if hasattr(os, "fork"):
-    try:
-        from socketserver import ForkingMixIn
-    except ImportError:  # Python2
-        from SocketServer import ForkingMixIn
+    from socketserver import ForkingMixIn
 
 from types import GeneratorType
 
