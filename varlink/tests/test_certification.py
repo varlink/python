@@ -83,7 +83,7 @@ class CertificationError(varlink.VarlinkError):
 
 
 @service.interface('org.varlink.certification')
-class CertService(object):
+class CertService:
     next_method = {}
 
     def new_client_id(self, _server):
