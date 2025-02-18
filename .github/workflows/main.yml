@@ -25,3 +25,22 @@ jobs:
 
     # Use GitHub's Linux Docker host
     runs-on: ubuntu-latest
+
+  lints:
+    name: Lints
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install ruff
+        run: |
+          python3 -m pip install --break-system-packages ruff
+      - name: Run ruff format
+        run: |
+          ruff --version
+          if ! ruff format --check --quiet varlink
+          then
+              echo "Please run 'ruff format' on the above files or apply the diffs below manually"
+              ruff format --check --quiet --diff varlink
+          fi
+    runs-on: ubuntu-latest
