@@ -5,6 +5,7 @@ import unittest
 here = os.path.dirname(__file__)
 loader = unittest.defaultTestLoader
 
+
 def suite():
     suite = unittest.TestSuite()
     for fn in os.listdir(here):

@@ -83,10 +83,18 @@ error ActionFailed (reason: ?ErrorChain)
 
     def test_interfacename(self):
         self.assertRaises(SyntaxError, varlink.Interface, "interface .a.b.c\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface com.-example.leadinghyphen\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface com.example-.danglinghyphen-\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface co9.example.number-toplevel\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface 1om.example.number-toplevel\nmethod F()->()")
+        self.assertRaises(
+            SyntaxError, varlink.Interface, "interface com.-example.leadinghyphen\nmethod F()->()"
+        )
+        self.assertRaises(
+            SyntaxError, varlink.Interface, "interface com.example-.danglinghyphen-\nmethod F()->()"
+        )
+        self.assertRaises(
+            SyntaxError, varlink.Interface, "interface co9.example.number-toplevel\nmethod F()->()"
+        )
+        self.assertRaises(
+            SyntaxError, varlink.Interface, "interface 1om.example.number-toplevel\nmethod F()->()"
+        )
         self.assertRaises(SyntaxError, varlink.Interface, "interface ab\nmethod F()->()")
         self.assertRaises(SyntaxError, varlink.Interface, "interface .a.b.c\nmethod F()->()")
         self.assertRaises(SyntaxError, varlink.Interface, "interface a.b.c.\nmethod F()->()")
@@ -107,5 +115,9 @@ error ActionFailed (reason: ?ErrorChain)
         self.assertIsNotNone(varlink.Interface("interface org.varlink.service\nmethod F()->()").name)
         self.assertIsNotNone(varlink.Interface("interface com.example.0example\nmethod F()->()").name)
         self.assertIsNotNone(varlink.Interface("interface com.example.example-dash\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface xn--lgbbat1ad8j.example.algeria\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()").name)
+        self.assertIsNotNone(
+            varlink.Interface("interface xn--lgbbat1ad8j.example.algeria\nmethod F()->()").name
+        )
+        self.assertIsNotNone(
+            varlink.Interface("interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()").name
+        )

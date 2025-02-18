@@ -7,11 +7,11 @@ import socket
 import stat
 import string
 
-from .error import (InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError)
+from .error import InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError
 from .scanner import Interface
 
 
-from socketserver import (StreamRequestHandler, BaseServer, ThreadingMixIn)
+from socketserver import StreamRequestHandler, BaseServer, ThreadingMixIn
 
 if hasattr(os, "fork"):
     from socketserver import ForkingMixIn
@@ -55,7 +55,7 @@ class Service:
 
     """
 
-    def __init__(self, vendor='', product='', version='', url='', interface_dir='.', namespaced=False):
+    def __init__(self, vendor="", product="", version="", url="", interface_dir=".", namespaced=False):
         """Initialize the service with the data org.varlink.service.GetInfo() returns
 
         :param interface_dir: the directory with the \\*.varlink files for the interfaces
@@ -71,16 +71,16 @@ class Service:
         self.interfaces = {}
         self.interfaces_handlers = {}
         directory = os.path.dirname(__file__)
-        self._add_interface(os.path.abspath(os.path.join(directory, 'org.varlink.service.varlink')), self)
+        self._add_interface(os.path.abspath(os.path.join(directory, "org.varlink.service.varlink")), self)
 
     def GetInfo(self):
         """The standardized org.varlink.service.GetInfo() varlink method."""
         return {
-            'vendor': self.vendor,
-            'product': self.product,
-            'version': self.version,
-            'url': self.url,
-            'interfaces': list(self.interfaces.keys())
+            "vendor": self.vendor,
+            "product": self.product,
+            "version": self.version,
+            "url": self.url,
+            "interfaces": list(self.interfaces.keys()),
         }
 
     def GetInterfaceDescription(self, interface):
@@ -90,11 +90,11 @@ class Service:
         except KeyError:
             raise InterfaceNotFound(interface)
 
-        return {'description': i.description}
+        return {"description": i.description}
 
     def _handle(self, message, raw_message, _server=None, _request=None):
         try:
-            interface_name, _, method_name = message.get('method', '').rpartition('.')
+            interface_name, _, method_name = message.get("method", "").rpartition(".")
             if not interface_name or not method_name:
                 raise InterfaceNotFound(interface_name)
 
@@ -104,7 +104,7 @@ class Service:
 
             method = interface.get_method(method_name)
 
-            parameters = message.get('parameters', {})
+            parameters = message.get("parameters", {})
             if parameters is None:
                 parameters = {}
 
@@ -118,7 +118,9 @@ class Service:
                 if name not in parameters:
                     parameters[name] = None
 
-            parameters = interface.filter_params("server.call", method.in_type, self._namespaced, parameters, None)
+            parameters = interface.filter_params(
+                "server.call", method.in_type, self._namespaced, parameters, None
+            )
 
             func = getattr(handler, method_name, None)
 
@@ -129,41 +131,50 @@ class Service:
 
             if hasattr(inspect, "signature"):
                 sig = inspect.signature(func)
-                arg_names = [(sig.parameters[k].kind in (
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY) and k or None) for k in
-                             sig.parameters.keys()]
+                arg_names = [
+                    (
+                        sig.parameters[k].kind
+                        in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+                        and k
+                        or None
+                    )
+                    for k in sig.parameters.keys()
+                ]
             else:
                 from itertools import izip
+
                 spec = inspect.getargspec(func)
                 matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
                 arg_names = dict(izip(*matched_args))
 
-            if message.get('more', False) or message.get('oneway', False) or message.get('upgrade', False):
-                if message.get('more', False) and '_more' in arg_names:
+            if message.get("more", False) or message.get("oneway", False) or message.get("upgrade", False):
+                if message.get("more", False) and "_more" in arg_names:
                     kwargs["_more"] = True
 
-                if message.get('oneway', False) and '_oneway' in arg_names:
+                if message.get("oneway", False) and "_oneway" in arg_names:
                     kwargs["_oneway"] = True
 
-                if message.get('upgrade', False) and '_upgrade' in arg_names:
+                if message.get("upgrade", False) and "_upgrade" in arg_names:
                     kwargs["_upgrade"] = True
 
-            if '_raw' in arg_names:
+            if "_raw" in arg_names:
                 kwargs["_raw"] = raw_message
-            if '_message' in arg_names:
+            if "_message" in arg_names:
                 kwargs["_message"] = message
-            if '_interface' in arg_names:
+            if "_interface" in arg_names:
                 kwargs["_interface"] = interface
-            if '_method' in arg_names:
+            if "_method" in arg_names:
                 kwargs["_method"] = method
-            if '_server' in arg_names:
+            if "_server" in arg_names:
                 kwargs["_server"] = _server
-            if '_request' in arg_names:
+            if "_request" in arg_names:
                 kwargs["_request"] = _request
 
             if self._namespaced:
                 # FIXME: check for Maybe before taking None as default value
-                out = func(*(getattr(parameters, k, default=None) for k in method.in_type.fields.keys()), **kwargs)
+                out = func(
+                    *(getattr(parameters, k, default=None) for k in method.in_type.fields.keys()), **kwargs
+                )
             else:
                 # FIXME: check for Maybe before taking None as default value
                 out = func(*(parameters.get(k) for k in method.in_type.fields.keys()), **kwargs)
@@ -178,17 +189,23 @@ class Service:
                             continue
 
                         cont = True
-                        if '_continues' in o:
-                            cont = o['_continues']
-                            del o['_continues']
-                            yield {'continues': bool(cont),
-                                   'parameters': interface.filter_params("server.reply", method.out_type,
-                                                                         self._namespaced, o,
-                                                                         None) or {}}
+                        if "_continues" in o:
+                            cont = o["_continues"]
+                            del o["_continues"]
+                            yield {
+                                "continues": bool(cont),
+                                "parameters": interface.filter_params(
+                                    "server.reply", method.out_type, self._namespaced, o, None
+                                )
+                                or {},
+                            }
                         else:
-                            yield {'parameters': interface.filter_params("server.reply", method.out_type,
-                                                                         self._namespaced, o,
-                                                                         None) or {}}
+                            yield {
+                                "parameters": interface.filter_params(
+                                    "server.reply", method.out_type, self._namespaced, o, None
+                                )
+                                or {}
+                            }
 
                         if not cont:
                             return
@@ -198,10 +215,10 @@ class Service:
                     except StopIteration:
                         pass
             else:
-                if message.get('oneway', False):
+                if message.get("oneway", False):
                     yield None
                 else:
-                    yield {'parameters': out or {}}
+                    yield {"parameters": out or {}}
 
         except VarlinkError as error:
             yield error
@@ -220,13 +237,13 @@ class Service:
         if message[-1] == 0:
             message = message[:-1]
 
-        string = message.decode('utf-8')
+        string = message.decode("utf-8")
         handle = self._handle(json.loads(string), message, _server, _request)
         for out in handle:
             if out is None:
                 return
             try:
-                yield json.dumps(out, cls=VarlinkEncoder).encode('utf-8')
+                yield json.dumps(out, cls=VarlinkEncoder).encode("utf-8")
             except ConnectionError as e:
                 try:
                     handle.throw(e)
@@ -235,7 +252,7 @@ class Service:
 
     def _add_interface(self, filename, handler):
         if not os.path.isabs(filename):
-            filename = os.path.join(self.interface_dir, filename + '.varlink')
+            filename = os.path.join(self.interface_dir, filename + ".varlink")
 
         with open(filename) as f:
             interface = Interface(f.read())
@@ -243,7 +260,7 @@ class Service:
             self.interfaces_handlers[interface.name] = handler
 
     def _set_interface(self, filename, interface_class):
-        if 'class' in str(type(interface_class)):
+        if "class" in str(type(interface_class)):
             ic = interface_class
         else:
             ic = interface_class()
@@ -251,7 +268,6 @@ class Service:
         return interface_class
 
     def interface(self, filename):
-
         def decorator(interface_class):
             self._add_interface(filename, interface_class())
             return interface_class
@@ -309,10 +325,11 @@ class RequestHandler(StreamRequestHandler):
     To use as an argument for the VarlinkServer constructor.
     Instantiate your own class and set the class variable service to your global :class:`Service` object.
     """
+
     service = None
 
     def handle(self):
-        message = b''
+        message = b""
 
         self.request.setblocking(True)
         while not self.rfile.closed:
@@ -321,18 +338,18 @@ class RequestHandler(StreamRequestHandler):
             except BrokenPipeError:
                 break
 
-            if c == b'':
+            if c == b"":
                 break
 
-            if c != b'\0':
+            if c != b"\0":
                 message += c
                 continue
 
             for reply in self.service.handle(message, _server=self.server, _request=self.request):
                 if reply is not None:
-                    self.wfile.write(reply + b'\0')
+                    self.wfile.write(reply + b"\0")
 
-            message = b''
+            message = b""
 
 
 class Server(BaseServer):
@@ -380,13 +397,13 @@ class Server(BaseServer):
         elif server_address.startswith("unix:"):
             self.address_family = socket.AF_UNIX
             address = server_address[5:]
-            m = address.rfind(';mode=')
+            m = address.rfind(";mode=")
             if m != -1:
-                self.mode = address[m + 6:]
+                self.mode = address[m + 6 :]
                 address = address[:m]
 
-            if address[0] == '@':
-                address = address.replace('@', '\0', 1)
+            if address[0] == "@":
+                address = address.replace("@", "\0", 1)
                 self.mode = None
             else:
                 self.remove_file = address
@@ -397,20 +414,28 @@ class Server(BaseServer):
 
         elif server_address.startswith("tcp:"):
             address = server_address[4:]
-            p = address.rfind(':')
+            p = address.rfind(":")
             if p != -1:
-                port = int(address[p + 1:])
+                port = int(address[p + 1 :])
                 address = address[:p]
             else:
                 raise ConnectionError("Invalid address 'tcp:%s'" % address)
-            address = address.replace('[', '')
-            address = address.replace(']', '')
+            address = address.replace("[", "")
+            address = address.replace("]", "")
 
             try:
-                res = socket.getaddrinfo(address, port, proto=socket.IPPROTO_TCP, flags=socket.AI_NUMERICHOST)
+                res = socket.getaddrinfo(
+                    address, port, proto=socket.IPPROTO_TCP, flags=socket.AI_NUMERICHOST
+                )
             except TypeError:
-                res = socket.getaddrinfo(address, port, self.address_family, self.socket_type, socket.IPPROTO_TCP,
-                                         socket.AI_NUMERICHOST)
+                res = socket.getaddrinfo(
+                    address,
+                    port,
+                    self.address_family,
+                    self.socket_type,
+                    socket.IPPROTO_TCP,
+                    socket.AI_NUMERICHOST,
+                )
 
             af, socktype, proto, canonname, sa = res[0]
             self.address_family = af
@@ -447,7 +472,7 @@ class Server(BaseServer):
         self.server_address = self.socket.getsockname()
 
         if self.server_address[0] == 0:
-            self.server_address = '@' + self.server_address[1:].decode('utf-8')
+            self.server_address = "@" + self.server_address[1:].decode("utf-8")
             if self.mode:
                 os.fchmod(self.socket.fileno(), mode=int(self.mode, 8))
         elif self.mode:
@@ -512,8 +537,11 @@ class Server(BaseServer):
         self.server_close()
 
 
-class ThreadingServer(ThreadingMixIn, Server): pass
+class ThreadingServer(ThreadingMixIn, Server):
+    pass
 
 
 if hasattr(os, "fork"):
-    class ForkingServer(ForkingMixIn, Server): pass
+
+    class ForkingServer(ForkingMixIn, Server):
+        pass

@@ -18,9 +18,10 @@ import varlink
 
 ######## CLIENT #############
 
+
 def run_client(client):
-    print('Connecting to %s\n' % client)
-    with client.open('org.varlink.certification') as con:
+    print("Connecting to %s\n" % client)
+    with client.open("org.varlink.certification") as con:
         ret = con.Start()
         client_id = ret["client_id"]
         print("client_id:", client_id)
@@ -56,11 +57,11 @@ def run_client(client):
 ######## SERVER #############
 
 service = varlink.Service(
-    vendor='Varlink',
-    product='Varlink Examples',
-    version='1',
-    url='http://varlink.org',
-    interface_dir=os.path.dirname(__file__)
+    vendor="Varlink",
+    product="Varlink Examples",
+    version="1",
+    url="http://varlink.org",
+    interface_dir=os.path.dirname(__file__),
 )
 
 
@@ -75,19 +76,22 @@ def sorted_json(dct):
 
 
 class CertificationError(varlink.VarlinkError):
-
     def __init__(self, wants, got):
-        varlink.VarlinkError.__init__(self,
-                                      {'error': 'org.varlink.certification.CertificationError',
-                                       'parameters': {'wants': wants, 'got': got}})
+        varlink.VarlinkError.__init__(
+            self,
+            {
+                "error": "org.varlink.certification.CertificationError",
+                "parameters": {"wants": wants, "got": got},
+            },
+        )
 
 
-@service.interface('org.varlink.certification')
+@service.interface("org.varlink.certification")
 class CertService:
     next_method = {}
 
     def new_client_id(self, _server):
-        client_id = codecs.getencoder('hex')(os.urandom(16))[0].decode("ascii")
+        client_id = codecs.getencoder("hex")(os.urandom(16))[0].decode("ascii")
         if not hasattr(_server, "next_method"):
             _server.next_method = {}
         if not hasattr(_server, "lifetimes"):
@@ -117,42 +121,55 @@ class CertService:
     def assert_raw(self, client_id, _server, _raw, _message, wants):
         if wants != _message:
             del _server.next_method[client_id]
-            raise CertificationError(wants, json.loads(_raw.decode('utf-8')))
+            raise CertificationError(wants, json.loads(_raw.decode("utf-8")))
 
     def assert_cmp(self, client_id, _server, _raw, wants, _bool):
         if not _bool:
             del _server.next_method[client_id]
-            raise CertificationError(wants, json.loads(_raw.decode('utf-8')))
+            raise CertificationError(wants, json.loads(_raw.decode("utf-8")))
 
     def assert_method(self, client_id, _server, from_method, next_method):
         if not hasattr(_server, "next_method") or client_id not in _server.next_method:
-            raise CertificationError({"method": "org.varlink.certification.Start+++"},
-                                     {"method": "org.varlink.certification." + from_method})
+            raise CertificationError(
+                {"method": "org.varlink.certification.Start+++"},
+                {"method": "org.varlink.certification." + from_method},
+            )
 
         self.check_lifetimes(_server)
 
         if from_method != _server.next_method[client_id]:
-            raise CertificationError("Call to method org.varlink.certification." + _server.next_method[client_id],
-                                     "Call to method org.varlink.certification." + from_method)
+            raise CertificationError(
+                "Call to method org.varlink.certification." + _server.next_method[client_id],
+                "Call to method org.varlink.certification." + from_method,
+            )
         _server.next_method[client_id] = next_method
 
     def Start(self, _server=None, _raw=None, _message=None, _oneway=False):
         client_id = self.new_client_id(_server)
-        if 'parameters' in _message and not _message['parameters']:
-            del _message['parameters']
+        if "parameters" in _message and not _message["parameters"]:
+            del _message["parameters"]
         self.assert_method(client_id, _server, "Start", "Test01")
-        self.assert_raw(client_id, _server, _raw, _message, {
-            "method": "org.varlink.certification.Start",
-        })
+        self.assert_raw(
+            client_id,
+            _server,
+            _raw,
+            _message,
+            {
+                "method": "org.varlink.certification.Start",
+            },
+        )
         return {"client_id": client_id}
 
     # () -> (bool: bool)
     def Test01(self, client_id, _server=None, _raw=None, _message=None):
         self.assert_method(client_id, _server, "Test01", "Test02")
-        self.assert_raw(client_id, _server, _raw, _message, {
-            "method": "org.varlink.certification.Test01",
-            "parameters": {"client_id": client_id}
-        })
+        self.assert_raw(
+            client_id,
+            _server,
+            _raw,
+            _message,
+            {"method": "org.varlink.certification.Test01", "parameters": {"client_id": client_id}},
+        )
         return {"bool": True}
 
     # (bool: bool) -> (int: int)
@@ -160,7 +177,7 @@ class CertService:
         self.assert_method(client_id, _server, "Test02", "Test03")
         wants = {
             "method": "org.varlink.certification.Test02",
-            "parameters": {"client_id": client_id, "bool": True}
+            "parameters": {"client_id": client_id, "bool": True},
         }
         self.assert_cmp(client_id, _server, _raw, wants, _bool == True)
         self.assert_raw(client_id, _server, _raw, _message, wants)
@@ -171,7 +188,7 @@ class CertService:
         self.assert_method(client_id, _server, "Test03", "Test04")
         wants = {
             "method": "org.varlink.certification.Test03",
-            "parameters": {"client_id": client_id, "int": 1}
+            "parameters": {"client_id": client_id, "int": 1},
         }
         self.assert_cmp(client_id, _server, _raw, wants, _int == 1)
         self.assert_raw(client_id, _server, _raw, _message, wants)
@@ -182,7 +199,7 @@ class CertService:
         self.assert_method(client_id, _server, "Test04", "Test05")
         wants = {
             "method": "org.varlink.certification.Test04",
-            "parameters": {"client_id": client_id, "float": 1.0}
+            "parameters": {"client_id": client_id, "float": 1.0},
         }
         self.assert_cmp(client_id, _server, _raw, wants, _float == 1.0)
         self.assert_raw(client_id, _server, _raw, _message, wants)
@@ -193,7 +210,7 @@ class CertService:
         self.assert_method(client_id, _server, "Test05", "Test06")
         wants = {
             "method": "org.varlink.certification.Test05",
-            "parameters": {"client_id": client_id, "string": "ping"}
+            "parameters": {"client_id": client_id, "string": "ping"},
         }
         self.assert_cmp(client_id, _server, _raw, wants, _string == "ping")
         self.assert_raw(client_id, _server, _raw, _message, wants)
@@ -210,8 +227,8 @@ class CertService:
                 "bool": False,
                 "int": 2,
                 "float": math.pi,
-                "string": "a lot of string"
-            }
+                "string": "a lot of string",
+            },
         }
         self.assert_raw(client_id, _server, _raw, _message, wants)
         self.assert_cmp(client_id, _server, _raw, wants, _int == 2)
@@ -228,8 +245,8 @@ class CertService:
             "method": "org.varlink.certification.Test07",
             "parameters": {
                 "client_id": client_id,
-                "struct": {"bool": False, "int": 2, "float": math.pi, "string": "a lot of string"}
-            }
+                "struct": {"bool": False, "int": 2, "float": math.pi, "string": "a lot of string"},
+            },
         }
         self.assert_raw(client_id, _server, _raw, _message, wants)
         self.assert_cmp(client_id, _server, _raw, wants, _dict["int"] == 2)
@@ -241,11 +258,16 @@ class CertService:
     # (map: [string]string) -> (set: [string]())
     def Test08(self, client_id, _map, _server=None, _raw=None, _message=None):
         self.assert_method(client_id, _server, "Test08", "Test09")
-        self.assert_raw(client_id, _server, _raw, _message,
-                        {
-                            "method": "org.varlink.certification.Test08",
-                            "parameters": {"client_id": client_id, "map": {"foo": "Foo", "bar": "Bar"}}
-                        })
+        self.assert_raw(
+            client_id,
+            _server,
+            _raw,
+            _message,
+            {
+                "method": "org.varlink.certification.Test08",
+                "parameters": {"client_id": client_id, "map": {"foo": "Foo", "bar": "Bar"}},
+            },
+        )
         return {"set": {"one", "two", "three"}}
 
     # (set: [string]()) -> (mytype: MyType)
@@ -253,10 +275,7 @@ class CertService:
         self.assert_method(client_id, _server, "Test09", "Test10")
         wants = {
             "method": "org.varlink.certification.Test09",
-            "parameters": {
-                "client_id": client_id,
-                "set": {"one": {}, "three": {}, "two": {}}
-            }
+            "parameters": {"client_id": client_id, "set": {"one": {}, "three": {}, "two": {}}},
         }
         self.assert_raw(client_id, _server, _raw, _message, wants)
         self.assert_cmp(client_id, _server, _raw, wants, isinstance(_set, set))
@@ -267,8 +286,10 @@ class CertService:
         return {
             "client_id": client_id,
             "mytype": {
-                "object": {"method": "org.varlink.certification.Test09",
-                           "parameters": {"map": {"foo": "Foo", "bar": "Bar"}}},
+                "object": {
+                    "method": "org.varlink.certification.Test09",
+                    "parameters": {"map": {"foo": "Foo", "bar": "Bar"}},
+                },
                 "enum": "two",
                 "struct": {"first": 1, "second": "2"},
                 "array": ["one", "two", "three"],
@@ -277,15 +298,10 @@ class CertService:
                 "nullable": None,
                 "nullable_array_struct": None,
                 "interface": {
-                    "foo": [
-                        None,
-                        {"foo": "foo", "bar": "bar"},
-                        None,
-                        {"one": "foo", "two": "bar"}
-                    ],
-                    "anon": {"foo": True, "bar": False}
-                }
-            }
+                    "foo": [None, {"foo": "foo", "bar": "bar"}, None, {"one": "foo", "two": "bar"}],
+                    "anon": {"foo": True, "bar": False},
+                },
+            },
         }
 
     # method Test10(mytype: MyType) -> (string: string)
@@ -298,24 +314,21 @@ class CertService:
             "parameters": {
                 "client_id": client_id,
                 "mytype": {
-                    "object": {"method": "org.varlink.certification.Test09",
-                               "parameters": {"map": {"foo": "Foo", "bar": "Bar"}}},
+                    "object": {
+                        "method": "org.varlink.certification.Test09",
+                        "parameters": {"map": {"foo": "Foo", "bar": "Bar"}},
+                    },
                     "enum": "two",
                     "struct": {"first": 1, "second": "2"},
                     "array": ["one", "two", "three"],
                     "dictionary": {"foo": "Foo", "bar": "Bar"},
                     "stringset": {"one", "two", "three"},
                     "interface": {
-                        "foo": [
-                            None,
-                            {"foo": "foo", "bar": "bar"},
-                            None,
-                            {"one": "foo", "two": "bar"}
-                        ],
-                        "anon": {"foo": True, "bar": False}
-                    }
-                }
-            }
+                        "foo": [None, {"foo": "foo", "bar": "bar"}, None, {"one": "foo", "two": "bar"}],
+                        "anon": {"foo": True, "bar": False},
+                    },
+                },
+            },
         }
 
         if "nullable" in mytype:
@@ -329,7 +342,7 @@ class CertService:
         self.assert_cmp(client_id, _server, _raw, wants, mytype == wants["parameters"]["mytype"])
 
         for i in range(1, 11):
-            yield {"string": "Reply number %d" % i, '_continues': i != 10}
+            yield {"string": "Reply number %d" % i, "_continues": i != 10}
 
     # method Test11(last_more_replies: []string) -> ()
     def Test11(self, client_id, last_more_replies, _server=None, _raw=None, _message=None, _oneway=False):
@@ -340,26 +353,38 @@ class CertService:
             "parameters": {
                 "client_id": client_id,
                 "last_more_replies": [
-                    "Reply number 1", "Reply number 2", "Reply number 3", "Reply number 4",
-                    "Reply number 5", "Reply number 6", "Reply number 7", "Reply number 8",
-                    "Reply number 9", "Reply number 10"
-                ]
-            }
+                    "Reply number 1",
+                    "Reply number 2",
+                    "Reply number 3",
+                    "Reply number 4",
+                    "Reply number 5",
+                    "Reply number 6",
+                    "Reply number 7",
+                    "Reply number 8",
+                    "Reply number 9",
+                    "Reply number 10",
+                ],
+            },
         }
 
         self.assert_cmp(client_id, _server, _raw, wants, _oneway)
 
         for i in range(0, 10):
-            self.assert_cmp(client_id, _server, _raw, wants, last_more_replies[i] == "Reply number %d" % (i + 1))
+            self.assert_cmp(
+                client_id, _server, _raw, wants, last_more_replies[i] == "Reply number %d" % (i + 1)
+            )
 
     # method End() -> ()
     def End(self, client_id, _server=None, _raw=None, _message=None):
         self.assert_method(client_id, _server, "End", "Start")
 
-        self.assert_raw(client_id, _server, _raw, _message, {
-            "method": "org.varlink.certification.End",
-            "parameters": {"client_id": client_id}
-        })
+        self.assert_raw(
+            client_id,
+            _server,
+            _raw,
+            _message,
+            {"method": "org.varlink.certification.End", "parameters": {"client_id": client_id}},
+        )
 
         del _server.next_method[client_id]
         return {"all_ok": True}
@@ -376,18 +401,21 @@ def run_server(address):
 
 ######## MAIN #############
 
+
 def usage():
-    print('Usage: %s [[--client] --varlink=<varlink address>]' % sys.argv[0], file=sys.stderr)
-    print('\tSelf Exec: $ %s' % sys.argv[0], file=sys.stderr)
-    print('\tServer   : $ %s --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
-    print('\tClient   : $ %s --client --varlink=<varlink address>' % sys.argv[0], file=sys.stderr)
-    print('\tClient   : $ %s --client --bridge=<bridge command>' % sys.argv[0], file=sys.stderr)
-    print('\tClient   : $ %s --client --activate=<activation command>' % sys.argv[0], file=sys.stderr)
+    print("Usage: %s [[--client] --varlink=<varlink address>]" % sys.argv[0], file=sys.stderr)
+    print("\tSelf Exec: $ %s" % sys.argv[0], file=sys.stderr)
+    print("\tServer   : $ %s --varlink=<varlink address>" % sys.argv[0], file=sys.stderr)
+    print("\tClient   : $ %s --client --varlink=<varlink address>" % sys.argv[0], file=sys.stderr)
+    print("\tClient   : $ %s --client --bridge=<bridge command>" % sys.argv[0], file=sys.stderr)
+    print("\tClient   : $ %s --client --activate=<activation command>" % sys.argv[0], file=sys.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "b:A:", ["help", "client", "varlink=", "bridge=", "activate="])
+        opts, args = getopt.getopt(
+            sys.argv[1:], "b:A:", ["help", "client", "varlink=", "bridge=", "activate="]
+        )
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -440,13 +468,14 @@ if __name__ == '__main__':
 
 ######## UNITTEST #############
 
+
 class TestService(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if hasattr(socket, "AF_UNIX"):
-            cls.address = "unix:org.varlink.certification_" \
-                          + str(os.getpid()) \
-                          + threading.current_thread().name
+            cls.address = (
+                "unix:org.varlink.certification_" + str(os.getpid()) + threading.current_thread().name
+            )
         else:
             cls.address = "tcp:127.0.0.1:23456"
 
@@ -459,8 +488,7 @@ class TestService(unittest.TestCase):
         run_client(varlink.Client.new_with_address(self.address))
 
     def test_01(self):
-        with varlink.Client(self.address) as client, \
-                client.open('org.varlink.certification') as con:
+        with varlink.Client(self.address) as client, client.open("org.varlink.certification") as con:
             ret = con.Start()
             client_id = ret["client_id"]
             ret = con.Test01(client_id)
