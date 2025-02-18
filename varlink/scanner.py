@@ -14,21 +14,17 @@ class Scanner:
     """Class for scanning a varlink interface definition."""
 
     def __init__(self, string):
-        if hasattr(re, "ASCII"):
-            ASCII = re.ASCII
-        else:
-            ASCII = 0
-        self.whitespace = re.compile(r'([ \t\n]|#.*$)+', ASCII | re.MULTILINE)
+        self.whitespace = re.compile(r'([ \t\n]|#.*$)+', re.ASCII | re.MULTILINE)
         self.docstring = re.compile(r'(?:.?)+#(.*)(?:\n|\r\n)')
         # FIXME: nested ()
         self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
-                                           ASCII | re.MULTILINE)
+                                           re.ASCII | re.MULTILINE)
 
-        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]', ASCII)
+        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]', re.ASCII)
         self.patterns = {
             'interface-name': re.compile(r'[A-Za-z]([A-Za-z])*([.][A-Za-z0-9]([-]*[A-Za-z0-9])*)+|xn--([0-9a-z])*([.][A-Za-z0-9]([-]*[A-Za-z0-9])*)+'),
-            'member-name': re.compile(r'\b[A-Z][A-Za-z0-9]*\b', ASCII),
-            'identifier': re.compile(r'\b[A-Za-z]([_]?[A-Za-z0-9])*\b', ASCII),
+            'member-name': re.compile(r'\b[A-Z][A-Za-z0-9]*\b', re.ASCII),
+            'identifier': re.compile(r'\b[A-Za-z]([_]?[A-Za-z0-9])*\b', re.ASCII),
         }
 
         self.string = string
