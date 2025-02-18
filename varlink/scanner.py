@@ -3,28 +3,33 @@
 import re
 
 from types import SimpleNamespace
-from collections.abc import (Set, Mapping)
+from collections.abc import Set, Mapping
 
 from collections import OrderedDict
 
-from .error import (MethodNotFound, InvalidParameter)
+from .error import MethodNotFound, InvalidParameter
 
 
 class Scanner:
     """Class for scanning a varlink interface definition."""
 
     def __init__(self, string):
-        self.whitespace = re.compile(r'([ \t\n]|#.*$)+', re.ASCII | re.MULTILINE)
-        self.docstring = re.compile(r'(?:.?)+#(.*)(?:\n|\r\n)')
+        self.whitespace = re.compile(r"([ \t\n]|#.*$)+", re.ASCII | re.MULTILINE)
+        self.docstring = re.compile(r"(?:.?)+#(.*)(?:\n|\r\n)")
         # FIXME: nested ()
-        self.method_signature = re.compile(r'([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))',
-                                           re.ASCII | re.MULTILINE)
+        self.method_signature = re.compile(
+            r"([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))", re.ASCII | re.MULTILINE
+        )
 
-        self.keyword_pattern = re.compile(r'\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]', re.ASCII)
+        self.keyword_pattern = re.compile(
+            r"\b[a-z]+\b|[:,(){}]|->|\[\]|\?|\[string\]\(\)|\[string\]", re.ASCII
+        )
         self.patterns = {
-            'interface-name': re.compile(r'[A-Za-z]([A-Za-z])*([.][A-Za-z0-9]([-]*[A-Za-z0-9])*)+|xn--([0-9a-z])*([.][A-Za-z0-9]([-]*[A-Za-z0-9])*)+'),
-            'member-name': re.compile(r'\b[A-Z][A-Za-z0-9]*\b', re.ASCII),
-            'identifier': re.compile(r'\b[A-Za-z]([_]?[A-Za-z0-9])*\b', re.ASCII),
+            "interface-name": re.compile(
+                r"[A-Za-z]([A-Za-z])*([.][A-Za-z0-9]([-]*[A-Za-z0-9])*)+|xn--([0-9a-z])*([.][A-Za-z0-9]([-]*[A-Za-z0-9])*)+"
+            ),
+            "member-name": re.compile(r"\b[A-Z][A-Za-z0-9]*\b", re.ASCII),
+            "identifier": re.compile(r"\b[A-Za-z]([_]?[A-Za-z0-9])*\b", re.ASCII),
         }
 
         self.string = string
@@ -34,13 +39,12 @@ class Scanner:
     def get(self, expected):
         m = self.whitespace.match(self.string, self.pos)
         if m:
-            doc = self.docstring.findall(self.string[m.start():m.end()])
+            doc = self.docstring.findall(self.string[m.start() : m.end()])
             if len(doc):
                 try:
                     self.current_doc += "\n".join(doc)
                 except UnicodeError:
-                    self.current_doc += "\n".join(
-                            [el.decode("utf-8") for el in doc])
+                    self.current_doc += "\n".join([el.decode("utf-8") for el in doc])
             self.pos = m.end()
 
         pattern = self.patterns.get(expected)
@@ -64,45 +68,44 @@ class Scanner:
     def end(self):
         m = self.whitespace.match(self.string, self.pos)
         if m:
-            doc = self.docstring.findall(self.string[m.start():m.end()])
+            doc = self.docstring.findall(self.string[m.start() : m.end()])
             if len(doc):
                 try:
                     self.current_doc += "\n".join(doc)
                 except UnicodeError:
-                    self.current_doc += "\n".join(
-                            [el.decode("utf-8") for el in doc])
+                    self.current_doc += "\n".join([el.decode("utf-8") for el in doc])
             self.pos = m.end()
 
         return self.pos >= len(self.string)
 
     def read_type(self, lastmaybe=False):
-        if self.get('?'):
+        if self.get("?"):
             if lastmaybe:
                 raise SyntaxError("double '??'")
             return _Maybe(self.read_type(lastmaybe=True))
 
-        if self.get('[string]()'):
+        if self.get("[string]()"):
             return set()
 
-        if self.get('[string]'):
+        if self.get("[string]"):
             return _Dict(self.read_type())
 
-        if self.get('[]'):
+        if self.get("[]"):
             return _Array(self.read_type())
 
-        if self.get('object'):
+        if self.get("object"):
             return _Object()
 
-        if self.get('bool'):
+        if self.get("bool"):
             t = bool()
-        elif self.get('int'):
+        elif self.get("int"):
             t = int()
-        elif self.get('float'):
+        elif self.get("float"):
             t = float()
-        elif self.get('string'):
+        elif self.get("string"):
             t = str()
         else:
-            name = self.get('member-name')
+            name = self.get("member-name")
             if name:
                 t = _CustomType(name)
             else:
@@ -112,19 +115,19 @@ class Scanner:
 
     def read_struct(self):
         _isenum = None
-        self.expect('(')
+        self.expect("(")
         fields = OrderedDict()
-        if not self.get(')'):
+        if not self.get(")"):
             while True:
-                name = self.expect('identifier')
+                name = self.expect("identifier")
                 if _isenum is None:
-                    if self.get(':'):
+                    if self.get(":"):
                         _isenum = False
                         fields[name] = self.read_type()
-                        if not self.get(','):
+                        if not self.get(","):
                             break
                         continue
-                    elif self.get(','):
+                    elif self.get(","):
                         _isenum = True
                         fields[name] = True
                         continue
@@ -132,25 +135,25 @@ class Scanner:
                         raise SyntaxError("after '{}'".format(name))
                 elif not _isenum:
                     try:
-                        self.expect(':')
+                        self.expect(":")
                         fields[name] = self.read_type()
                     except SyntaxError as e:
                         raise SyntaxError("after '{}': {}".format(name, e))
                 else:
                     fields[name] = True
 
-                if not self.get(','):
+                if not self.get(","):
                     break
-            self.expect(')')
+            self.expect(")")
         if _isenum:
             return _Enum(fields.keys())
         else:
             return _Struct(fields)
 
     def read_member(self):
-        if self.get('type'):
+        if self.get("type"):
             try:
-                _name = self.expect('member-name')
+                _name = self.expect("member-name")
             except SyntaxError:
                 m = self.whitespace.match(self.string, self.pos)
                 if m:
@@ -171,24 +174,24 @@ class Scanner:
             doc = self.current_doc
             self.current_doc = ""
             return _Alias(_name, _type, doc)
-        elif self.get('method'):
-            name = self.expect('member-name')
+        elif self.get("method"):
+            name = self.expect("member-name")
             # FIXME
             sig = self.method_signature.match(self.string, self.pos)
             if sig:
                 sig = name + sig.group(0)
             in_type = self.read_struct()
-            self.expect('->')
+            self.expect("->")
             out_type = self.read_struct()
             doc = self.current_doc
             self.current_doc = ""
             return _Method(name, in_type, out_type, sig, doc)
-        elif self.get('error'):
+        elif self.get("error"):
             doc = self.current_doc
             self.current_doc = ""
-            return _Error(self.expect('member-name'), self.read_type(), doc)
+            return _Error(self.expect("member-name"), self.read_type(), doc)
         else:
-            raise SyntaxError('expected type, method, or error')
+            raise SyntaxError("expected type, method, or error")
 
 
 class _Object:
@@ -196,43 +199,36 @@ class _Object:
 
 
 class _Struct:
-
     def __init__(self, fields):
         self.fields = OrderedDict(fields)
 
 
 class _Enum:
-
     def __init__(self, fields):
         self.fields = fields
 
 
 class _Array:
-
     def __init__(self, element_type):
         self.element_type = element_type
 
 
 class _Maybe:
-
     def __init__(self, element_type):
         self.element_type = element_type
 
 
 class _Dict:
-
     def __init__(self, element_type):
         self.element_type = element_type
 
 
 class _CustomType:
-
     def __init__(self, name):
         self.name = name
 
 
 class _Alias:
-
     def __init__(self, name, varlink_type, doc=None):
         self.name = name
         self.type = varlink_type
@@ -240,7 +236,6 @@ class _Alias:
 
 
 class _Method:
-
     def __init__(self, name, in_type, out_type, _signature, doc=None):
         self.name = name
         self.in_type = in_type
@@ -250,7 +245,6 @@ class _Method:
 
 
 class _Error:
-
     def __init__(self, name, varlink_type, doc=None):
         self.name = name
         self.type = varlink_type
@@ -265,8 +259,8 @@ class Interface:
         self.description = description
 
         scanner = Scanner(description)
-        scanner.expect('interface')
-        self.name = scanner.expect('interface-name')
+        scanner.expect("interface")
+        self.name = scanner.expect("interface-name")
         self.doc = scanner.current_doc
         scanner.current_doc = ""
         self.members = OrderedDict()
@@ -297,16 +291,19 @@ class Interface:
                 return {}
 
             if isinstance(args, Mapping):
-                for (k, v) in args.items():
-                    args[k] = self.filter_params(parent_name + '[' + k + ']', varlink_type.element_type, _namespaced, v,
-                                                 None)
+                for k, v in args.items():
+                    args[k] = self.filter_params(
+                        parent_name + "[" + k + "]", varlink_type.element_type, _namespaced, v, None
+                    )
                 return args
             else:
                 InvalidParameter(parent_name)
 
         if isinstance(varlink_type, _CustomType):
             # print("CustomType", varlink_type.name)
-            return self.filter_params(parent_name, self.members.get(varlink_type.name), _namespaced, args, kwargs)
+            return self.filter_params(
+                parent_name, self.members.get(varlink_type.name), _namespaced, args, kwargs
+            )
 
         if isinstance(varlink_type, _Alias):
             # print("Alias", varlink_type.name)
@@ -323,8 +320,10 @@ class Interface:
             if args is None:
                 return []
 
-            return [self.filter_params(parent_name + '[]', varlink_type.element_type, _namespaced, x, None) for x in
-                    args]
+            return [
+                self.filter_params(parent_name + "[]", varlink_type.element_type, _namespaced, x, None)
+                for x in args
+            ]
 
         if isinstance(varlink_type, Set):
             # print("Returned set:", set(args))
@@ -370,8 +369,9 @@ class Interface:
                         args = args[1:]
                     else:
                         args = None
-                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
-                                             None)
+                    ret = self.filter_params(
+                        parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None
+                    )
                     if ret is not None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -381,8 +381,13 @@ class Interface:
                     continue
                 else:
                     if name in kwargs:
-                        ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced,
-                                                 kwargs[name], None)
+                        ret = self.filter_params(
+                            parent_name + "." + name,
+                            varlink_type.fields[name],
+                            _namespaced,
+                            kwargs[name],
+                            None,
+                        )
                         if ret is not None:
                             # print("SetOUT:", name)
                             if _namespaced:
@@ -397,8 +402,9 @@ class Interface:
                         continue
 
                     val = varlink_struct[name]
-                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
-                                             None)
+                    ret = self.filter_params(
+                        parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None
+                    )
                     if ret is not None:
                         # print("SetOUT:", name)
                         if _namespaced:
@@ -407,8 +413,9 @@ class Interface:
                             out[name] = ret
                 elif hasattr(varlink_struct, name):
                     val = getattr(varlink_struct, name)
-                    ret = self.filter_params(parent_name + "." + name, varlink_type.fields[name], _namespaced, val,
-                                             None)
+                    ret = self.filter_params(
+                        parent_name + "." + name, varlink_type.fields[name], _namespaced, val, None
+                    )
                     if ret is not None:
                         # print("SetOUT:", name)
                         if _namespaced:

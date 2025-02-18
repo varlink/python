@@ -22,16 +22,16 @@ class VarlinkError(Exception):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        if message['error'] == 'org.varlink.service.InterfaceNotFound':
+        if message["error"] == "org.varlink.service.InterfaceNotFound":
             return InterfaceNotFound.new(message, namespaced)
 
-        elif message['error'] == 'org.varlink.service.InvalidParameter':
+        elif message["error"] == "org.varlink.service.InvalidParameter":
             return InvalidParameter.new(message, namespaced)
 
-        elif message['error'] == 'org.varlink.service.MethodNotImplemented':
+        elif message["error"] == "org.varlink.service.MethodNotImplemented":
             return MethodNotImplemented.new(message, namespaced)
 
-        elif message['error'] == 'org.varlink.service.MethodNotImplemented':
+        elif message["error"] == "org.varlink.service.MethodNotImplemented":
             return MethodNotImplemented.new(message, namespaced)
 
         else:
@@ -45,14 +45,16 @@ class VarlinkError(Exception):
 
     def error(self):
         """returns the exception varlink error name"""
-        return self.args[0].get('error')
+        return self.args[0].get("error")
 
     def parameters(self, namespaced=False):
         """returns the exception varlink error parameters"""
         if namespaced:
-            return json.loads(json.dumps(self.args[0]['parameters']), object_hook=lambda d: SimpleNamespace(**d))
+            return json.loads(
+                json.dumps(self.args[0]["parameters"]), object_hook=lambda d: SimpleNamespace(**d)
+            )
         else:
-            return self.args[0].get('parameters')
+            return self.args[0].get("parameters")
 
     def as_dict(self):
         return self.args[0]
@@ -63,11 +65,14 @@ class InterfaceNotFound(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(namespaced and message['parameters'].interface or message['parameters'].get('interface', None))
+        return cls(
+            namespaced and message["parameters"].interface or message["parameters"].get("interface", None)
+        )
 
     def __init__(self, interface):
-        VarlinkError.__init__(self, {'error': 'org.varlink.service.InterfaceNotFound',
-                                     'parameters': {'interface': interface}})
+        VarlinkError.__init__(
+            self, {"error": "org.varlink.service.InterfaceNotFound", "parameters": {"interface": interface}}
+        )
 
 
 class MethodNotFound(VarlinkError):
@@ -75,10 +80,12 @@ class MethodNotFound(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(namespaced and message['parameters'].method or message['parameters'].get('method', None))
+        return cls(namespaced and message["parameters"].method or message["parameters"].get("method", None))
 
     def __init__(self, method):
-        VarlinkError.__init__(self, {'error': 'org.varlink.service.MethodNotFound', 'parameters': {'method': method}})
+        VarlinkError.__init__(
+            self, {"error": "org.varlink.service.MethodNotFound", "parameters": {"method": method}}
+        )
 
 
 class MethodNotImplemented(VarlinkError):
@@ -86,11 +93,12 @@ class MethodNotImplemented(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(namespaced and message['parameters'].method or message['parameters'].get('method', None))
+        return cls(namespaced and message["parameters"].method or message["parameters"].get("method", None))
 
     def __init__(self, method):
-        VarlinkError.__init__(self,
-                              {'error': 'org.varlink.service.MethodNotImplemented', 'parameters': {'method': method}})
+        VarlinkError.__init__(
+            self, {"error": "org.varlink.service.MethodNotImplemented", "parameters": {"method": method}}
+        )
 
 
 class InvalidParameter(VarlinkError):
@@ -98,8 +106,11 @@ class InvalidParameter(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(namespaced and message['parameters'].parameter or message['parameters'].get('parameter', None))
+        return cls(
+            namespaced and message["parameters"].parameter or message["parameters"].get("parameter", None)
+        )
 
     def __init__(self, name):
-        VarlinkError.__init__(self,
-                              {'error': 'org.varlink.service.InvalidParameter', 'parameters': {'parameter': name}})
+        VarlinkError.__init__(
+            self, {"error": "org.varlink.service.InvalidParameter", "parameters": {"parameter": name}}
+        )

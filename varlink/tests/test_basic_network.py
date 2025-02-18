@@ -8,11 +8,11 @@ from sys import platform
 import varlink
 
 service = varlink.Service(
-    vendor='Varlink',
-    product='Varlink Examples',
-    version='1',
-    url='http://varlink.org',
-    interface_dir=os.path.dirname(__file__)
+    vendor="Varlink",
+    product="Varlink Examples",
+    version="1",
+    url="http://varlink.org",
+    interface_dir=os.path.dirname(__file__),
 )
 
 
@@ -28,15 +28,14 @@ class TestService(unittest.TestCase):
         server_thread.start()
 
         try:
-            with varlink.Client(address) as client, \
-                    client.open('org.varlink.service') as _connection:
+            with varlink.Client(address) as client, client.open("org.varlink.service") as _connection:
                 info = _connection.GetInfo()
 
-                self.assertEqual(len(info['interfaces']), 1)
-                self.assertEqual(info['interfaces'][0], "org.varlink.service")
+                self.assertEqual(len(info["interfaces"]), 1)
+                self.assertEqual(info["interfaces"][0], "org.varlink.service")
                 self.assertEqual(info, service.GetInfo())
 
-                desc = _connection.GetInterfaceDescription(info['interfaces'][0])
+                desc = _connection.GetInterfaceDescription(info["interfaces"][0])
                 self.assertEqual(desc, service.GetInterfaceDescription("org.varlink.service"))
 
                 _connection.close()
@@ -50,18 +49,17 @@ class TestService(unittest.TestCase):
 
     def test_anon_unix(self):
         if platform.startswith("linux"):
-            self.do_run("unix:@org.varlink.service_anon_test"
-                        + str(os.getpid())
-                        + threading.current_thread().name
-                        )
+            self.do_run(
+                "unix:@org.varlink.service_anon_test" + str(os.getpid()) + threading.current_thread().name
+            )
 
     def test_unix(self):
         if hasattr(socket, "AF_UNIX"):
-            self.do_run("unix:org.varlink.service_anon_test_"
-                        + str(os.getpid())
-                        + threading.current_thread().name
-                        )
+            self.do_run(
+                "unix:org.varlink.service_anon_test_" + str(os.getpid()) + threading.current_thread().name
+            )
 
     def test_wrong_url(self):
-        self.assertRaises(ConnectionError, self.do_run,
-                          "uenix:org.varlink.service_wrong_url_test_%d" % os.getpid())
+        self.assertRaises(
+            ConnectionError, self.do_run, "uenix:org.varlink.service_wrong_url_test_%d" % os.getpid()
+        )

@@ -10,8 +10,8 @@ import tempfile
 import subprocess
 import threading
 
-from .error import (VarlinkError, InterfaceNotFound, VarlinkEncoder)
-from .scanner import (Interface, _Method)
+from .error import VarlinkError, InterfaceNotFound, VarlinkEncoder
+from .scanner import Interface, _Method
 
 
 class ClientInterfaceHandler:
@@ -59,7 +59,6 @@ class ClientInterfaceHandler:
         raise NotImplementedError
 
     def _add_method(self, method):
-
         def _wrapped(*args, **kwargs):
             if "_more" in kwargs and kwargs.pop("_more"):
                 return self._call_more(method.name, *args, **kwargs)
@@ -82,15 +81,15 @@ class ClientInterfaceHandler:
         message = next(self._next_message())
 
         message = json.loads(message)
-        if 'parameters' not in message:
-            message['parameters'] = {}
+        if "parameters" not in message:
+            message["parameters"] = {}
 
-        if 'error' in message and message["error"] is not None:
+        if "error" in message and message["error"] is not None:
             self._in_use = False
             e = VarlinkError.new(message, self._namespaced)
             raise e
         else:
-            return message['parameters'], ('continues' in message) and message['continues']
+            return message["parameters"], ("continues" in message) and message["continues"]
 
     def _call(self, method_name, *args, **kwargs):
         if self._in_use:
@@ -104,15 +103,15 @@ class ClientInterfaceHandler:
 
         parameters = self._interface.filter_params("client.call", method.in_type, False, args, kwargs)
 
-        out = {'method': self._interface.name + "." + method_name}
+        out = {"method": self._interface.name + "." + method_name}
 
         if oneway:
-            out['oneway'] = True
+            out["oneway"] = True
 
         if parameters:
-            out['parameters'] = parameters
+            out["parameters"] = parameters
 
-        self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
+        self._send_message(json.dumps(out, cls=VarlinkEncoder).encode("utf-8"))
 
         if oneway:
             return None
@@ -126,7 +125,9 @@ class ClientInterfaceHandler:
         self._in_use = False
 
         if message:
-            message = self._interface.filter_params("client.reply", method.out_type, self._namespaced, message, None)
+            message = self._interface.filter_params(
+                "client.reply", method.out_type, self._namespaced, message, None
+            )
 
         return message
 
@@ -137,17 +138,18 @@ class ClientInterfaceHandler:
         method = self._interface.get_method(method_name)
 
         parameters = self._interface.filter_params("client.call", method.in_type, False, args, kwargs)
-        out = {'method': self._interface.name + "." + method_name, 'more': True, 'parameters': parameters}
+        out = {"method": self._interface.name + "." + method_name, "more": True, "parameters": parameters}
 
-        self._send_message(json.dumps(out, cls=VarlinkEncoder).encode('utf-8'))
+        self._send_message(json.dumps(out, cls=VarlinkEncoder).encode("utf-8"))
 
         more = True
         self._in_use = True
         while more:
             (message, more) = self._next_varlink_message()
             if message:
-                message = self._interface.filter_params("client.reply", method.out_type, self._namespaced, message,
-                                                        None)
+                message = self._interface.filter_params(
+                    "client.reply", method.out_type, self._namespaced, message, None
+                )
             yield message
         self._in_use = False
 
@@ -171,31 +173,31 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         ClientInterfaceHandler.__init__(self, interface, namespaced=namespaced)
         self._connection = file_or_socket
 
-        if hasattr(self._connection, 'send_bytes'):
+        if hasattr(self._connection, "send_bytes"):
             self._send_bytes = True
             self._sendall = False
-        elif hasattr(self._connection, 'sendall'):
+        elif hasattr(self._connection, "sendall"):
             self._send_bytes = False
             self._sendall = True
         else:
-            if not hasattr(self._connection, 'write'):
+            if not hasattr(self._connection, "write"):
                 raise TypeError
             self._sendall = False
             self._send_bytes = False
 
-        if hasattr(self._connection, 'recv_bytes'):
+        if hasattr(self._connection, "recv_bytes"):
             self._recv_bytes = True
             self._recv = False
-        elif hasattr(self._connection, 'recv'):
+        elif hasattr(self._connection, "recv"):
             self._recv = True
             self._recv_bytes = False
         else:
-            if not hasattr(self._connection, 'read'):
+            if not hasattr(self._connection, "read"):
                 raise TypeError
             self._recv = False
             self._recv_bytes = False
 
-        self._in_buffer = b''
+        self._in_buffer = b""
 
     def __enter__(self):
         return self
@@ -205,7 +207,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
     def close(self):
         try:
-            if hasattr(self._connection, 'shutdown'):
+            if hasattr(self._connection, "shutdown"):
                 self._connection.shutdown(socket.SHUT_RDWR)
         except:
             pass
@@ -214,22 +216,22 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
     def _send_message(self, out):
         if self._send_bytes:
-            self._connection.send_bytes(out + b'\0')
+            self._connection.send_bytes(out + b"\0")
         elif self._sendall:
-            self._connection.sendall(out + b'\0')
+            self._connection.sendall(out + b"\0")
         elif hasattr:
-            self._connection.write(out + b'\0')
+            self._connection.write(out + b"\0")
 
     def _next_message(self):
         while True:
-            message, sep, self._in_buffer = self._in_buffer.partition(b'\0')
+            message, sep, self._in_buffer = self._in_buffer.partition(b"\0")
             if not sep:
                 # No zero byte found
                 self._in_buffer = message
                 message = None
 
             if message:
-                yield message.decode('utf-8')
+                yield message.decode("utf-8")
                 continue
 
             if self._recv_bytes:
@@ -331,6 +333,7 @@ class Client:
     which yields the return values and waits (blocks) for the service to return more return values
     in the generator's .__next__() call.
     """
+
     handler = SimpleClientInterfaceHandler
 
     def __init__(self, address=None, resolve_interface=None, resolver=None):
@@ -350,7 +353,7 @@ class Client:
         self._child_pid = 0
         self._str = "Client<uninitialized>"
 
-        with open(os.path.join(os.path.dirname(__file__), 'org.varlink.service.varlink')) as f:
+        with open(os.path.join(os.path.dirname(__file__), "org.varlink.service.varlink")) as f:
             interface = Interface(f.read())
             self.add_interface(interface)
 
@@ -402,7 +405,7 @@ class Client:
                     pass
 
             os.dup2(n, 3)
-            address = address.replace('\0', '@', 1)
+            address = address.replace("\0", "@", 1)
 
             for i in range(1, len(argv)):
                 argv[i] = argv[i].replace("$VARLINK_ADDRESS", "unix:" + address)
@@ -442,8 +445,9 @@ class Client:
 
         def new_bridge_socket_compat():
             sp = socket.socketpair()
-            p = subprocess.Popen(" ".join(argv), shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                 close_fds=True)
+            p = subprocess.Popen(
+                " ".join(argv), shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True
+            )
             self._child_pid = p.pid
 
             thread1 = threading.Thread(daemon=True, target=pipe_bridge, args=(sp[1], p.stdin))
@@ -453,7 +457,7 @@ class Client:
             return sp[0]
 
         self._str = "Bridge with: '%s'" % " ".join(argv)
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             self._socket_fn = new_bridge_socket_compat
         else:
             self._socket_fn = new_bridge_socket
@@ -475,11 +479,11 @@ class Client:
         if address.startswith("unix:"):
             self._str = address
             address = address[5:]
-            mode = address.find(';')
+            mode = address.find(";")
             if mode != -1:
                 address = address[:mode]
-            if address[0] == '@':
-                address = address.replace('@', '\0', 1)
+            if address[0] == "@":
+                address = address.replace("@", "\0", 1)
 
             def open_unix():
                 s = socket.socket(socket.AF_UNIX)
@@ -492,14 +496,14 @@ class Client:
         elif address.startswith("tcp:"):
             self._str = address
             address = address[4:]
-            p = address.rfind(':')
+            p = address.rfind(":")
             if p != -1:
-                port = address[p + 1:]
+                port = address[p + 1 :]
                 address = address[:p]
             else:
                 raise ConnectionError("Invalid address 'tcp:%s'" % address)
-            address = address.replace('[', '')
-            address = address.replace(']', '')
+            address = address.replace("[", "")
+            address = address.replace("]", "")
 
             def open_tcp():
                 s = socket.create_connection((address, int(port)))
@@ -529,14 +533,16 @@ class Client:
         if not resolver_address:
             resolver_address = "unix:/run/org.varlink.resolver"
 
-        if interface == 'org.varlink.resolver':
+        if interface == "org.varlink.resolver":
             self._with_address(resolver_address)
         else:
-            with Client.new_with_address(resolver_address) as client, \
-                    client.open('org.varlink.resolver') as _rc:
+            with (
+                Client.new_with_address(resolver_address) as client,
+                client.open("org.varlink.resolver") as _rc,
+            ):
                 # noinspection PyUnresolvedReferences
                 _r = _rc.Resolve(interface)
-                self._with_address(_r['address'])
+                self._with_address(_r["address"])
 
         return self
 
@@ -602,7 +608,7 @@ class Client:
         if close_socket:
             socket_connection.close()
 
-        return self.info['interfaces']
+        return self.info["interfaces"]
 
     def get_interface(self, interface_name, socket_connection=None):
         if not socket_connection:
@@ -614,7 +620,7 @@ class Client:
         _service = self.handler(self._interfaces["org.varlink.service"], socket_connection)
         # noinspection PyUnresolvedReferences
         desc = _service.GetInterfaceDescription(interface_name)
-        interface = Interface(desc['description'])
+        interface = Interface(desc["description"])
         self._interfaces[interface.name] = interface
 
         if close_socket:

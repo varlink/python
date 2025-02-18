@@ -32,23 +32,24 @@ import varlink
 
 ######## CLIENT #############
 
-def run_client(client):
-    print('Connecting to %s\n' % client)
-    try:
-        with \
-                client.open('org.example.more', namespaced=True) as con1, \
-                client.open('org.example.more', namespaced=True) as con2:
 
+def run_client(client):
+    print("Connecting to %s\n" % client)
+    try:
+        with (
+            client.open("org.example.more", namespaced=True) as con1,
+            client.open("org.example.more", namespaced=True) as con2,
+        ):
             for m in con1.TestMore(10, _more=True):
-                if hasattr(m.state, 'start') and m.state.start is not None:
+                if hasattr(m.state, "start") and m.state.start is not None:
                     if m.state.start:
                         print("--- Start ---", file=sys.stderr)
 
-                if hasattr(m.state, 'end') and m.state.end is not None:
+                if hasattr(m.state, "end") and m.state.end is not None:
                     if m.state.end:
                         print("--- End ---", file=sys.stderr)
 
-                if hasattr(m.state, 'progress') and m.state.progress is not None:
+                if hasattr(m.state, "progress") and m.state.progress is not None:
                     print("Progress:", m.state.progress, file=sys.stderr)
                     if m.state.progress > 50:
                         ret = con2.Ping("Test")
@@ -67,11 +68,11 @@ def run_client(client):
 ######## SERVER #############
 
 service = varlink.Service(
-    vendor='Varlink',
-    product='Varlink Examples',
-    version='1',
-    url='http://varlink.org',
-    interface_dir=os.path.dirname(__file__)
+    vendor="Varlink",
+    product="Varlink Examples",
+    version="1",
+    url="http://varlink.org",
+    interface_dir=os.path.dirname(__file__),
 )
 
 
@@ -80,38 +81,37 @@ class ServiceRequestHandler(varlink.RequestHandler):
 
 
 class ActionFailed(varlink.VarlinkError):
-
     def __init__(self, reason):
-        varlink.VarlinkError.__init__(self,
-                                      {'error': 'org.example.more.ActionFailed',
-                                       'parameters': {'field': reason}})
+        varlink.VarlinkError.__init__(
+            self, {"error": "org.example.more.ActionFailed", "parameters": {"field": reason}}
+        )
 
 
-@service.interface('org.example.more')
+@service.interface("org.example.more")
 class Example:
     sleep_duration = 1
 
     def TestMore(self, n, _more=True, _server=None):
         try:
             if not _more:
-                yield varlink.InvalidParameter('more')
+                yield varlink.InvalidParameter("more")
 
-            yield {'state': {'start': True}, '_continues': True}
+            yield {"state": {"start": True}, "_continues": True}
 
             for i in range(0, n):
-                yield {'state': {'progress': int(i * 100 / n)}, '_continues': True}
+                yield {"state": {"progress": int(i * 100 / n)}, "_continues": True}
                 time.sleep(self.sleep_duration)
 
-            yield {'state': {'progress': 100}, '_continues': True}
+            yield {"state": {"progress": 100}, "_continues": True}
 
-            yield {'state': {'end': True}, '_continues': False}
+            yield {"state": {"end": True}, "_continues": False}
         except Exception as error:
             print("ERROR", error, file=sys.stderr)
             if _server:
                 _server.shutdown()
 
     def Ping(self, ping):
-        return {'pong': ping}
+        return {"pong": ping}
 
     def StopServing(self, reason=None, _request=None, _server=None):
         print("Server ends.")
@@ -127,13 +127,14 @@ class Example:
     def TestMap(self, map):
         i = 1
         ret = {}
-        for (key, val) in map.items():
+        for key, val in map.items():
             ret[key] = {"i": i, "val": val}
             i += 1
-        return {'map': ret}
+        return {"map": ret}
 
     def TestObject(self, object):
         import json
+
         return {"object": json.loads(json.dumps(object))}
 
 
@@ -148,43 +149,30 @@ def run_server(address):
 
 ######## MAIN #############
 
+
 def epilog():
-    return textwrap.dedent("""
+    return textwrap.dedent(
+        """
     Examples:
         \tSelf Exec: $ {0}
         \tServer   : $ {0} --varlink=<varlink address>
         \tClient   : $ {0} --client --varlink=<varlink address>
         \tClient   : $ {0} --client --bridge=<bridge command>
         \tClient   : $ {0} --client --activate=<activation command>
-    """.format(sys.argv[0]))
+    """.format(sys.argv[0])
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Varlink org.example.more test case',
+        description="Varlink org.example.more test case",
         epilog=epilog(),
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser.add_argument(
-        '--varlink',
-        type=str,
-        help='The varlink address'
-    )
-    parser.add_argument(
-        '-b', '--bridge',
-        type=str,
-        help='bridge command'
-    )
-    parser.add_argument(
-        '-A', '--activate',
-        type=str,
-        help='activation command'
-    )
-    parser.add_argument(
-        '--client',
-        action='store_true',
-        help='launch the client mode'
-    )
+    parser.add_argument("--varlink", type=str, help="The varlink address")
+    parser.add_argument("-b", "--bridge", type=str, help="bridge command")
+    parser.add_argument("-A", "--activate", type=str, help="activation command")
+    parser.add_argument("--client", action="store_true", help="launch the client mode")
     args = parser.parse_args()
 
     address = args.varlink
@@ -204,14 +192,12 @@ if __name__ == '__main__':
 
     if not address and not client_mode:
         if not hasattr(socket, "AF_UNIX"):
-            print("varlink activate: not supported on platform %s" % platform,
-                  file=sys.stderr)
+            print("varlink activate: not supported on platform %s" % platform, file=sys.stderr)
             parser.print_help()
             sys.exit(2)
 
         client_mode = True
-        with varlink.Client.new_with_activate(
-            [__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
+        with varlink.Client.new_with_activate([__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
             run_client(client)
     elif client_mode:
         with client:
@@ -223,6 +209,7 @@ if __name__ == '__main__':
 
 
 ######## UNITTEST #############
+
 
 class TestService(unittest.TestCase):
     def test_service(self):
@@ -238,25 +225,25 @@ class TestService(unittest.TestCase):
 
             run_client(client)
 
-            with \
-                    client.open('org.example.more', namespaced=True) as con1, \
-                    client.open('org.example.more', namespaced=True) as con2:
-
+            with (
+                client.open("org.example.more", namespaced=True) as con1,
+                client.open("org.example.more", namespaced=True) as con2,
+            ):
                 self.assertEqual(con1.Ping("Test").pong, "Test")
 
                 it = con1.TestMore(10, _more=True)
 
                 m = next(it)
-                self.assertTrue(hasattr(m.state, 'start'))
-                self.assertFalse(hasattr(m.state, 'end'))
-                self.assertFalse(hasattr(m.state, 'progress'))
+                self.assertTrue(hasattr(m.state, "start"))
+                self.assertFalse(hasattr(m.state, "end"))
+                self.assertFalse(hasattr(m.state, "progress"))
                 self.assertIsNotNone(m.state.start)
 
                 for i in range(0, 110, 10):
                     m = next(it)
-                    self.assertTrue(hasattr(m.state, 'progress'))
-                    self.assertFalse(hasattr(m.state, 'start'))
-                    self.assertFalse(hasattr(m.state, 'end'))
+                    self.assertTrue(hasattr(m.state, "progress"))
+                    self.assertFalse(hasattr(m.state, "start"))
+                    self.assertFalse(hasattr(m.state, "end"))
                     self.assertIsNotNone(m.state.progress)
                     self.assertEqual(i, m.state.progress)
 
@@ -265,9 +252,9 @@ class TestService(unittest.TestCase):
                         self.assertEqual("Test", ret.pong)
 
                 m = next(it)
-                self.assertTrue(hasattr(m.state, 'end'))
-                self.assertFalse(hasattr(m.state, 'start'))
-                self.assertFalse(hasattr(m.state, 'progress'))
+                self.assertTrue(hasattr(m.state, "end"))
+                self.assertFalse(hasattr(m.state, "start"))
+                self.assertFalse(hasattr(m.state, "progress"))
                 self.assertIsNotNone(m.state.end)
 
                 self.assertRaises(StopIteration, next, it)
