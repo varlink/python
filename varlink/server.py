@@ -195,14 +195,22 @@ class Service:
                             yield {
                                 "continues": bool(cont),
                                 "parameters": interface.filter_params(
-                                    "server.reply", method.out_type, self._namespaced, o, None
+                                    "server.reply",
+                                    method.out_type,
+                                    self._namespaced,
+                                    o,
+                                    None,
                                 )
                                 or {},
                             }
                         else:
                             yield {
                                 "parameters": interface.filter_params(
-                                    "server.reply", method.out_type, self._namespaced, o, None
+                                    "server.reply",
+                                    method.out_type,
+                                    self._namespaced,
+                                    o,
+                                    None,
                                 )
                                 or {}
                             }

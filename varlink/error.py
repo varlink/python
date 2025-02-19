@@ -51,7 +51,8 @@ class VarlinkError(Exception):
         """returns the exception varlink error parameters"""
         if namespaced:
             return json.loads(
-                json.dumps(self.args[0]["parameters"]), object_hook=lambda d: SimpleNamespace(**d)
+                json.dumps(self.args[0]["parameters"]),
+                object_hook=lambda d: SimpleNamespace(**d),
             )
         else:
             return self.args[0].get("parameters")
@@ -71,7 +72,11 @@ class InterfaceNotFound(VarlinkError):
 
     def __init__(self, interface):
         VarlinkError.__init__(
-            self, {"error": "org.varlink.service.InterfaceNotFound", "parameters": {"interface": interface}}
+            self,
+            {
+                "error": "org.varlink.service.InterfaceNotFound",
+                "parameters": {"interface": interface},
+            },
         )
 
 
@@ -84,7 +89,11 @@ class MethodNotFound(VarlinkError):
 
     def __init__(self, method):
         VarlinkError.__init__(
-            self, {"error": "org.varlink.service.MethodNotFound", "parameters": {"method": method}}
+            self,
+            {
+                "error": "org.varlink.service.MethodNotFound",
+                "parameters": {"method": method},
+            },
         )
 
 
@@ -97,7 +106,11 @@ class MethodNotImplemented(VarlinkError):
 
     def __init__(self, method):
         VarlinkError.__init__(
-            self, {"error": "org.varlink.service.MethodNotImplemented", "parameters": {"method": method}}
+            self,
+            {
+                "error": "org.varlink.service.MethodNotImplemented",
+                "parameters": {"method": method},
+            },
         )
 
 
@@ -112,5 +125,9 @@ class InvalidParameter(VarlinkError):
 
     def __init__(self, name):
         VarlinkError.__init__(
-            self, {"error": "org.varlink.service.InvalidParameter", "parameters": {"parameter": name}}
+            self,
+            {
+                "error": "org.varlink.service.InvalidParameter",
+                "parameters": {"parameter": name},
+            },
         )
