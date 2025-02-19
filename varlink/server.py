@@ -4,12 +4,10 @@ import os
 import socket
 import stat
 import string
+from socketserver import BaseServer, StreamRequestHandler, ThreadingMixIn
 
 from .error import InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError
 from .scanner import Interface
-
-
-from socketserver import StreamRequestHandler, BaseServer, ThreadingMixIn
 
 if hasattr(os, "fork"):
     from socketserver import ForkingMixIn

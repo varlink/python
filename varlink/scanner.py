@@ -1,11 +1,9 @@
 import re
-
-from types import SimpleNamespace
-from collections.abc import Set, Mapping
-
 from collections import OrderedDict
+from collections.abc import Mapping, Set
+from types import SimpleNamespace
 
-from .error import MethodNotFound, InvalidParameter
+from .error import InvalidParameter, MethodNotFound
 
 
 class Scanner:

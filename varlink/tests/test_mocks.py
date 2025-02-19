@@ -1,7 +1,7 @@
 import unittest
-from varlink import mock
-import varlink
 
+import varlink
+from varlink import mock
 
 types = """
 type MyPersonalType (

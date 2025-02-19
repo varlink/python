@@ -4,7 +4,6 @@ import threading
 import unittest
 from sys import platform
 
-
 import varlink
 
 service = varlink.Service(
