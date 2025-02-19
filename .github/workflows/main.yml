@@ -43,4 +43,8 @@ jobs:
               echo "Please run 'ruff format' on the above files or apply the diffs below manually"
               ruff format --check --quiet --diff varlink
           fi
+      - name: Run ruff check
+        run: |
+          ruff --version
+          ruff check varlink
     runs-on: ubuntu-latest
