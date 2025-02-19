@@ -16,7 +16,6 @@ from sys import platform
 
 import varlink
 
-
 ######## CLIENT #############
 
 

@@ -58,15 +58,15 @@ else:
 
 from .client import Client, ClientInterfaceHandler, SimpleClientInterfaceHandler
 from .error import (
+    InterfaceNotFound,
+    InvalidParameter,
+    MethodNotFound,
+    MethodNotImplemented,
     VarlinkEncoder,
     VarlinkError,
-    InvalidParameter,
-    InterfaceNotFound,
-    MethodNotImplemented,
-    MethodNotFound,
 )
-from .scanner import Scanner, Interface
-from .server import Service, get_listen_fd, Server, ThreadingServer, RequestHandler
+from .scanner import Interface, Scanner
+from .server import RequestHandler, Server, Service, ThreadingServer, get_listen_fd
 
 
 # There are no tests here, so don't try to run anything discovered from

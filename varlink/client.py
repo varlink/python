@@ -3,12 +3,12 @@ import os
 import shutil
 import signal
 import socket
+import subprocess
 import sys
 import tempfile
-import subprocess
 import threading
 
-from .error import VarlinkError, InterfaceNotFound, VarlinkEncoder
+from .error import InterfaceNotFound, VarlinkEncoder, VarlinkError
 from .scanner import Interface, _Method
 
 
