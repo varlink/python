@@ -378,7 +378,7 @@ class Server(BaseServer):
         >>>
         >>> server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)
         >>> server.serve_forever()
-    """
+    """  # noqa: E501
 
     address_family = socket.AF_INET
 
