@@ -151,15 +151,16 @@ def run_server(address):
 
 
 def epilog():
+    arg0 = sys.argv[0]
     return textwrap.dedent(
-        """
+        f"""
     Examples:
-        \tSelf Exec: $ {0}
-        \tServer   : $ {0} --varlink=<varlink address>
-        \tClient   : $ {0} --client --varlink=<varlink address>
-        \tClient   : $ {0} --client --bridge=<bridge command>
-        \tClient   : $ {0} --client --activate=<activation command>
-    """.format(sys.argv[0])
+        \tSelf Exec: $ {arg0}
+        \tServer   : $ {arg0} --varlink=<varlink address>
+        \tClient   : $ {arg0} --client --varlink=<varlink address>
+        \tClient   : $ {arg0} --client --bridge=<bridge command>
+        \tClient   : $ {arg0} --client --activate=<activation command>
+    """
     )
 
 
