@@ -284,16 +284,10 @@ def get_listen_fd():
         return None
     if "LISTEN_PID" not in os.environ:
         return None
-    try:
-        if int(os.environ["LISTEN_PID"]) != os.getpid():
-            return None
-    except:
+    if int(os.environ.get("LISTEN_PID", -1)) != os.getpid():
         return None
 
-    try:
-        fds = int(os.environ["LISTEN_FDS"])
-    except:
-        return None
+    fds = int(os.environ.get("LISTEN_FDS", -1))
 
     if fds < 1:
         return None
@@ -456,7 +450,7 @@ class Server(BaseServer):
             try:
                 self.server_bind()
                 self.server_activate()
-            except:
+            except Exception:  # TODO: maybe just OSError?
                 self.server_close()
                 raise
 
@@ -499,7 +493,7 @@ class Server(BaseServer):
         if self.remove_file:
             try:
                 os.remove(self.remove_file)
-            except:
+            except OSError:
                 pass
         self.socket.close()
 
@@ -526,7 +520,7 @@ class Server(BaseServer):
             # the socket and waits for GC to perform the actual close.
             request.shutdown(socket.SHUT_RDWR)
 
-        except:
+        except Exception:  # TODO: maybe just OSError?
             pass  # some platforms may raise ENOTCONN here
         self.close_request(request)
 
