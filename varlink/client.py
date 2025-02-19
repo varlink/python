@@ -383,6 +383,7 @@ class Client:
     def _with_activate(self, argv):
         s = socket.socket(socket.AF_UNIX)
         s.setblocking(False)
+        # TODO: this is not cleaned up
         self._tmpdir = tempfile.mkdtemp()
         address = f"{self._tmpdir}/{os.getpid()}"
         s.bind(address)
@@ -413,6 +414,7 @@ class Client:
             os.environ["LISTEN_FDNAMES"] = "varlink"
             os.environ["LISTEN_PID"] = str(os.getpid())
             os.execvp(argv[0], argv)
+            # TODO: this is unreachable
             sys.exit(1)
         # parent
         s.close()
