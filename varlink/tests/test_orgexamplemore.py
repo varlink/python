@@ -34,7 +34,7 @@ import varlink
 
 
 def run_client(client):
-    print("Connecting to %s\n" % client)
+    print(f"Connecting to {client}\n")
     try:
         with (
             client.open("org.example.more", namespaced=True) as con1,
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     if not address and not client_mode:
         if not hasattr(socket, "AF_UNIX"):
-            print("varlink activate: not supported on platform %s" % platform, file=sys.stderr)
+            print(f"varlink activate: not supported on platform {platform}", file=sys.stderr)
             parser.print_help()
             sys.exit(2)
 

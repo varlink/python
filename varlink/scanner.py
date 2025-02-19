@@ -347,8 +347,7 @@ class Interface:
 
         if not isinstance(varlink_type, _Struct):
             raise InvalidParameter(parent_name)
-            # SyntaxError("Expected type %s, got %s with value '%s'" % (type(varlink_type), type(args),
-            #                                                                args))
+            # SyntaxError(f"Expected type {type(varlink_type)}, got {type(args)} with value '{args}'"
 
         if _namespaced:
             out = SimpleNamespace()

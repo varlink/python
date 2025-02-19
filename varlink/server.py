@@ -425,7 +425,7 @@ class Server(BaseServer):
                 port = int(address[p + 1 :])
                 address = address[:p]
             else:
-                raise ConnectionError("Invalid address 'tcp:%s'" % address)
+                raise ConnectionError(f"Invalid address 'tcp:{address}'")
             address = address.replace("[", "")
             address = address.replace("]", "")
 
@@ -450,7 +450,7 @@ class Server(BaseServer):
             server_address = sa[0:2]
 
         else:
-            raise ConnectionError("Invalid address '%s'" % server_address)
+            raise ConnectionError(f"Invalid address '{server_address}'")
 
         BaseServer.__init__(self, server_address, RequestHandlerClass)
 
