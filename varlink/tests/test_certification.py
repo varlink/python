@@ -8,6 +8,7 @@ import os
 import shlex
 import socket
 import sys
+import textwrap
 import threading
 import time
 import unittest
@@ -20,7 +21,7 @@ import varlink
 
 
 def run_client(client):
-    print("Connecting to %s\n" % client)
+    print(f"Connecting to {client}\n")
     with client.open("org.varlink.certification") as con:
         ret = con.Start()
         client_id = ret["client_id"]
@@ -355,7 +356,7 @@ class CertService:
         self.assert_cmp(client_id, _server, _raw, wants, mytype == wants["parameters"]["mytype"])
 
         for i in range(1, 11):
-            yield {"string": "Reply number %d" % i, "_continues": i != 10}
+            yield {"string": f"Reply number {i}", "_continues": i != 10}
 
     # method Test11(last_more_replies: []string) -> ()
     def Test11(self, client_id, last_more_replies, _server=None, _raw=None, _message=None, _oneway=False):
@@ -383,9 +384,7 @@ class CertService:
         self.assert_cmp(client_id, _server, _raw, wants, _oneway)
 
         for i in range(0, 10):
-            self.assert_cmp(
-                client_id, _server, _raw, wants, last_more_replies[i] == "Reply number %d" % (i + 1)
-            )
+            self.assert_cmp(client_id, _server, _raw, wants, last_more_replies[i] == f"Reply number {i + 1}")
 
     # method End() -> ()
     def End(self, client_id, _server=None, _raw=None, _message=None):
@@ -416,12 +415,20 @@ def run_server(address):
 
 
 def usage():
-    print("Usage: %s [[--client] --varlink=<varlink address>]" % sys.argv[0], file=sys.stderr)
-    print("\tSelf Exec: $ %s" % sys.argv[0], file=sys.stderr)
-    print("\tServer   : $ %s --varlink=<varlink address>" % sys.argv[0], file=sys.stderr)
-    print("\tClient   : $ %s --client --varlink=<varlink address>" % sys.argv[0], file=sys.stderr)
-    print("\tClient   : $ %s --client --bridge=<bridge command>" % sys.argv[0], file=sys.stderr)
-    print("\tClient   : $ %s --client --activate=<activation command>" % sys.argv[0], file=sys.stderr)
+    arg0 = sys.argv[0]
+    print(
+        textwrap.dedent(
+            f"""\
+            Usage: {arg0} [[--client] --varlink=<varlink address>]
+            \tSelf Exec: $ {arg0}
+            \tServer   : $ {arg0} --varlink=<varlink address>
+            \tClient   : $ {arg0} --client --varlink=<varlink address>
+            \tClient   : $ {arg0} --client --bridge=<bridge command>
+            \tClient   : $ {arg0} --client --activate=<activation command>
+            """
+        ),
+        file=sys.stderr,
+    )
 
 
 if __name__ == "__main__":
@@ -463,7 +470,7 @@ if __name__ == "__main__":
 
     if not address and not client_mode:
         if not hasattr(socket, "AF_UNIX"):
-            print("varlink activate: not supported on platform %s" % platform, file=sys.stderr)
+            print(f"varlink activate: not supported on platform {platform}", file=sys.stderr)
             usage()
             sys.exit(2)
 

@@ -317,7 +317,7 @@ class Client:
 
         >>> for m in connection.Monitor(_more=True):
         >>>     for e in m.entries:
-        >>>         print("%s: %s" % (e.time, e.message))
+        >>>         print(f"{e.time}: {e.message}")
         2018-01-29 12:19:59Z: [system] Activating via systemd: service name='[…]
         2018-01-29 12:19:59Z: Starting Network Manager Script Dispatcher Service...
         2018-01-29 12:19:59Z: bound to 10.200.159.150 -- renewal in 1423 seconds.
@@ -384,7 +384,7 @@ class Client:
         s = socket.socket(socket.AF_UNIX)
         s.setblocking(False)
         self._tmpdir = tempfile.mkdtemp()
-        address = self._tmpdir + "/" + str(os.getpid())
+        address = f"{self._tmpdir}/{os.getpid()}"
         s.bind(address)
         s.listen(100)
 
@@ -406,9 +406,9 @@ class Client:
             address = address.replace("\0", "@", 1)
 
             for i in range(1, len(argv)):
-                argv[i] = argv[i].replace("$VARLINK_ADDRESS", "unix:" + address)
+                argv[i] = argv[i].replace("$VARLINK_ADDRESS", f"unix:{address}")
 
-            os.environ["VARLINK_ADDRESS"] = "unix:" + address
+            os.environ["VARLINK_ADDRESS"] = f"unix:{address}"
             os.environ["LISTEN_FDS"] = "1"
             os.environ["LISTEN_FDNAMES"] = "varlink"
             os.environ["LISTEN_PID"] = str(os.getpid())
@@ -454,7 +454,7 @@ class Client:
             thread2.start()
             return sp[0]
 
-        self._str = "Bridge with: '%s'" % " ".join(argv)
+        self._str = f"Bridge with: '{' '.join(argv)}'"
         if sys.platform == "win32":
             self._socket_fn = new_bridge_socket_compat
         else:
@@ -499,7 +499,7 @@ class Client:
                 port = address[p + 1 :]
                 address = address[:p]
             else:
-                raise ConnectionError("Invalid address 'tcp:%s'" % address)
+                raise ConnectionError(f"Invalid address 'tcp:{address}'")
             address = address.replace("[", "")
             address = address.replace("]", "")
 
@@ -511,7 +511,7 @@ class Client:
             self._socket_fn = open_tcp
 
         elif address is not None:
-            raise ConnectionError("Invalid address '%s'" % address)
+            raise ConnectionError(f"Invalid address '{address}'")
 
         return self
 
