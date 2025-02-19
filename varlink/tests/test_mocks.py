@@ -14,7 +14,12 @@ type MyPersonalType (
 class Service:
     def Test1(self, param1: int) -> str:
         """return test: MyPersonalType"""
-        return {"test": {"foo": "bim", "bar": "boom"}}
+        return {
+            "test": {
+                "foo": "bim",
+                "bar": "boom",
+            },
+        }
 
     def Test2(self, param1: str = "test") -> None:
         pass

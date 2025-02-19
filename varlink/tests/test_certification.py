@@ -168,7 +168,10 @@ class CertService:
             _server,
             _raw,
             _message,
-            {"method": "org.varlink.certification.Test01", "parameters": {"client_id": client_id}},
+            {
+                "method": "org.varlink.certification.Test01",
+                "parameters": {"client_id": client_id},
+            },
         )
         return {"bool": True}
 
@@ -298,7 +301,12 @@ class CertService:
                 "nullable": None,
                 "nullable_array_struct": None,
                 "interface": {
-                    "foo": [None, {"foo": "foo", "bar": "bar"}, None, {"one": "foo", "two": "bar"}],
+                    "foo": [
+                        None,
+                        {"foo": "foo", "bar": "bar"},
+                        None,
+                        {"one": "foo", "two": "bar"},
+                    ],
                     "anon": {"foo": True, "bar": False},
                 },
             },
@@ -324,7 +332,12 @@ class CertService:
                     "dictionary": {"foo": "Foo", "bar": "Bar"},
                     "stringset": {"one", "two", "three"},
                     "interface": {
-                        "foo": [None, {"foo": "foo", "bar": "bar"}, None, {"one": "foo", "two": "bar"}],
+                        "foo": [
+                            None,
+                            {"foo": "foo", "bar": "bar"},
+                            None,
+                            {"one": "foo", "two": "bar"},
+                        ],
                         "anon": {"foo": True, "bar": False},
                     },
                 },

@@ -18,7 +18,8 @@ class Scanner:
         self.docstring = re.compile(r"(?:.?)+#(.*)(?:\n|\r\n)")
         # FIXME: nested ()
         self.method_signature = re.compile(
-            r"([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))", re.ASCII | re.MULTILINE
+            r"([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))",
+            re.ASCII | re.MULTILINE,
         )
 
         self.keyword_pattern = re.compile(

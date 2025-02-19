@@ -76,7 +76,10 @@ class MockedServiceProcess:
 
     def run(self):
         mocked_service = varlink.Service(
-            vendor=self.vendor, product=self.product, version=self.version, url=self.url
+            vendor=self.vendor,
+            product=self.product,
+            version=self.version,
+            url=self.url,
         )
         instanciated_service = self.service_to_mock()
         mocked_service._set_interface(self.interface_file, instanciated_service)
