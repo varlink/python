@@ -207,7 +207,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
         try:
             if hasattr(self._connection, "shutdown"):
                 self._connection.shutdown(socket.SHUT_RDWR)
-        except:
+        except Exception:  # TODO: maybe just OSError?
             pass
 
         self._connection.close()
@@ -261,7 +261,7 @@ def pipe_bridge(reader, writer):
                 data = reader.recv(8192)
             else:
                 data = reader.read(1)
-        except:
+        except Exception:  # TODO: maybe just OsError?
             data = []
 
         if len(data) == 0:
@@ -275,7 +275,7 @@ def pipe_bridge(reader, writer):
             elif hasattr:
                 writer.write(data)
                 writer.flush()
-        except Exception:
+        except Exception:  # TODO: maybe just OsError?
             reader.close()
             writer.close()
             return
@@ -560,7 +560,7 @@ class Client:
                 pass
             try:
                 os.waitpid(self._child_pid, 0)
-            except:
+            except Exception:  # TODO: maybe just ChildProcessError?
                 pass
 
     def open(self, interface_name, namespaced=False, connection=None):
