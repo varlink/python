@@ -94,11 +94,11 @@ class Scanner:
             return _Object()
 
         if self.get("bool"):
-            t = bool()
+            t = False
         elif self.get("int"):
-            t = int()
+            t = 0
         elif self.get("float"):
-            t = float()
+            t = 0.0
         elif self.get("string"):
             t = ""
         else:
