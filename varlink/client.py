@@ -330,7 +330,7 @@ class Client:
     not return a normal namespace wrapped varlink return value, but a generator,
     which yields the return values and waits (blocks) for the service to return more return values
     in the generator's .__next__() call.
-    """
+    """  # noqa: E501
 
     handler = SimpleClientInterfaceHandler
 

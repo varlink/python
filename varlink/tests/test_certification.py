@@ -182,7 +182,7 @@ class CertService:
             "method": "org.varlink.certification.Test02",
             "parameters": {"client_id": client_id, "bool": True},
         }
-        self.assert_cmp(client_id, _server, _raw, wants, _bool == True)
+        self.assert_cmp(client_id, _server, _raw, wants, _bool == True)  # noqa: E712
         self.assert_raw(client_id, _server, _raw, _message, wants)
         return {"int": 1}
 
@@ -235,7 +235,7 @@ class CertService:
         }
         self.assert_raw(client_id, _server, _raw, _message, wants)
         self.assert_cmp(client_id, _server, _raw, wants, _int == 2)
-        self.assert_cmp(client_id, _server, _raw, wants, _bool == False)
+        self.assert_cmp(client_id, _server, _raw, wants, _bool == False)  # noqa: E712
         self.assert_cmp(client_id, _server, _raw, wants, _float == math.pi)
         self.assert_cmp(client_id, _server, _raw, wants, _string == "a lot of string")
 
@@ -253,7 +253,7 @@ class CertService:
         }
         self.assert_raw(client_id, _server, _raw, _message, wants)
         self.assert_cmp(client_id, _server, _raw, wants, _dict["int"] == 2)
-        self.assert_cmp(client_id, _server, _raw, wants, _dict["bool"] == False)
+        self.assert_cmp(client_id, _server, _raw, wants, _dict["bool"] == False)  # noqa: E712
         self.assert_cmp(client_id, _server, _raw, wants, _dict["float"] == math.pi)
         self.assert_cmp(client_id, _server, _raw, wants, _dict["string"] == "a lot of string")
         return {"map": {"foo": "Foo", "bar": "Bar"}}
