@@ -43,7 +43,7 @@ def generate_callable_interface(interface, attr):
         if param.name == "self":
             continue
         typeof = param.annotation
-        sign.append("{}: {}".format(param.name, cast_type(typeof)))
+        sign.append(f"{param.name}: {cast_type(typeof)}")
     returned = signature.return_annotation
     if returned:
         returned = cast_type(returned)
@@ -54,7 +54,7 @@ def generate_callable_interface(interface, attr):
         if ":" in doc:
             returned = doc
         else:
-            returned = "{}: {}".format(doc, returned)
+            returned = f"{doc}: {returned}"
     else:
         returned = ""
     return "method {name}({signature}) -> ({returned})".format(
@@ -286,7 +286,7 @@ class MockedService:
 
     def generate_interface(self):
         ignore = get_ignored()
-        self.interface_description = ["interface {}".format(self.name)]
+        self.interface_description = [f"interface {self.name}"]
         if self.types:
             for line in self.types.split("\n"):
                 self.interface_description.append(line)
@@ -295,7 +295,7 @@ class MockedService:
             self.interface_description.append(generate_callable_interface(self.service, attr))
 
     def get_interface_file_path(self):
-        return "/tmp/{}".format(self.name)
+        return f"/tmp/{self.name}"
 
     def generate_interface_file(self):
         tfp = open(self.get_interface_file_path(), "w+")
@@ -317,7 +317,7 @@ class MockedService:
         self.service_pid.communicate()
 
     def __enter__(self):
-        self.mocked_service_file = "/tmp/{}".format(self.identifier)
+        self.mocked_service_file = f"/tmp/{self.identifier}"
         service_generator(self.service, self.service_info, filename=self.mocked_service_file)
         self.generate_interface_file()
         self.service_start()
