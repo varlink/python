@@ -61,7 +61,7 @@ class Scanner:
     def expect(self, expected):
         value = self.get(expected)
         if not value:
-            raise SyntaxError("expected '{}'".format(expected))
+            raise SyntaxError(f"expected '{expected}'")
         return value
 
     def end(self):
@@ -102,7 +102,7 @@ class Scanner:
         elif self.get("float"):
             t = float()
         elif self.get("string"):
-            t = str()
+            t = ""
         else:
             name = self.get("member-name")
             if name:
@@ -131,13 +131,13 @@ class Scanner:
                         fields[name] = True
                         continue
                     else:
-                        raise SyntaxError("after '{}'".format(name))
+                        raise SyntaxError(f"after '{name}'")
                 elif not _isenum:
                     try:
                         self.expect(":")
                         fields[name] = self.read_type()
                     except SyntaxError as e:
-                        raise SyntaxError("after '{}': {}".format(name, e))
+                        raise SyntaxError(f"after '{name}': {e}")
                 else:
                     fields[name] = True
 
@@ -165,11 +165,11 @@ class Scanner:
                 else:
                     stop = start
 
-                raise SyntaxError("'{}' not a valid type name.".format(self.string[start:stop]))
+                raise SyntaxError(f"'{self.string[start:stop]}' not a valid type name.")
             try:
                 _type = self.read_type()
             except SyntaxError as e:
-                raise SyntaxError("in '{}': {}".format(_name, e))
+                raise SyntaxError(f"in '{_name}': {e}")
             doc = self.current_doc
             self.current_doc = ""
             return _Alias(_name, _type, doc)
