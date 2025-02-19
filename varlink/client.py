@@ -275,7 +275,7 @@ def pipe_bridge(reader, writer):
             elif hasattr:
                 writer.write(data)
                 writer.flush()
-        except Exception as e:
+        except Exception:
             reader.close()
             writer.close()
             return
