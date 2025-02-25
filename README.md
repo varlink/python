@@ -31,7 +31,7 @@ See the [tests](https://github.com/varlink/python-varlink/tree/master/varlink/te
 ```bash
 $ python3 -m varlink.tests.test_orgexamplemore --varlink="unix:/tmp/test" &
 [1] 6434
-$ python -m varlink.cli help unix:/tmp/test/org.example.more
+$ python3 -m varlink.cli help unix:/tmp/test/org.example.more
 # Example Varlink service
 interface org.example.more
 
@@ -56,7 +56,7 @@ method StopServing() -> ()
 # Something failed in TestMore
 error TestMoreError (reason: string)
 
-$ python -m varlink.cli call unix:/tmp/test/org.example.more.Ping '{ "ping": "Ping"}'
+$ python3 -m varlink.cli call unix:/tmp/test/org.example.more.Ping '{ "ping": "Ping"}'
 {
   "pong": "Ping"
 }
