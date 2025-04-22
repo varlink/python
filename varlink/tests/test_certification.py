@@ -88,7 +88,7 @@ class CertificationError(varlink.VarlinkError):
 
 @service.interface("org.varlink.certification")
 class CertService:
-    next_method = {}
+    next_method: dict[str, str] = {}
 
     def new_client_id(self, _server):
         client_id = codecs.getencoder("hex")(os.urandom(16))[0].decode("ascii")
@@ -477,6 +477,8 @@ if __name__ == "__main__":
         with varlink.Client.new_with_activate([__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
             run_client(client)
     elif client_mode:
+        if client is None:
+            raise ValueError("--client requires at either of --varlink, --bridge or --activate")
         with client:
             run_client(client)
     else:
