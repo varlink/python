@@ -217,7 +217,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
             self._connection.send_bytes(out + b"\0")
         elif self._sendall:
             self._connection.sendall(out + b"\0")
-        elif hasattr:
+        else:
             self._connection.write(out + b"\0")
 
     def _next_message(self):
@@ -272,7 +272,7 @@ def pipe_bridge(reader, writer):
         try:
             if sendall:
                 writer.sendall(data)
-            elif hasattr:
+            else:
                 writer.write(data)
                 writer.flush()
         except Exception:  # TODO: maybe just OsError?
