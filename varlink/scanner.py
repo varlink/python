@@ -36,8 +36,7 @@ class Scanner:
         self.current_doc = ""
 
     def get(self, expected):
-        m = self.whitespace.match(self.string, self.pos)
-        if m:
+        if m := self.whitespace.match(self.string, self.pos):
             doc = self.docstring.findall(self.string[m.start() : m.end()])
             if len(doc):
                 try:
@@ -46,10 +45,8 @@ class Scanner:
                     self.current_doc += "\n".join([el.decode("utf-8") for el in doc])
             self.pos = m.end()
 
-        pattern = self.patterns.get(expected)
-        if pattern:
-            m = pattern.match(self.string, self.pos)
-            if m:
+        if pattern := self.patterns.get(expected):
+            if m := pattern.match(self.string, self.pos):
                 self.pos = m.end()
                 return m.group(0)
         else:
@@ -59,14 +56,12 @@ class Scanner:
                 return True
 
     def expect(self, expected):
-        value = self.get(expected)
-        if not value:
-            raise SyntaxError(f"expected '{expected}'")
-        return value
+        if value := self.get(expected):
+            return value
+        raise SyntaxError(f"expected '{expected}'")
 
     def end(self):
-        m = self.whitespace.match(self.string, self.pos)
-        if m:
+        if m := self.whitespace.match(self.string, self.pos):
             doc = self.docstring.findall(self.string[m.start() : m.end()])
             if len(doc):
                 try:
