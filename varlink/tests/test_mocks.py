@@ -12,21 +12,23 @@ type MyPersonalType (
 
 
 class Service:
-    def Test1(self, param1: int) -> str:
+    # TODO: these type annotations are wrong as Python type hints, but are used
+    # by varlink.mock.generate_callable_interface
+    def Test1(self, param1: int) -> str:  # type: ignore
         """return test: MyPersonalType"""
         return {
             "test": {
                 "foo": "bim",
                 "bar": "boom",
             },
-        }
+        }  # type: ignore
 
     def Test2(self, param1: str = "test") -> None:
         pass
 
-    def Test3(self, param1: str) -> str:
+    def Test3(self, param1: str) -> str:  # type: ignore
         """return test"""
-        return {"test": param1}
+        return {"test": param1}  # type: ignore
 
 
 class TestMockMechanisms(unittest.TestCase):

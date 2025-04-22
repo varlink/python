@@ -200,6 +200,8 @@ if __name__ == "__main__":
         with varlink.Client.new_with_activate([__file__, "--varlink=$VARLINK_ADDRESS"]) as client:
             run_client(client)
     elif client_mode:
+        if client is None:
+            raise ValueError("--client requires at either of --varlink, --bridge or --activate")
         with client:
             run_client(client)
     else:

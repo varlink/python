@@ -13,6 +13,7 @@ if hasattr(os, "fork"):
     from socketserver import ForkingMixIn
 
 from types import GeneratorType
+from typing import Optional
 
 
 class Service:
@@ -324,7 +325,7 @@ class RequestHandler(StreamRequestHandler):
     Instantiate your own class and set the class variable service to your global :class:`Service` object.
     """
 
-    service = None
+    service: Optional[Service] = None
 
     def handle(self):
         message = b""
