@@ -245,15 +245,8 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
 
 def pipe_bridge(reader, writer):
-    if hasattr(reader, "recv"):
-        recv = True
-    else:
-        recv = False
-
-    if hasattr(writer, "sendall"):
-        sendall = True
-    else:
-        sendall = False
+    recv = hasattr(reader, "recv")
+    sendall = hasattr(writer, "sendall")
 
     while True:
         try:
