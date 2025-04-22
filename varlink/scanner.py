@@ -10,11 +10,13 @@ class Scanner:
     """Class for scanning a varlink interface definition."""
 
     def __init__(self, string):
-        self.whitespace = re.compile(r"([ \t\n]|#.*$)+", re.ASCII | re.MULTILINE)
+        # whitespace or comment
+        wsc = r"([ \t\n]|#.*$)"
+        self.whitespace = re.compile(rf"{wsc}+", re.ASCII | re.MULTILINE)
         self.docstring = re.compile(r"(?:.?)+#(.*)(?:\n|\r\n)")
         # FIXME: nested ()
         self.method_signature = re.compile(
-            r"([ \t\n]|#.*$)*(\([^)]*\))([ \t\n]|#.*$)*->([ \t\n]|#.*$)*(\([^)]*\))",
+            rf"{wsc}*(\(.*?\)){wsc}*->{wsc}*(\(.*?\))",
             re.ASCII | re.MULTILINE,
         )
 
