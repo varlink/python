@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
       - name: Install ruff
         run: |
-          python3 -m pip install --break-system-packages ruff
+          python3 -m pip install --break-system-packages ruff mypy
       - name: Run ruff format
         run: |
           ruff --version
@@ -47,4 +47,8 @@ jobs:
         run: |
           ruff --version
           ruff check varlink
+      - name: Type Checking (mypy)
+        run: |
+          python3 -m mypy --version
+          python3 -m mypy varlink/
     runs-on: ubuntu-latest
