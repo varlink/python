@@ -42,6 +42,5 @@ jobs:
           tox -e ruff-check
       - name: Type Checking (mypy)
         run: |
-          python3 -m mypy --version
-          python3 -m mypy varlink/
+          tox -e mypy
     runs-on: ubuntu-latest
