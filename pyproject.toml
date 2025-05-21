@@ -29,3 +29,31 @@ commands = [
 VIRTUAL_ENV="{envdir}"
 BRANCH_NAME="master"
 CLIENT_NAME="varlink"
+
+[tool.tox.env.ruff-format]
+description = "Check formatting using the ruff tool"
+deps = ["ruff"]
+commands = [
+    ["ruff", "format", "--quiet", "--check", "--diff", "{posargs:varlink}"]
+]
+
+[tool.tox.env.ruff-check]
+description = "Run linting checks using the ruff tool"
+deps = ["ruff"]
+commands = [
+    ["ruff", "check", "{posargs:varlink}"]
+]
+
+[tool.tox.env.py3-mypy]
+description = "Run type checking tool mypy"
+deps = ["mypy"]
+commands = [
+    ["mypy", "{posargs:varlink}"]
+]
+
+[tool.tox.env.py39-mypy]
+description = "Run type checking tool mypy (oldest supported python)"
+deps = ["mypy"]
+commands = [
+    ["mypy", "{posargs:varlink}"]
+]
