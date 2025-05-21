@@ -22,7 +22,7 @@ env_list = ["py313", "py312", "py311", "py310", "py39", "pypy3"]
 description = "Run test suite on {base_python}"
 deps = ["-r{toxinidir}/test-requirements.txt"]
 commands = [
-    ["nose2", "--coverage", "varlink"]
+    ["pytest", "--cov=varlink", "--cov-report=term", "{posargs:varlink}"]
 ]
 
 [tool.tox.env_run_base.set_env]
