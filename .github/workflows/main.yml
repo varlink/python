@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox_env: [py39, py310,  py311,  py312,  py313, pypy3, pep8]
+        tox_env: [py39, py310,  py311,  py312,  py313, pypy3]
 
     # Use GitHub's Linux Docker host
     runs-on: ubuntu-latest
@@ -32,23 +32,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install ruff
-        run: |
-          python3 -m pip install --break-system-packages ruff mypy
       - name: Run ruff format
         run: |
-          ruff --version
-          if ! ruff format --check --quiet varlink
-          then
-              echo "Please run 'ruff format' on the above files or apply the diffs below manually"
-              ruff format --check --quiet --diff varlink
+          if ! tox -e ruff-format ; then
+              echo "Please run 'ruff format' on the above files or apply the diffs manually"
           fi
       - name: Run ruff check
         run: |
-          ruff --version
-          ruff check varlink
+          tox -e ruff-check
       - name: Type Checking (mypy)
         run: |
-          python3 -m mypy --version
-          python3 -m mypy varlink/
+          tox -e py3-mypy,py39-mypy
     runs-on: ubuntu-latest
