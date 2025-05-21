@@ -32,21 +32,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install ruff
-        run: |
-          python3 -m pip install --break-system-packages ruff mypy
+      - name: Install tox
+        run: python -m pip install tox
       - name: Run ruff format
         run: |
-          ruff --version
-          if ! ruff format --check --quiet varlink
-          then
-              echo "Please run 'ruff format' on the above files or apply the diffs below manually"
-              ruff format --check --quiet --diff varlink
-          fi
+          tox -e ruff-format
       - name: Run ruff check
         run: |
-          ruff --version
-          ruff check varlink
+          tox -e ruff-check
       - name: Type Checking (mypy)
         run: |
           python3 -m mypy --version
