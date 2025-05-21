@@ -1,2 +1,2 @@
-fixtures
-nose2
+pytest
+pytest-cov
