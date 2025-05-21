@@ -1,0 +1,27 @@
+# Example Varlink service
+interface org.example.encoding
+
+type State (
+  start: ?bool,
+  progress: ?int,
+  end: ?bool
+)
+
+type Shipment (
+  name: string,
+  description: string,
+  size: int,
+  weight: ?int
+)
+
+type Order (
+  shipments: []Shipment,
+  order_num: int,
+  customer: string
+)
+
+# Returns the same string
+method Ping(ping: string) -> (pong: string)
+
+# Returns a fake order given an order number
+method GetOrder(num: int) -> (order: Order)

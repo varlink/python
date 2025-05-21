@@ -52,10 +52,21 @@ class Service:
 
     """
 
-    def __init__(self, vendor="", product="", version="", url="", interface_dir=".", namespaced=False):
+    def __init__(
+        self,
+        vendor="",
+        product="",
+        version="",
+        url="",
+        interface_dir=".",
+        namespaced=False,
+        *,
+        json_encoder_cls=None,
+    ):
         """Initialize the service with the data org.varlink.service.GetInfo() returns
 
         :param interface_dir: the directory with the \\*.varlink files for the interfaces
+        :param json_encoder_cls: Optional; supply a json.JSONEncoder subclass to use instead of the default
 
         """
         self.vendor = vendor
@@ -64,6 +75,7 @@ class Service:
         self.url = url
         self.interface_dir = interface_dir
         self._namespaced = namespaced
+        self.json_encoder_cls = json_encoder_cls or VarlinkEncoder
 
         self.interfaces = {}
         self.interfaces_handlers = {}
@@ -248,7 +260,7 @@ class Service:
             if out is None:
                 return
             try:
-                yield json.dumps(out, cls=VarlinkEncoder).encode("utf-8")
+                yield json.dumps(out, cls=self.json_encoder_cls).encode("utf-8")
             except ConnectionError as e:
                 try:
                     handle.throw(e)
