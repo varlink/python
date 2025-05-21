@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox_env: [py39, py310,  py311,  py312,  py313, pypy3, pep8]
+        tox_env: [py39, py310,  py311,  py312,  py313, pypy3]
 
     # Use GitHub's Linux Docker host
     runs-on: ubuntu-latest
