@@ -287,7 +287,6 @@ class CertService:
         self.assert_cmp(client_id, _server, _raw, wants, "two" in _set)
         self.assert_cmp(client_id, _server, _raw, wants, "three" in _set)
         return {
-            "client_id": client_id,
             "mytype": {
                 "object": {
                     "method": "org.varlink.certification.Test09",
