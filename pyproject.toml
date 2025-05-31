@@ -13,3 +13,47 @@ local_scheme = "no-local-version"
 target-version = "py39"
 line-length = 109
 lint.select = ["E", "F", "I", "UP"]
+
+### tox configuration ###
+[tool.tox]
+env_list = ["py313", "py312", "py311", "py310", "py39", "pypy3"]
+
+[tool.tox.env_run_base]
+description = "Run test suite on {base_python}"
+deps = ["-r{toxinidir}/test-requirements.txt"]
+commands = [
+    ["pytest", "--cov=varlink", "--cov-report=term", "{posargs:varlink}"]
+]
+
+[tool.tox.env_run_base.set_env]
+VIRTUAL_ENV="{envdir}"
+BRANCH_NAME="master"
+CLIENT_NAME="varlink"
+
+[tool.tox.env.ruff-format]
+description = "Check formatting using the ruff tool"
+deps = ["ruff"]
+commands = [
+    ["ruff", "format", "--quiet", "--check", "--diff", "{posargs:varlink}"]
+]
+
+[tool.tox.env.ruff-check]
+description = "Run linting checks using the ruff tool"
+deps = ["ruff"]
+commands = [
+    ["ruff", "check", "{posargs:varlink}"]
+]
+
+[tool.tox.env.py3-mypy]
+description = "Run type checking tool mypy"
+deps = ["mypy"]
+commands = [
+    ["mypy", "{posargs:varlink}"]
+]
+
+[tool.tox.env.py39-mypy]
+description = "Run type checking tool mypy (oldest supported python)"
+deps = ["mypy"]
+commands = [
+    ["mypy", "{posargs:varlink}"]
+]
