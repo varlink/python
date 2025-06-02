@@ -14,6 +14,9 @@ target-version = "py39"
 line-length = 109
 lint.select = ["E", "F", "I", "UP"]
 
+[tool.mypy]
+python_version = 3.9
+
 ### tox configuration ###
 [tool.tox]
 env_list = ["py313", "py312", "py311", "py310", "py39", "pypy3"]
