@@ -182,7 +182,7 @@ class Service:
             if self._namespaced:
                 # FIXME: check for Maybe before taking None as default value
                 out = func(
-                    *(getattr(parameters, k, default=None) for k in method.in_type.fields.keys()), **kwargs
+                    *(getattr(parameters, k, None) for k in method.in_type.fields.keys()), **kwargs
                 )
             else:
                 # FIXME: check for Maybe before taking None as default value
