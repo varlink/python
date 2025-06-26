@@ -126,9 +126,14 @@ error ActionFailed (reason: ?ErrorChain)
         interface = varlink.Interface("""
         interface org.example.testerrors
         type TypeEnum ( a, b, c )
+        type TypeDict (dict: [string]string)
 
         method Foo(param: TypeEnum) -> ()
+        method Bar(param: TypeDict) -> ()
         """)
         foo = interface.get_method("Foo")
         with self.assertRaises(varlink.InvalidParameter):
             interface.filter_params("test.call", foo.in_type, False, (), {"param": "d"})
+        bar = interface.get_method("Bar")
+        with self.assertRaises(varlink.InvalidParameter):
+            interface.filter_params("test.call", bar.in_type, False, (), {"param": {"dict": [1, 2, 3]}})
