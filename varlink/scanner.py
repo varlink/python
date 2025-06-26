@@ -307,7 +307,8 @@ class Interface:
             return args
 
         if isinstance(varlink_type, _Enum) and isinstance(args, str):
-            # print("Returned str:", args)
+            if args not in varlink_type.fields:
+                raise InvalidParameter(parent_name)
             return args
 
         if isinstance(varlink_type, _Array):
