@@ -121,3 +121,14 @@ error ActionFailed (reason: ?ErrorChain)
         self.assertIsNotNone(
             varlink.Interface("interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()").name
         )
+
+    def test_bad_types(self):
+        interface = varlink.Interface("""
+        interface org.example.testerrors
+        type TypeEnum ( a, b, c )
+
+        method Foo(param: TypeEnum) -> ()
+        """)
+        foo = interface.get_method("Foo")
+        with self.assertRaises(varlink.InvalidParameter):
+            interface.filter_params("test.call", foo.in_type, False, (), {"param": "d"})
