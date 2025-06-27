@@ -19,6 +19,7 @@ class TestError(unittest.TestCase):
         dummy_if = varlink.Interface("interface org.example.dummy")
         for error in [
             varlink.InterfaceNotFound("org.varlink.notfound"),
+            varlink.MethodNotFound("Method"),
             varlink.MethodNotImplemented("Abstract"),
             varlink.InvalidParameter("Struct.param"),
         ]:
