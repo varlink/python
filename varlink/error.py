@@ -45,15 +45,19 @@ class VarlinkError(Exception):
         """returns the exception varlink error name"""
         return self.args[0].get("error")
 
-    def parameters(self, namespaced=False):
-        """returns the exception varlink error parameters"""
+    @staticmethod
+    def message_parameters(message, namespaced=False):
         if namespaced:
             return json.loads(
-                json.dumps(self.args[0]["parameters"]),
+                json.dumps(message["parameters"]),
                 object_hook=lambda d: SimpleNamespace(**d),
             )
         else:
-            return self.args[0].get("parameters")
+            return message.get("parameters")
+
+    def parameters(self, namespaced=False):
+        """returns the exception varlink error parameters"""
+        return self.message_parameters(self.args[0], namespaced)
 
     def as_dict(self):
         return self.args[0]
@@ -64,9 +68,11 @@ class InterfaceNotFound(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(
-            namespaced and message["parameters"].interface or message["parameters"].get("interface", None)
-        )
+        parameters = cls.message_parameters(message, namespaced)
+        if parameters is None:
+            # Back-compatibility error
+            raise KeyError("parameters")
+        return cls(parameters.interface if namespaced else parameters.get("interface", None))
 
     def __init__(self, interface):
         VarlinkError.__init__(
@@ -83,7 +89,8 @@ class MethodNotFound(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(namespaced and message["parameters"].method or message["parameters"].get("method", None))
+        parameters = cls.message_parameters(message, namespaced)
+        return cls(namespaced and parameters.method or parameters.get("method", None))
 
     def __init__(self, method):
         VarlinkError.__init__(
@@ -100,7 +107,8 @@ class MethodNotImplemented(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(namespaced and message["parameters"].method or message["parameters"].get("method", None))
+        parameters = cls.message_parameters(message, namespaced)
+        return cls(namespaced and parameters.method or parameters.get("method", None))
 
     def __init__(self, method):
         VarlinkError.__init__(
@@ -117,9 +125,8 @@ class InvalidParameter(VarlinkError):
 
     @classmethod
     def new(cls, message, namespaced=False):
-        return cls(
-            namespaced and message["parameters"].parameter or message["parameters"].get("parameter", None)
-        )
+        parameters = cls.message_parameters(message, namespaced)
+        return cls(namespaced and parameters.parameter or parameters.get("parameter", None))
 
     def __init__(self, name):
         VarlinkError.__init__(
