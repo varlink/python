@@ -3,7 +3,6 @@ import json
 import os
 import socket
 import stat
-import string
 from socketserver import BaseServer, StreamRequestHandler, ThreadingMixIn
 
 from .error import InterfaceNotFound, InvalidParameter, MethodNotImplemented, VarlinkEncoder, VarlinkError
@@ -305,7 +304,7 @@ def get_listen_fd():
         except OSError:
             return None
 
-    fields = string.split(os.environ["LISTEN_FDNAMES"], ":")
+    fields = os.environ.get("LISTEN_FDNAMES", "").split(":")
 
     if len(fields) != fds:
         return None
