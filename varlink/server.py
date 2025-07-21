@@ -138,23 +138,16 @@ class Service:
 
             kwargs = {}
 
-            if hasattr(inspect, "signature"):
-                sig = inspect.signature(func)
-                arg_names = [
-                    (
-                        sig.parameters[k].kind
-                        in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
-                        and k
-                        or None
-                    )
-                    for k in sig.parameters.keys()
-                ]
-            else:
-                from itertools import izip
-
-                spec = inspect.getargspec(func)
-                matched_args = [reversed(x) for x in [spec.args, spec.defaults or []]]
-                arg_names = dict(izip(*matched_args))
+            sig = inspect.signature(func)
+            arg_names = [
+                (
+                    sig.parameters[k].kind
+                    in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+                    and k
+                    or None
+                )
+                for k in sig.parameters.keys()
+            ]
 
             if message.get("more", False) or message.get("oneway", False) or message.get("upgrade", False):
                 if message.get("more", False) and "_more" in arg_names:
