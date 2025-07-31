@@ -1,3 +1,5 @@
+import functools
+import importlib.resources
 import json
 import os
 import shutil
@@ -327,6 +329,13 @@ class Client:
 
     handler = SimpleClientInterfaceHandler
 
+    @classmethod
+    @functools.lru_cache(maxsize=1)
+    def _get_base_interface(cls):
+        return Interface(
+            importlib.resources.files("varlink").joinpath("org.varlink.service.varlink").read_text()
+        )
+
     def __init__(self, address=None, resolve_interface=None, resolver=None):
         """Creates a Client object to reach the interfaces of a varlink service.
         For more constructors see the class constructor methods new_with_*() returning an Client object.
@@ -344,9 +353,7 @@ class Client:
         self._child_pid = 0
         self._str = "Client<uninitialized>"
 
-        with open(os.path.join(os.path.dirname(__file__), "org.varlink.service.varlink")) as f:
-            interface = Interface(f.read())
-            self.add_interface(interface)
+        self.add_interface(self._get_base_interface())
 
         if resolve_interface:
             self._with_interface(resolve_interface, resolver)
