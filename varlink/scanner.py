@@ -291,7 +291,7 @@ class Interface:
                     )
                 return args
             else:
-                InvalidParameter(parent_name)
+                raise InvalidParameter(parent_name)
 
         if isinstance(varlink_type, _CustomType):
             # print("CustomType", varlink_type.name)
@@ -307,7 +307,8 @@ class Interface:
             return args
 
         if isinstance(varlink_type, _Enum) and isinstance(args, str):
-            # print("Returned str:", args)
+            if args not in varlink_type.fields:
+                raise InvalidParameter(parent_name)
             return args
 
         if isinstance(varlink_type, _Array):
