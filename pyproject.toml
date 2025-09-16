@@ -6,6 +6,42 @@ requires = [
 ]
 build-backend = 'setuptools.build_meta'
 
+[project]
+name = "varlink"
+description = "Python implementation of the Varlink protocol"
+readme = "README.md"
+requires-python = ">=3.9"
+dynamic = ["version"]
+authors = [
+    {name = "Lars Karlitski", email = "lars@karlitski.net"},
+    {name = "Harald Hoyer", email = "harald@hoyer.xyz"}
+]
+keywords = ["ipc", "varlink", "rpc"]
+license = "Apache-2.0"
+license-files = ["LICENSE.txt"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Networking",
+]
+
+[project.urls]
+Homepage = "https://varlink.org/"
+Repository = "https://github.com/varlink/python"
+Issues = "https://github.com/varlink/python/issues"
+
+[tool.setuptools.package-data]
+varlink = [
+    "*.varlink"
+]
+
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
 
