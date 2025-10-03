@@ -29,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Networking",
 ]
 
@@ -55,7 +56,7 @@ python_version = 3.9
 
 ### tox configuration ###
 [tool.tox]
-env_list = ["py313", "py312", "py311", "py310", "py39", "pypy3"]
+env_list = ["py314", "py313", "py312", "py311", "py310", "py39", "pypy3"]
 
 [tool.tox.env_run_base]
 description = "Run test suite on {base_python}"
