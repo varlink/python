@@ -88,7 +88,7 @@ class ActionFailed(varlink.VarlinkError):
 
 @service.interface("org.example.more")
 class Example:
-    sleep_duration = 1
+    sleep_duration = 1.0
 
     def TestMore(self, n, _more=True, _server=None):
         try:
