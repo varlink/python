@@ -248,7 +248,7 @@ class MockedService:
         product="mock",
         version=1,
         url="http://localhost",
-    ):
+    ) -> None:
         if not name:
             module = service.__module__
             try:
@@ -291,22 +291,22 @@ class MockedService:
     def get_interface_file_path(self):
         return f"/tmp/{self.name}"
 
-    def generate_interface_file(self):
+    def generate_interface_file(self) -> None:
         tfp = open(self.get_interface_file_path(), "w+")
         tfp.write("\n".join(self.interface_description))
         tfp.close()
 
-    def delete_interface_files(self):
+    def delete_interface_files(self) -> None:
         os.remove(self.get_interface_file_path())
         os.remove(self.mocked_service_file)
 
-    def service_start(self):
+    def service_start(self) -> None:
         self.service_pid = subprocess.Popen(
             [sys.executable, self.mocked_service_file], env={"PYTHONPATH": ":".join(sys.path)}
         )
         time.sleep(2)
 
-    def service_stop(self):
+    def service_stop(self) -> None:
         self.service_pid.kill()
         self.service_pid.communicate()
 

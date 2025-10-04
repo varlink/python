@@ -40,11 +40,11 @@ class ClientInterfaceHandler:
             if isinstance(member, _Method):
                 self._add_method(member)
 
-    def close(self):
+    def close(self) -> None:
         """To be implemented."""
         raise NotImplementedError
 
-    def _send_message(self, out):
+    def _send_message(self, out) -> None:
         """To be implemented.
 
         This should send a varlink message to the varlink service adding a trailing zero byte.
@@ -205,7 +205,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
     def __exit__(self, _type, _value, _traceback):
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         try:
             if hasattr(self._connection, "shutdown"):
                 self._connection.shutdown(socket.SHUT_RDWR)
@@ -214,7 +214,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
 
         self._connection.close()
 
-    def _send_message(self, out):
+    def _send_message(self, out) -> None:
         if self._send_bytes:
             self._connection.send_bytes(out + b"\0")
         elif self._sendall:
@@ -546,7 +546,7 @@ class Client:
 
         return self
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         if hasattr(self, "_tmpdir") and self._tmpdir is not None:
             try:
                 shutil.rmtree(self._tmpdir)
