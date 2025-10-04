@@ -12,7 +12,7 @@ if hasattr(os, "fork"):
     from socketserver import ForkingMixIn
 
 from types import GeneratorType
-from typing import Optional
+from typing import Optional, Union
 
 
 class Service:
@@ -91,7 +91,7 @@ class Service:
             "interfaces": list(self.interfaces.keys()),
         }
 
-    def GetInterfaceDescription(self, interface):
+    def GetInterfaceDescription(self, interface: str) -> dict[str, str]:
         """The standardized org.varlink.service.GetInterfaceDescription() varlink method."""
         try:
             i = self.interfaces[interface]
@@ -282,7 +282,7 @@ class Service:
         return decorator
 
 
-def get_listen_fd():
+def get_listen_fd() -> Union[int, None]:
     if "LISTEN_FDS" not in os.environ:
         return None
     if "LISTEN_PID" not in os.environ:
@@ -318,6 +318,8 @@ def get_listen_fd():
                     return None
             except OSError:
                 return None
+
+    return None
 
 
 class RequestHandler(StreamRequestHandler):
@@ -500,7 +502,7 @@ class Server(BaseServer):
                 pass
         self.socket.close()
 
-    def fileno(self):
+    def fileno(self) -> int:
         """Return socket file number.
 
         Interface required by selector.
