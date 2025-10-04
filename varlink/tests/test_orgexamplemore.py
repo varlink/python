@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
 
 class TestService(unittest.TestCase):
-    def test_service(self):
+    def test_service(self) -> None:
         address = "tcp:127.0.0.1:23451"
         Example.sleep_duration = 0.1
 

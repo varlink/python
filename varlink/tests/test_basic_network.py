@@ -43,18 +43,18 @@ class TestService(unittest.TestCase):
             server.shutdown()
             server.server_close()
 
-    def test_tcp(self):
+    def test_tcp(self) -> None:
         self.do_run("tcp:127.0.0.1:23450")
 
-    def test_anon_unix(self):
+    def test_anon_unix(self) -> None:
         if platform.startswith("linux"):
             self.do_run(f"unix:@org.varlink.service_anon_test{os.getpid()}{threading.current_thread().name}")
 
-    def test_unix(self):
+    def test_unix(self) -> None:
         if hasattr(socket, "AF_UNIX"):
             self.do_run(f"unix:org.varlink.service_anon_test_{os.getpid()}{threading.current_thread().name}")
 
-    def test_wrong_url(self):
+    def test_wrong_url(self) -> None:
         self.assertRaises(
             ConnectionError, self.do_run, f"uenix:org.varlink.service_wrong_url_test_{os.getpid()}"
         )
