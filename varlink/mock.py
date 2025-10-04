@@ -16,7 +16,7 @@ def cast_type(typeof):
     return cast.get(typeof, typeof)
 
 
-def get_ignored():
+def get_ignored() -> list[str]:
     ignore = dir(MockedService)
     return ignore
 
@@ -258,7 +258,7 @@ class MockedService:
         else:
             self.name = name
         self.identifier = str(uuid.uuid4())
-        self.interface_description = None
+        self.interface_description: list[str] = []
         self.service = service
         self.types = types
         self.address = address
@@ -278,7 +278,7 @@ class MockedService:
         }
         self.generate_interface()
 
-    def generate_interface(self):
+    def generate_interface(self) -> None:
         ignore = get_ignored()
         self.interface_description = [f"interface {self.name}"]
         if self.types:
@@ -288,7 +288,7 @@ class MockedService:
         for attr in attributs["callables"]:
             self.interface_description.append(generate_callable_interface(self.service, attr))
 
-    def get_interface_file_path(self):
+    def get_interface_file_path(self) -> str:
         return f"/tmp/{self.name}"
 
     def generate_interface_file(self) -> None:
