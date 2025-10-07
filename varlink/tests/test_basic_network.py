@@ -58,3 +58,24 @@ class TestService(unittest.TestCase):
         self.assertRaises(
             ConnectionError, self.do_run, f"uenix:org.varlink.service_wrong_url_test_{os.getpid()}"
         )
+
+    def test_reuse_open(self) -> None:
+        address = "tcp:127.0.0.1:23450"
+        server = varlink.ThreadingServer(address, ServiceRequestHandler)
+        server_thread = threading.Thread(target=server.serve_forever)
+        server_thread.daemon = True
+        server_thread.start()
+
+        try:
+            with varlink.Client(address) as client:
+                connection = client.open_connection()
+                re_use = client.open("org.varlink.service", False, connection)
+
+                info = re_use.GetInfo()
+                self.assertEqual(len(info["interfaces"]), 1)
+                self.assertEqual(info["interfaces"][0], "org.varlink.service")
+                self.assertEqual(info, service.GetInfo())
+                connection.close()
+        finally:
+            server.shutdown()
+            server.server_close()
