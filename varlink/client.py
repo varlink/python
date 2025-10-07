@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from typing import Optional
 
 from .error import InterfaceNotFound, VarlinkEncoder, VarlinkError
 from .scanner import Interface, _Method
@@ -443,7 +444,7 @@ class Client:
             self._child_pid = p.pid
             return sp[0]
 
-        def new_bridge_socket_compat():
+        def new_bridge_socket_compat() -> socket.socket:
             sp = socket.socketpair()
             p = subprocess.Popen(
                 " ".join(argv), shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True
@@ -563,7 +564,9 @@ class Client:
             except Exception:  # TODO: maybe just ChildProcessError?
                 pass
 
-    def open(self, interface_name, namespaced=False, connection=None):
+    def open(
+        self, interface_name: str, namespaced: bool = False, connection: Optional[socket.socket] = None
+    ) -> SimpleClientInterfaceHandler:
         """Open a new connection and get a client interface handle with the varlink methods installed.
 
         :param interface_name: an interface name, which the service this client object is
@@ -586,11 +589,12 @@ class Client:
 
         return self.handler(self._interfaces[interface_name], connection, namespaced=namespaced)
 
-    def open_connection(self):
+    def open_connection(self) -> socket.socket:
         """Open a new connection and return the socket.
         :exception OSError: anything socket.connect() throws
 
         """
+        assert self._socket_fn, "socket_fn not initialised"
         return self._socket_fn()
 
     def get_interfaces(self, socket_connection=None):
@@ -628,7 +632,7 @@ class Client:
 
         return interface
 
-    def add_interface(self, interface):
+    def add_interface(self, interface: Interface) -> None:
         """Manually add or overwrite an interface definition from an Interface object.
 
         :param interface: an Interface() object
