@@ -1,11 +1,15 @@
-import unittest
+import pytest
 
 import varlink
 
 
-class TestScanner(unittest.TestCase):
-    def test_scanner_1(self):
-        interface = varlink.Interface("""# Example Varlink service
+def assert_invalid_description_raises(description: str) -> None:
+    with pytest.raises(SyntaxError):
+        varlink.Interface(description)
+
+
+def test_scanner_1() -> None:
+    interface = varlink.Interface("""# Example Varlink service
 interface org.example.more
 
 # Enum, returning either start, progress or end
@@ -35,105 +39,102 @@ type ErrorChain (
 
 error ActionFailed (reason: ?ErrorChain)
 """)
-        self.assertEqual(interface.name, "org.example.more")
-        self.assertIsNotNone(interface.get_method("Ping"))
-        self.assertIsNotNone(interface.get_method("TestMore"))
-        self.assertIsNotNone(interface.get_method("TestMap"))
-        self.assertIsNotNone(interface.get_method("StopServing"))
-        self.assertIsInstance(interface.members.get("ActionFailed"), varlink.scanner._Error)
-        self.assertIsInstance(interface.members.get("State"), varlink.scanner._Alias)
+    assert interface.name == "org.example.more"
+    assert interface.get_method("Ping") is not None
+    assert interface.get_method("TestMore") is not None
+    assert interface.get_method("TestMap") is not None
+    assert interface.get_method("StopServing") is not None
+    assert isinstance(interface.members.get("ActionFailed"), varlink.scanner._Error)
+    assert isinstance(interface.members.get("State"), varlink.scanner._Alias)
 
-    def test_doubleoption(self):
-        interface = None
-        try:
-            interface = varlink.Interface("""
+
+def test_doubleoption() -> None:
+    interface = None
+    try:
+        interface = varlink.Interface("""
     interface org.example.doubleoption
     method Foo(a: ??string) -> ()
     """)
-        except SyntaxError:
-            pass
+    except SyntaxError:
+        pass
 
-        self.assertIsNone(interface)
+    assert interface is None
 
-    def test_complex(self):
-        interface = varlink.Interface("""
-    interface org.example.complex
-    
-    type TypeEnum ( a, b, c )
-    
-    type TypeFoo (
-        bool: bool,
-        int: int,
-        float: float,
-        string: ?string,
-        enum: ?[]( foo, bar, baz ),
-        type: ?TypeEnum,
-        anon: ( foo: bool, bar: int, baz: [](a: int, b: int) ),
-        object: object
+
+def test_complex() -> None:
+    interface = varlink.Interface("""
+interface org.example.complex
+
+type TypeEnum ( a, b, c )
+
+type TypeFoo (
+    bool: bool,
+    int: int,
+    float: float,
+    string: ?string,
+    enum: ?[]( foo, bar, baz ),
+    type: ?TypeEnum,
+    anon: ( foo: bool, bar: int, baz: [](a: int, b: int) ),
+    object: object
+)
+
+method Foo(a: (b: bool, c: int), foo: TypeFoo) -> (a: [](b: bool, c: int), foo: TypeFoo)
+
+error ErrorFoo (a: (b: bool, c: int), foo: TypeFoo)
+""")
+
+    assert interface.name == "org.example.complex"
+    assert interface.get_method("Foo") is not None
+    assert isinstance(interface.members.get("ErrorFoo"), varlink.scanner._Error)
+    assert isinstance(interface.members.get("TypeEnum"), varlink.scanner._Alias)
+
+
+def test_interfacename() -> None:
+    assert_invalid_description_raises("interface .a.b.c\nmethod F()->()")
+    assert_invalid_description_raises("interface com.-example.leadinghyphen\nmethod F()->()")
+    assert_invalid_description_raises("interface com.example-.danglinghyphen-\nmethod F()->()")
+    assert_invalid_description_raises("interface co9.example.number-toplevel\nmethod F()->()")
+    assert_invalid_description_raises("interface 1om.example.number-toplevel\nmethod F()->()")
+    assert_invalid_description_raises("interface ab\nmethod F()->()")
+    assert_invalid_description_raises("interface .a.b.c\nmethod F()->()")
+    assert_invalid_description_raises("interface a.b.c.\nmethod F()->()")
+    assert_invalid_description_raises("interface a..b.c\nmethod F()->()")
+    assert_invalid_description_raises("interface 1.b.c\nmethod F()->()")
+    assert_invalid_description_raises("interface 8a.0.0\nmethod F()->()")
+    assert_invalid_description_raises("interface -a.b.c\nmethod F()->()")
+    assert_invalid_description_raises("interface a.b.c-\nmethod F()->()")
+    assert_invalid_description_raises("interface a.b-.c-\nmethod F()->()")
+    assert_invalid_description_raises("interface a.-b.c-\nmethod F()->()")
+    assert_invalid_description_raises("interface a.-.c\nmethod F()->()")
+    assert_invalid_description_raises("interface a.*.c\nmethod F()->()")
+    assert_invalid_description_raises("interface a.?\nmethod F()->()")
+
+    assert varlink.Interface("interface a.b\nmethod F()->()").name is not None
+    assert varlink.Interface("interface a.b.c\nmethod F()->()").name is not None
+    assert varlink.Interface("interface a.1\nmethod F()->()").name is not None
+    assert varlink.Interface("interface a.0.0\nmethod F()->()").name is not None
+    assert varlink.Interface("interface org.varlink.service\nmethod F()->()").name is not None
+    assert varlink.Interface("interface com.example.0example\nmethod F()->()").name is not None
+    assert varlink.Interface("interface com.example.example-dash\nmethod F()->()").name is not None
+    assert varlink.Interface("interface xn--lgbbat1ad8j.example.algeria\nmethod F()->()").name is not None
+    assert (
+        varlink.Interface("interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()").name is not None
     )
-    
-    method Foo(a: (b: bool, c: int), foo: TypeFoo) -> (a: [](b: bool, c: int), foo: TypeFoo)
-    
-    error ErrorFoo (a: (b: bool, c: int), foo: TypeFoo)
+
+
+def test_bad_types() -> None:
+    interface = varlink.Interface("""
+    interface org.example.testerrors
+    type TypeEnum ( a, b, c )
+    type TypeDict (dict: [string]string)
+
+    method Foo(param: TypeEnum) -> ()
+    method Bar(param: TypeDict) -> ()
     """)
-        self.assertEqual(interface.name, "org.example.complex")
-        self.assertIsNotNone(interface.get_method("Foo"))
-        self.assertIsInstance(interface.members.get("ErrorFoo"), varlink.scanner._Error)
-        self.assertIsInstance(interface.members.get("TypeEnum"), varlink.scanner._Alias)
+    foo = interface.get_method("Foo")
+    with pytest.raises(varlink.InvalidParameter):
+        interface.filter_params("test.call", foo.in_type, False, (), {"param": "d"})
 
-    def test_interfacename(self):
-        self.assertRaises(SyntaxError, varlink.Interface, "interface .a.b.c\nmethod F()->()")
-        self.assertRaises(
-            SyntaxError, varlink.Interface, "interface com.-example.leadinghyphen\nmethod F()->()"
-        )
-        self.assertRaises(
-            SyntaxError, varlink.Interface, "interface com.example-.danglinghyphen-\nmethod F()->()"
-        )
-        self.assertRaises(
-            SyntaxError, varlink.Interface, "interface co9.example.number-toplevel\nmethod F()->()"
-        )
-        self.assertRaises(
-            SyntaxError, varlink.Interface, "interface 1om.example.number-toplevel\nmethod F()->()"
-        )
-        self.assertRaises(SyntaxError, varlink.Interface, "interface ab\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface .a.b.c\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a.b.c.\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a..b.c\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface 1.b.c\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface 8a.0.0\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface -a.b.c\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a.b.c-\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a.b-.c-\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a.-b.c-\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a.-.c\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a.*.c\nmethod F()->()")
-        self.assertRaises(SyntaxError, varlink.Interface, "interface a.?\nmethod F()->()")
-        self.assertIsNotNone(varlink.Interface("interface a.b\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface a.b.c\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface a.1\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface a.0.0\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface org.varlink.service\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface com.example.0example\nmethod F()->()").name)
-        self.assertIsNotNone(varlink.Interface("interface com.example.example-dash\nmethod F()->()").name)
-        self.assertIsNotNone(
-            varlink.Interface("interface xn--lgbbat1ad8j.example.algeria\nmethod F()->()").name
-        )
-        self.assertIsNotNone(
-            varlink.Interface("interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()").name
-        )
-
-    def test_bad_types(self):
-        interface = varlink.Interface("""
-        interface org.example.testerrors
-        type TypeEnum ( a, b, c )
-        type TypeDict (dict: [string]string)
-
-        method Foo(param: TypeEnum) -> ()
-        method Bar(param: TypeDict) -> ()
-        """)
-        foo = interface.get_method("Foo")
-        with self.assertRaises(varlink.InvalidParameter):
-            interface.filter_params("test.call", foo.in_type, False, (), {"param": "d"})
-        bar = interface.get_method("Bar")
-        with self.assertRaises(varlink.InvalidParameter):
-            interface.filter_params("test.call", bar.in_type, False, (), {"param": {"dict": [1, 2, 3]}})
+    bar = interface.get_method("Bar")
+    with pytest.raises(varlink.InvalidParameter):
+        interface.filter_params("test.call", bar.in_type, False, (), {"param": {"dict": [1, 2, 3]}})
