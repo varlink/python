@@ -138,3 +138,45 @@ def test_bad_types() -> None:
     bar = interface.get_method("Bar")
     with pytest.raises(varlink.InvalidParameter):
         interface.filter_params("test.call", bar.in_type, False, (), {"param": {"dict": [1, 2, 3]}})
+
+
+def test_method_not_found() -> None:
+    interface = varlink.Interface("""
+    interface org.example.testerrors
+    """)
+
+    with pytest.raises(varlink.MethodNotFound):
+        interface.get_method("Bar")
+
+
+def test_struct_errors() -> None:
+    missing_colon_after_name = """
+    interface org.example.teststruct
+
+    type TypeStruct ( struct ?[](first: int, second: string) )
+    """
+
+    with pytest.raises(SyntaxError, match="after 'struct'"):
+        varlink.Interface(missing_colon_after_name)
+
+    missing_colon_in_struct = """
+    interface org.example.teststruct
+
+    type MyType (
+        nullable_array_struct: ?[](first: int, second string)
+    )
+    method Start() -> (client_id: string)
+    """
+    with pytest.raises(SyntaxError, match="after 'second'"):
+        varlink.Interface(missing_colon_in_struct)
+
+
+def test_unexpected() -> None:
+    invalid = """
+    interface org.example.unexpected
+
+    invalid
+    """
+
+    with pytest.raises(SyntaxError, match="expected type, method, or error"):
+        varlink.Interface(invalid)
