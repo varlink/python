@@ -38,6 +38,12 @@ Homepage = "https://varlink.org/"
 Repository = "https://github.com/varlink/python"
 Issues = "https://github.com/varlink/python/issues"
 
+[tool.coverage.paths]
+source = ["varlink"]
+
+[tool.coverage.run]
+omit = ["varlink/tests/*"]
+
 [tool.setuptools.package-data]
 varlink = [
     "*.varlink"
