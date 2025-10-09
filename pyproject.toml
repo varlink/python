@@ -94,7 +94,8 @@ commands = [
 
 [tool.tox.env.mypy]
 description = "Run type checking tool mypy"
-deps = ["mypy"]
+# pytest-stub required for type hints to be available
+deps = ["mypy", "pytest-stub"]
 commands = [
     ["mypy", "--version"],
     ["mypy", "{posargs:varlink}"]
