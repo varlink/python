@@ -3,11 +3,6 @@ import pytest
 import varlink
 
 
-def assert_invalid_description_raises(description: str) -> None:
-    with pytest.raises(SyntaxError):
-        varlink.Interface(description)
-
-
 def test_scanner_1() -> None:
     interface = varlink.Interface("""# Example Varlink service
 interface org.example.more
@@ -89,37 +84,50 @@ error ErrorFoo (a: (b: bool, c: int), foo: TypeFoo)
     assert isinstance(interface.members.get("TypeEnum"), varlink.scanner._Alias)
 
 
-def test_interfacename() -> None:
-    assert_invalid_description_raises("interface .a.b.c\nmethod F()->()")
-    assert_invalid_description_raises("interface com.-example.leadinghyphen\nmethod F()->()")
-    assert_invalid_description_raises("interface com.example-.danglinghyphen-\nmethod F()->()")
-    assert_invalid_description_raises("interface co9.example.number-toplevel\nmethod F()->()")
-    assert_invalid_description_raises("interface 1om.example.number-toplevel\nmethod F()->()")
-    assert_invalid_description_raises("interface ab\nmethod F()->()")
-    assert_invalid_description_raises("interface .a.b.c\nmethod F()->()")
-    assert_invalid_description_raises("interface a.b.c.\nmethod F()->()")
-    assert_invalid_description_raises("interface a..b.c\nmethod F()->()")
-    assert_invalid_description_raises("interface 1.b.c\nmethod F()->()")
-    assert_invalid_description_raises("interface 8a.0.0\nmethod F()->()")
-    assert_invalid_description_raises("interface -a.b.c\nmethod F()->()")
-    assert_invalid_description_raises("interface a.b.c-\nmethod F()->()")
-    assert_invalid_description_raises("interface a.b-.c-\nmethod F()->()")
-    assert_invalid_description_raises("interface a.-b.c-\nmethod F()->()")
-    assert_invalid_description_raises("interface a.-.c\nmethod F()->()")
-    assert_invalid_description_raises("interface a.*.c\nmethod F()->()")
-    assert_invalid_description_raises("interface a.?\nmethod F()->()")
+invalid_interfacenames = [
+    "interface .a.b.c\nmethod F()->()",
+    "interface com.-example.leadinghyphen\nmethod F()->()",
+    "interface com.example-.danglinghyphen-\nmethod F()->()",
+    "interface co9.example.number-toplevel\nmethod F()->()",
+    "interface 1om.example.number-toplevel\nmethod F()->()",
+    "interface ab\nmethod F()->()",
+    "interface .a.b.c\nmethod F()->()",
+    "interface a.b.c.\nmethod F()->()",
+    "interface a..b.c\nmethod F()->()",
+    "interface 1.b.c\nmethod F()->()",
+    "interface 8a.0.0\nmethod F()->()",
+    "interface -a.b.c\nmethod F()->()",
+    "interface a.b.c-\nmethod F()->()",
+    "interface a.b-.c-\nmethod F()->()",
+    "interface a.-b.c-\nmethod F()->()",
+    "interface a.-.c\nmethod F()->()",
+    "interface a.*.c\nmethod F()->()",
+    "interface a.?\nmethod F()->()",
+]
 
-    assert varlink.Interface("interface a.b\nmethod F()->()").name is not None
-    assert varlink.Interface("interface a.b.c\nmethod F()->()").name is not None
-    assert varlink.Interface("interface a.1\nmethod F()->()").name is not None
-    assert varlink.Interface("interface a.0.0\nmethod F()->()").name is not None
-    assert varlink.Interface("interface org.varlink.service\nmethod F()->()").name is not None
-    assert varlink.Interface("interface com.example.0example\nmethod F()->()").name is not None
-    assert varlink.Interface("interface com.example.example-dash\nmethod F()->()").name is not None
-    assert varlink.Interface("interface xn--lgbbat1ad8j.example.algeria\nmethod F()->()").name is not None
-    assert (
-        varlink.Interface("interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()").name is not None
-    )
+
+@pytest.mark.parametrize("description", invalid_interfacenames)
+def test_interfacename_invalid(description) -> None:
+    with pytest.raises(SyntaxError):
+        varlink.Interface(description)
+
+
+valid_interfacenames = [
+    "interface a.b\nmethod F()->()",
+    "interface a.b.c\nmethod F()->()",
+    "interface a.1\nmethod F()->()",
+    "interface a.0.0\nmethod F()->()",
+    "interface org.varlink.service\nmethod F()->()",
+    "interface com.example.0example\nmethod F()->()",
+    "interface com.example.example-dash\nmethod F()->()",
+    "interface xn--lgbbat1ad8j.example.algeria\nmethod F()->()",
+    "interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()",
+]
+
+
+@pytest.mark.parametrize("description", valid_interfacenames)
+def test_interfacename_valid(description) -> None:
+    assert varlink.Interface(description).name is not None
 
 
 def test_bad_types() -> None:
