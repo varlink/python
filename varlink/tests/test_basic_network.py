@@ -20,44 +20,26 @@ class ServiceRequestHandler(varlink.RequestHandler):
     service = service
 
 
-def test_tcp(server_factory) -> None:
-    address = "tcp:127.0.0.1:23450"
-    server_factory(address, ServiceRequestHandler)
-
-    with varlink.Client(address) as client, client.open("org.varlink.service") as connection:
-        info = connection.GetInfo()
-
-        assert len(info["interfaces"]) == 1
-        assert info["interfaces"][0] == "org.varlink.service"
-        assert info == service.GetInfo()
-
-        desc = connection.GetInterfaceDescription(info["interfaces"][0])
-        assert desc == service.GetInterfaceDescription("org.varlink.service")
-
-        connection.close()
+test_addresses = [
+    ("tcp:127.0.0.1:23450", False, ""),
+    (
+        f"unix:@org.varlink.service_anon_test{os.getpid()}{threading.current_thread().name}",
+        not sys.platform.startswith("linux"),
+        "Only runs on Linux",
+    ),
+    (
+        f"unix:org.varlink.service_anon_test_{os.getpid()}{threading.current_thread().name}",
+        not hasattr(socket, "AF_UNIX"),
+        "No UNIX socket support",
+    ),
+]
 
 
-@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Only runs on Linux")
-def test_anon_unix(server_factory) -> None:
-    address = f"unix:@org.varlink.service_anon_test{os.getpid()}{threading.current_thread().name}"
-    server_factory(address, ServiceRequestHandler)
+@pytest.mark.parametrize("address,skip,skip_reason", test_addresses)
+def test_address(server_factory, address, skip, skip_reason) -> None:
+    if skip:
+        pytest.skip(skip_reason)
 
-    with varlink.Client(address) as client, client.open("org.varlink.service") as connection:
-        info = connection.GetInfo()
-
-        assert len(info["interfaces"]) == 1
-        assert info["interfaces"][0] == "org.varlink.service"
-        assert info == service.GetInfo()
-
-        desc = connection.GetInterfaceDescription(info["interfaces"][0])
-        assert desc == service.GetInterfaceDescription("org.varlink.service")
-
-        connection.close()
-
-
-@pytest.mark.skipif(not hasattr(socket, "AF_UNIX"), reason="No UNIX socket support")
-def test_unix(server_factory) -> None:
-    address = f"unix:org.varlink.service_anon_test_{os.getpid()}{threading.current_thread().name}"
     server_factory(address, ServiceRequestHandler)
 
     with varlink.Client(address) as client, client.open("org.varlink.service") as connection:
