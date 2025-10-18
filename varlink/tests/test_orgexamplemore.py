@@ -216,7 +216,7 @@ if __name__ == "__main__":
 def test_service(server_factory) -> None:
     address = "tcp:127.0.0.1:23451"
     Example.sleep_duration = 0.1
-    server_factory(address, ServiceRequestHandler)
+    server_factory(address, service)
 
     client = varlink.Client.new_with_address(address)
 
