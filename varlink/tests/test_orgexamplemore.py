@@ -75,10 +75,6 @@ service = varlink.Service(
 )
 
 
-class ServiceRequestHandler(varlink.RequestHandler):
-    service = service
-
-
 class ActionFailed(varlink.VarlinkError):
     def __init__(self, reason):
         varlink.VarlinkError.__init__(
@@ -138,7 +134,7 @@ class Example:
 
 
 def run_server(address):
-    with varlink.ThreadingServer(address, ServiceRequestHandler) as server:
+    with varlink.ThreadingServer(address, service) as server:
         print("Listening on", server.server_address)
         try:
             server.serve_forever()
@@ -216,7 +212,7 @@ if __name__ == "__main__":
 def test_service(server_factory) -> None:
     address = "tcp:127.0.0.1:23451"
     Example.sleep_duration = 0.1
-    server_factory(address, ServiceRequestHandler)
+    server_factory(address, service)
 
     client = varlink.Client.new_with_address(address)
 

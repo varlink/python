@@ -49,10 +49,6 @@ service = varlink.Service(
 )
 
 
-class ServiceRequestHandler(varlink.RequestHandler):
-    service = service
-
-
 @service.interface("org.example.encoding")
 class EncodingExample:
     sleep_duration = 1
@@ -83,7 +79,7 @@ class EncodingExample:
 
 def test_ping(server_factory):
     address = "tcp:127.0.0.1:23451"
-    server_factory(address, ServiceRequestHandler)
+    server_factory(address, service)
     client = varlink.Client.new_with_address(address)
     with client.open("org.example.encoding") as conn:
         response = conn.Ping("Foo")
@@ -92,7 +88,7 @@ def test_ping(server_factory):
 
 def test_get_order(server_factory):
     address = "tcp:127.0.0.1:23451"
-    server_factory(address, ServiceRequestHandler)
+    server_factory(address, service)
 
     client = varlink.Client.new_with_address(address)
     with client.open("org.example.encoding") as conn:

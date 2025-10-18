@@ -16,10 +16,6 @@ service = varlink.Service(
 )
 
 
-class ServiceRequestHandler(varlink.RequestHandler):
-    service = service
-
-
 test_addresses = [
     ("tcp:127.0.0.1:23450", False, ""),
     (
@@ -40,7 +36,7 @@ def test_address(server_factory, address, skip, skip_reason) -> None:
     if skip:
         pytest.skip(skip_reason)
 
-    server_factory(address, ServiceRequestHandler)
+    server_factory(address, service)
 
     with varlink.Client(address) as client, client.open("org.varlink.service") as connection:
         info = connection.GetInfo()
@@ -57,7 +53,7 @@ def test_address(server_factory, address, skip, skip_reason) -> None:
 
 def test_reuse_open(server_factory) -> None:
     address = "tcp:127.0.0.1:23450"
-    server_factory(address, ServiceRequestHandler)
+    server_factory(address, service)
 
     with varlink.Client(address) as client:
         connection = client.open_connection()
@@ -73,4 +69,4 @@ def test_reuse_open(server_factory) -> None:
 def test_wrong_url(server_factory) -> None:
     address = f"uenix:org.varlink.service_wrong_url_test_{os.getpid()}"
     with pytest.raises(ConnectionError):
-        server_factory(address, ServiceRequestHandler)
+        server_factory(address, service)

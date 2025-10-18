@@ -5,12 +5,16 @@ import pytest
 import varlink
 
 
+class ServiceRequestHandler(varlink.RequestHandler): ...
+
+
 @pytest.fixture
 def server_factory():
     servers = []
 
-    def _create_server(address: str, request_handler: varlink.RequestHandler):
-        server = varlink.ThreadingServer(address, request_handler)
+    def _create_server(address: str, service: varlink.Service):
+        ServiceRequestHandler.service = service
+        server = varlink.ThreadingServer(address, ServiceRequestHandler)
         ready_event = threading.Event()
 
         def run_server() -> None:
