@@ -6,10 +6,7 @@ passing it to a server Service.
 
 import dataclasses
 import os
-import threading
-import time
 import typing
-import unittest
 
 import varlink
 import varlink.error
@@ -84,41 +81,31 @@ class EncodingExample:
         return GetOrderResult(order=order)
 
 
-class TestService(unittest.TestCase):
+def test_ping(server_factory):
     address = "tcp:127.0.0.1:23451"
+    server_factory(address, ServiceRequestHandler)
+    client = varlink.Client.new_with_address(address)
+    with client.open("org.example.encoding") as conn:
+        response = conn.Ping("Foo")
+    assert response["pong"] == "Foo"
 
-    @classmethod
-    def setUpClass(cls):
-        cls._server = varlink.ThreadingServer(cls.address, ServiceRequestHandler)
-        cls._server_thread = threading.Thread(target=cls._server.serve_forever)
-        cls._server_thread.start()
-        time.sleep(0.1)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._server.shutdown()
-        cls._server.server_close()
-        cls._server_thread.join()
+def test_get_order(server_factory):
+    address = "tcp:127.0.0.1:23451"
+    server_factory(address, ServiceRequestHandler)
 
-    def test_ping(self):
-        client = varlink.Client.new_with_address(self.address)
-        with client.open("org.example.encoding") as conn:
-            response = conn.Ping("Foo")
-        self.assertEqual(response["pong"], "Foo")
-
-    def test_get_order(self):
-        client = varlink.Client.new_with_address(self.address)
-        with client.open("org.example.encoding") as conn:
-            response = conn.GetOrder(4638547)
-        # response will be a dict represenation of GetOrderResult
-        self.assertIn("order", response)
-        order = response["order"]
-        self.assertEqual(order.get("order_num"), 4638547)
-        self.assertEqual(order.get("customer"), "Joe's Discount Store")
-        self.assertEqual(len(order.get("shipments", [])), 2)
-        shipment1 = order["shipments"][0]
-        self.assertEqual(shipment1.get("name"), "Furniture")
-        self.assertIsNotNone(shipment1.get("weight"))
-        shipment2 = order["shipments"][1]
-        self.assertEqual(shipment2.get("name"), "Electronics")
-        self.assertIsNone(shipment2.get("weight"))
+    client = varlink.Client.new_with_address(address)
+    with client.open("org.example.encoding") as conn:
+        response = conn.GetOrder(4638547)
+    # response will be a dict represenation of GetOrderResult
+    assert "order" in response
+    order = response["order"]
+    assert order.get("order_num") == 4638547
+    assert order.get("customer") == "Joe's Discount Store"
+    assert len(order.get("shipments", [])) == 2
+    shipment1 = order["shipments"][0]
+    assert shipment1.get("name") == "Furniture"
+    assert shipment1.get("weight") is not None
+    shipment2 = order["shipments"][1]
+    assert shipment2.get("name") == "Electronics"
+    assert shipment2.get("weight") is None
