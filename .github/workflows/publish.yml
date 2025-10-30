@@ -1,6 +1,13 @@
 name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 
-on: push
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g., 32.0.1)'
+        required: true
+        type: string
 
 jobs:
   build-n-publish:
@@ -15,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
           fetch-depth: 0
       - name: Set up Python 3.9
         uses: actions/setup-python@v1
@@ -42,6 +50,6 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish distribution 📦 to PyPI
-        if: startsWith(github.ref, 'refs/tags')
+        if: startsWith(github.ref, 'refs/tags') || inputs.tag
         uses: pypa/gh-action-pypi-publish@release/v1
 
