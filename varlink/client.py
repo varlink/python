@@ -357,7 +357,7 @@ class Client:
         self.add_interface(self._get_base_interface())
 
         if resolve_interface:
-            self._with_interface(resolve_interface, resolver)
+            self._with_resolved_interface(resolve_interface, resolver)
 
         if address:
             self._with_address(address)
