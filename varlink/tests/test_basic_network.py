@@ -1,8 +1,9 @@
 import os
 import socket
+import sys
 import threading
-import unittest
-from sys import platform
+
+import pytest
 
 import varlink
 
@@ -15,67 +16,57 @@ service = varlink.Service(
 )
 
 
-class ServiceRequestHandler(varlink.RequestHandler):
-    service = service
+test_addresses = [
+    ("tcp:127.0.0.1:23450", False, ""),
+    (
+        f"unix:@org.varlink.service_anon_test{os.getpid()}{threading.current_thread().name}",
+        not sys.platform.startswith("linux"),
+        "Only runs on Linux",
+    ),
+    (
+        f"unix:org.varlink.service_anon_test_{os.getpid()}{threading.current_thread().name}",
+        not hasattr(socket, "AF_UNIX"),
+        "No UNIX socket support",
+    ),
+]
 
 
-class TestService(unittest.TestCase):
-    def do_run(self, address):
-        server = varlink.ThreadingServer(address, ServiceRequestHandler)
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
+@pytest.mark.parametrize("address,skip,skip_reason", test_addresses)
+def test_address(server_factory, address, skip, skip_reason) -> None:
+    if skip:
+        pytest.skip(skip_reason)
 
-        try:
-            with varlink.Client(address) as client, client.open("org.varlink.service") as _connection:
-                info = _connection.GetInfo()
+    server_factory(address, service)
 
-                self.assertEqual(len(info["interfaces"]), 1)
-                self.assertEqual(info["interfaces"][0], "org.varlink.service")
-                self.assertEqual(info, service.GetInfo())
+    with varlink.Client(address) as client, client.open("org.varlink.service") as connection:
+        info = connection.GetInfo()
 
-                desc = _connection.GetInterfaceDescription(info["interfaces"][0])
-                self.assertEqual(desc, service.GetInterfaceDescription("org.varlink.service"))
+        assert len(info["interfaces"]) == 1
+        assert info["interfaces"][0] == "org.varlink.service"
+        assert info == service.GetInfo()
 
-                _connection.close()
+        desc = connection.GetInterfaceDescription(info["interfaces"][0])
+        assert desc == service.GetInterfaceDescription("org.varlink.service")
 
-        finally:
-            server.shutdown()
-            server.server_close()
+        connection.close()
 
-    def test_tcp(self) -> None:
-        self.do_run("tcp:127.0.0.1:23450")
 
-    def test_anon_unix(self) -> None:
-        if platform.startswith("linux"):
-            self.do_run(f"unix:@org.varlink.service_anon_test{os.getpid()}{threading.current_thread().name}")
+def test_reuse_open(server_factory) -> None:
+    address = "tcp:127.0.0.1:23450"
+    server_factory(address, service)
 
-    def test_unix(self) -> None:
-        if hasattr(socket, "AF_UNIX"):
-            self.do_run(f"unix:org.varlink.service_anon_test_{os.getpid()}{threading.current_thread().name}")
+    with varlink.Client(address) as client:
+        connection = client.open_connection()
+        re_use = client.open("org.varlink.service", False, connection)
+        info = re_use.GetInfo()
 
-    def test_wrong_url(self) -> None:
-        self.assertRaises(
-            ConnectionError, self.do_run, f"uenix:org.varlink.service_wrong_url_test_{os.getpid()}"
-        )
+        assert len(info["interfaces"]) == 1
+        assert info["interfaces"][0] == "org.varlink.service"
+        assert info == service.GetInfo()
+        connection.close()
 
-    def test_reuse_open(self) -> None:
-        address = "tcp:127.0.0.1:23450"
-        server = varlink.ThreadingServer(address, ServiceRequestHandler)
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
 
-        try:
-            with varlink.Client(address) as client:
-                connection = client.open_connection()
-                re_use = client.open("org.varlink.service", False, connection)
-
-                info = re_use.GetInfo()
-                self.assertEqual(len(info["interfaces"]), 1)
-                self.assertEqual(info["interfaces"][0], "org.varlink.service")
-                self.assertEqual(info, service.GetInfo())
-                connection.close()
-        finally:
-            server.shutdown()
-            server.server_close()
+def test_wrong_url(server_factory) -> None:
+    address = f"uenix:org.varlink.service_wrong_url_test_{os.getpid()}"
+    with pytest.raises(ConnectionError):
+        server_factory(address, service)
