@@ -28,16 +28,29 @@ class Service:
         >>> )
 
     For the class implementing the methods of a specific varlink interface
-    a decorator is used:
+    the ``@service.interface()`` decorator is used. The argument is a varlink
+    interface name, **not** a Python class. The decorator loads the file
+    ``{name}.varlink`` from the ``interface_dir`` given to the Service constructor.
+    For example, ``@service.interface('com.redhat.system.accounts')`` loads
+    ``com.redhat.system.accounts.varlink`` from ``interface_dir``:
 
         >>> @service.interface('com.redhat.system.accounts')
         >>> class Accounts:
-        >>>     pass
+        >>>     def GetAccounts(self):
+        >>>         return {"accounts": []}
 
-    The varlink file corresponding to this interface is loaded from the 'interface_dir'
-    specified in the constructor of the Service. It has to end in '.varlink'.
+    The methods defined on the decorated class directly implement the varlink
+    interface methods. Each method receives the varlink call parameters as
+    keyword arguments and must return a dict matching the method's return type.
 
-    Use a :class:`RequestHandler` with your Service object and run a :class:`Server` with it.
+    To wire a Service to a network server, create a :class:`RequestHandler` subclass
+    and set its ``service`` class variable to your Service instance:
+
+        >>> class ServiceRequestHandler(varlink.RequestHandler):
+        >>>     service = service
+        >>>
+        >>> server = varlink.ThreadingServer("unix:@example", ServiceRequestHandler)
+        >>> server.serve_forever()
 
     If you want to use your own server with the Service object, split the incoming stream
     for every null byte and feed it to the :meth:`Service.handle` method.
@@ -275,6 +288,22 @@ class Service:
         return interface_class
 
     def interface(self, filename):
+        """Decorator that registers a class as the handler for a varlink interface.
+
+        :param filename: A varlink interface name (e.g. ``'com.example.service'``).
+            The file ``{filename}.varlink`` is loaded from the ``interface_dir`` given
+            to the Service constructor. This must be an interface name or a file path,
+            **not** a Python class or type.
+
+        Example::
+
+            @service.interface('com.example.service')
+            class Example:
+                def Echo(self, message):
+                    return {"message": message}
+
+        """
+
         def decorator(interface_class):
             self._add_interface(filename, interface_class())
             return interface_class
@@ -325,8 +354,17 @@ def get_listen_fd() -> Union[int, None]:
 class RequestHandler(StreamRequestHandler):
     """Varlink request handler
 
-    To use as an argument for the VarlinkServer constructor.
-    Instantiate your own class and set the class variable service to your global :class:`Service` object.
+    Subclass this and set the ``service`` class variable to your :class:`Service` instance.
+    Then pass your subclass to a :class:`Server` (or :class:`ThreadingServer`) constructor::
+
+        class ServiceRequestHandler(varlink.RequestHandler):
+            service = service          # required class variable
+
+        server = varlink.ThreadingServer(address, ServiceRequestHandler)
+        server.serve_forever()
+
+    The ``service`` class variable is **required**; without it, incoming requests cannot
+    be dispatched.
     """
 
     service: Optional[Service] = None
@@ -541,10 +579,18 @@ class Server(BaseServer):
 
 
 class ThreadingServer(ThreadingMixIn, Server):
-    pass
+    """Multi-threaded varlink server that handles each connection in a new thread.
+
+    This is the most commonly used server class. Import it from the ``varlink``
+    package (``varlink.ThreadingServer``), **not** from ``socketserver``.
+    """
 
 
 if hasattr(os, "fork"):
 
     class ForkingServer(ForkingMixIn, Server):
-        pass
+        """Multi-process varlink server that forks for each connection (Unix/Linux only).
+
+        Import from the ``varlink`` package (``varlink.ForkingServer``), **not** from
+        ``socketserver``.
+        """
