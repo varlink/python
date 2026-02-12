@@ -11,9 +11,6 @@ with one of the server classes:
 - :class:`varlink.ThreadingServer` -- multi-threaded server for concurrent connections
 - :class:`varlink.ForkingServer` -- multi-process server (Unix/Linux only)
 
-All server classes live in the ``varlink`` package; import them from ``varlink``, not from
-``socketserver``.
-
 For client implementations use the :class:`varlink.Client` class.
 
 For installation and examples, see the GIT repository https://github.com/varlink/python

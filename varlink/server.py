@@ -290,14 +290,14 @@ class Service:
     def interface(self, filename):
         """Decorator that registers a class as the handler for a varlink interface.
 
-        :param filename: A varlink interface name (e.g. ``'com.example.service'``).
+        :param filename: A varlink interface name (e.g. ``'org.example.service'``).
             The file ``{filename}.varlink`` is loaded from the ``interface_dir`` given
             to the Service constructor. This must be an interface name or a file path,
             **not** a Python class or type.
 
         Example::
 
-            @service.interface('com.example.service')
+            @service.interface('org.example.service')
             class Example:
                 def Echo(self, message):
                     return {"message": message}
@@ -408,9 +408,9 @@ class Server(BaseServer):
         >>> class ServiceRequestHandler(varlink.RequestHandler):
         >>>    service = service
         >>>
-        >>> @service.interface('com.example.service')
+        >>> @service.interface('org.example.service')
         >>> class Example:
-        >>>    # com.example.service method implementation here …
+        >>>    # org.example.service method implementation here …
         >>>    pass
         >>>
         >>> server = varlink.ThreadingServer(sys.argv[1][10:], ServiceRequestHandler)

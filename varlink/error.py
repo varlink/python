@@ -16,7 +16,7 @@ class VarlinkEncoder(json.JSONEncoder):
 
 
 class VarlinkError(Exception):
-    """The base class for varlink error exceptions.
+    """The base class for varlink errors.
 
     User-defined errors
     ~~~~~~~~~~~~~~~~~~~
@@ -26,12 +26,12 @@ class VarlinkError(Exception):
     keys to the base ``__init__``. The parameter names and types must match the
     ``.varlink`` definition manually; there is no automatic binding::
 
-        # Given:  error ActionFailed (field: string)  in the .varlink file
+        # Given:  error ActionFailed (field: string)  in an org.example.myinterface.varlink file
 
         class ActionFailed(VarlinkError):
             def __init__(self, reason):
                 VarlinkError.__init__(self, {
-                    "error": "com.example.ActionFailed",
+                    "error": "org.example.myinterface.ActionFailed",
                     "parameters": {"field": reason},
                 })
 
