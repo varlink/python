@@ -87,7 +87,7 @@ error ErrorFoo (a: (b: bool, c: int), foo: TypeFoo)
 invalid_interfacenames = [
     "interface .a.b.c\nmethod F()->()",
     "interface com.-example.leadinghyphen\nmethod F()->()",
-    "interface com.example-.danglinghyphen-\nmethod F()->()",
+    "interface org.example-.danglinghyphen-\nmethod F()->()",
     "interface co9.example.number-toplevel\nmethod F()->()",
     "interface 1om.example.number-toplevel\nmethod F()->()",
     "interface ab\nmethod F()->()",
@@ -118,8 +118,8 @@ valid_interfacenames = [
     "interface a.1\nmethod F()->()",
     "interface a.0.0\nmethod F()->()",
     "interface org.varlink.service\nmethod F()->()",
-    "interface com.example.0example\nmethod F()->()",
-    "interface com.example.example-dash\nmethod F()->()",
+    "interface org.example.0example\nmethod F()->()",
+    "interface org.example.example-dash\nmethod F()->()",
     "interface xn--lgbbat1ad8j.example.algeria\nmethod F()->()",
     "interface xn--c1yn36f.xn--c1yn36f.xn--c1yn36f\nmethod F()->()",
 ]
