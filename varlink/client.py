@@ -21,7 +21,7 @@ class ClientInterfaceHandler:
     def __init__(self, interface, namespaced=False):
         """Base class for varlink client, which wraps varlink methods of an interface.
 
-        The object allows to talk to a varlink service, which implements the specified interface
+        The object allows one to talk to a varlink service, which implements the specified interface
         transparently by calling the methods. The call blocks until enough messages are received.
 
         For monitor calls with '_more=True' a generator object is returned.
@@ -161,7 +161,7 @@ class SimpleClientInterfaceHandler(ClientInterfaceHandler):
     def __init__(self, interface, file_or_socket, namespaced=False):
         """Creates an object with the varlink methods of an interface installed.
 
-        The object allows to talk to a varlink service, which implements the specified interface
+        The object allows one to talk to a varlink service, which implements the specified interface
         transparently by calling the methods. The call blocks until enough messages are received.
 
         For monitor calls with '_more=True' a generator object is returned.

@@ -189,8 +189,8 @@ Listening on @00352
 
 ### Bridge Mode
 
-Bridge mode allows to tunnel to a remote point via stdin/stdout and call a method.
-Running ```varlink bridge``` allows to connect stdio to the host services via ```org.varlink.resolver``` interface resolving.
+Bridge mode allows one to tunnel to a remote point via stdin/stdout and call a method.
+Running ```varlink bridge``` allows one to connect stdio to the host services via ```org.varlink.resolver``` interface resolving.
 
 ```bash
 # python3 -m varlink.cli -b "ssh host.example.org varlink bridge" call com.redhat.machine.GetInfo '{}'
