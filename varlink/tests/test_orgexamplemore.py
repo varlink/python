@@ -22,10 +22,10 @@ import shlex
 import socket
 import sys
 import textwrap
-import threading
 import time
-import unittest
 from sys import platform
+
+import pytest
 
 import varlink
 
@@ -73,10 +73,6 @@ service = varlink.Service(
     url="http://varlink.org",
     interface_dir=os.path.dirname(__file__),
 )
-
-
-class ServiceRequestHandler(varlink.RequestHandler):
-    service = service
 
 
 class ActionFailed(varlink.VarlinkError):
@@ -138,7 +134,7 @@ class Example:
 
 
 def run_server(address):
-    with varlink.ThreadingServer(address, ServiceRequestHandler) as server:
+    with varlink.ThreadingServer(address, service) as server:
         print("Listening on", server.server_address)
         try:
             server.serve_forever()
@@ -213,57 +209,52 @@ if __name__ == "__main__":
 ######## UNITTEST #############
 
 
-class TestService(unittest.TestCase):
-    def test_service(self) -> None:
-        address = "tcp:127.0.0.1:23451"
-        Example.sleep_duration = 0.1
+def test_service(server_factory) -> None:
+    address = "tcp:127.0.0.1:23451"
+    Example.sleep_duration = 0.1
+    server_factory(address, service)
 
-        server = varlink.ThreadingServer(address, ServiceRequestHandler)
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
-        try:
-            client = varlink.Client.new_with_address(address)
+    client = varlink.Client.new_with_address(address)
 
-            run_client(client)
+    run_client(client)
 
-            with (
-                client.open("org.example.more", namespaced=True) as con1,
-                client.open("org.example.more", namespaced=True) as con2,
-            ):
-                self.assertEqual(con1.Ping("Test").pong, "Test")
+    with (
+        client.open("org.example.more", namespaced=True) as con1,
+        client.open("org.example.more", namespaced=True) as con2,
+    ):
+        assert con1.Ping("Test").pong == "Test"
 
-                it = con1.TestMore(10, _more=True)
+        it = con1.TestMore(10, _more=True)
 
-                m = next(it)
-                self.assertTrue(hasattr(m.state, "start"))
-                self.assertFalse(hasattr(m.state, "end"))
-                self.assertFalse(hasattr(m.state, "progress"))
-                self.assertIsNotNone(m.state.start)
+        m = next(it)
+        assert hasattr(m.state, "start")
+        assert not hasattr(m.state, "end")
+        assert not hasattr(m.state, "progress")
+        assert m.state.start is not None
 
-                for i in range(0, 110, 10):
-                    m = next(it)
-                    self.assertTrue(hasattr(m.state, "progress"))
-                    self.assertFalse(hasattr(m.state, "start"))
-                    self.assertFalse(hasattr(m.state, "end"))
-                    self.assertIsNotNone(m.state.progress)
-                    self.assertEqual(i, m.state.progress)
+        for i in range(0, 110, 10):
+            m = next(it)
+            assert hasattr(m.state, "progress")
+            assert not hasattr(m.state, "start")
+            assert not hasattr(m.state, "end")
+            assert m.state.progress is not None
+            assert i == m.state.progress
 
-                    if i > 50:
-                        ret = con2.Ping("Test")
-                        self.assertEqual("Test", ret.pong)
+            if i > 50:
+                ret = con2.Ping("Test")
+                assert ret.pong == "Test"
 
-                m = next(it)
-                self.assertTrue(hasattr(m.state, "end"))
-                self.assertFalse(hasattr(m.state, "start"))
-                self.assertFalse(hasattr(m.state, "progress"))
-                self.assertIsNotNone(m.state.end)
+        m = next(it)
+        assert hasattr(m.state, "end")
+        assert not hasattr(m.state, "start")
+        assert not hasattr(m.state, "progress")
+        assert m.state.end is not None
 
-                self.assertRaises(StopIteration, next, it)
+        with pytest.raises(StopIteration):
+            next(it)
 
-                con1.StopServing(_oneway=True)
-                time.sleep(0.5)
-                self.assertRaises(ConnectionError, con1.Ping, "Test")
-        finally:
-            server.shutdown()
-            server.server_close()
+        con1.StopServing(_oneway=True)
+        time.sleep(0.5)
+
+        with pytest.raises(ConnectionError):
+            con1.Ping("Test")
