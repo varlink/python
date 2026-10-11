@@ -1,5 +1,6 @@
 import json
-import unittest
+
+import pytest
 
 import varlink
 
@@ -14,21 +15,23 @@ class OneMessageClientHandler(varlink.ClientInterfaceHandler):
         yield self.next_message
 
 
-class TestError(unittest.TestCase):
-    def test_pack_unpack(self):
-        dummy_if = varlink.Interface("interface org.example.dummy")
-        for error in [
-            varlink.InterfaceNotFound("org.varlink.notfound"),
-            varlink.MethodNotFound("Method"),
-            varlink.MethodNotImplemented("Abstract"),
-            varlink.InvalidParameter("Struct.param"),
-        ]:
-            for namespaced in (True, False):
-                with self.subTest(error=error, namespaced=namespaced):
-                    # encode error
-                    encoded = json.dumps(error, cls=varlink.VarlinkEncoder)
+@pytest.mark.parametrize(
+    "error",
+    [
+        varlink.InterfaceNotFound("org.varlink.notfound"),
+        varlink.MethodNotFound("Method"),
+        varlink.MethodNotImplemented("Abstract"),
+        varlink.InvalidParameter("Struct.param"),
+    ],
+)
+@pytest.mark.parametrize("namespaced", [True, False])
+def test_pack_unpack(error, namespaced):
+    dummy_if = varlink.Interface("interface org.example.dummy")
 
-                    # Emulates the client receiving an error
-                    handler = OneMessageClientHandler(dummy_if, namespaced, encoded)
-                    with self.assertRaises(error.__class__):
-                        handler._next_varlink_message()
+    # encode error
+    encoded = json.dumps(error, cls=varlink.VarlinkEncoder)
+
+    # Emulates the client receiving an error
+    handler = OneMessageClientHandler(dummy_if, namespaced, encoded)
+    with pytest.raises(error.__class__):
+        handler._next_varlink_message()
