@@ -11,8 +11,9 @@ import sys
 import textwrap
 import threading
 import time
-import unittest
 from sys import platform
+
+import pytest
 
 import varlink
 
@@ -489,44 +490,42 @@ if __name__ == "__main__":
 ######## UNITTEST #############
 
 
-class TestService(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        if hasattr(socket, "AF_UNIX"):
-            cls.address = (
-                "unix:org.varlink.certification_" + str(os.getpid()) + threading.current_thread().name
-            )
-        else:
-            cls.address = "tcp:127.0.0.1:23456"
+@pytest.fixture
+def server_address(server_factory):
+    address = None
+    if hasattr(socket, "AF_UNIX"):
+        address = f"unix:org.varlink.certification_{os.getpid()}{threading.current_thread().name}"
+    else:
+        address = "tcp:127.0.0.1:23456"
 
-        cls.server = varlink.ThreadingServer(cls.address, ServiceRequestHandler)
-        server_thread = threading.Thread(target=cls.server.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
+    server_factory(address, service)
 
-    def test_client(self):
-        run_client(varlink.Client.new_with_address(self.address))
+    return address
 
-    def test_01(self):
-        with varlink.Client(self.address) as client, client.open("org.varlink.certification") as con:
-            ret = con.Start()
-            client_id = ret["client_id"]
-            ret = con.Test01(client_id)
-            print("Test01:", ret)
-            ret = con.Test02(client_id, ret["bool"])
-            print("Test02:", ret)
-            self.assertRaises(varlink.VarlinkError, con.Test03, "test")
-            self.assertRaises(varlink.VarlinkError, con.Test03, client_id, 0)
-            self.assertRaises(varlink.VarlinkError, con.Test03, client_id, ret["int"])
-            ret = con.Start()
-            client_id = ret["client_id"]
-            ret = con.Test01(client_id)
-            print("Test01:", ret)
-            ret = con.Test02(client_id, ret["bool"])
-            print("Test02:", ret)
-            self.assertRaises(varlink.VarlinkError, con.Test01, client_id)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.server.shutdown()
-        cls.server.server_close()
+def test_client(server_address):
+    run_client(varlink.Client.new_with_address(server_address))
+
+
+def test_01(server_address):
+    with varlink.Client(server_address) as client, client.open("org.varlink.certification") as con:
+        ret = con.Start()
+        client_id = ret["client_id"]
+        ret = con.Test01(client_id)
+        print("Test01:", ret)
+        ret = con.Test02(client_id, ret["bool"])
+        print("Test02:", ret)
+        with pytest.raises(varlink.VarlinkError):
+            con.Test03("test")
+        with pytest.raises(varlink.VarlinkError):
+            con.Test03(client_id, 0)
+        with pytest.raises(varlink.VarlinkError):
+            con.Test03(client_id, ret["int"])
+        ret = con.Start()
+        client_id = ret["client_id"]
+        ret = con.Test01(client_id)
+        print("Test01:", ret)
+        ret = con.Test02(client_id, ret["bool"])
+        print("Test02:", ret)
+        with pytest.raises(varlink.VarlinkError):
+            con.Test01(client_id)
