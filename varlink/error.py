@@ -51,9 +51,6 @@ class VarlinkError(Exception):
         elif message["error"] == "org.varlink.service.MethodNotImplemented":
             return MethodNotImplemented.new(message, namespaced)
 
-        elif message["error"] == "org.varlink.service.MethodNotImplemented":
-            return MethodNotImplemented.new(message, namespaced)
-
         elif message["error"] == "org.varlink.service.MethodNotFound":
             return MethodNotFound.new(message, namespaced)
 
