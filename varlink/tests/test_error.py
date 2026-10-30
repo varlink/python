@@ -22,6 +22,9 @@ class OneMessageClientHandler(varlink.ClientInterfaceHandler):
         varlink.MethodNotFound("Method"),
         varlink.MethodNotImplemented("Abstract"),
         varlink.InvalidParameter("Struct.param"),
+        varlink.ExpectedMore(),
+        varlink.ExpectedUpgrade(),
+        varlink.PermissionDenied(),
     ],
 )
 @pytest.mark.parametrize("namespaced", [True, False])

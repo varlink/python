@@ -40,6 +40,9 @@ if hasattr(os, "fork"):
         "Interface",
         "Scanner",
         "get_listen_fd",
+        "ExpectedMore",
+        "ExpectedUpgrade",
+        "PermissionDenied",
     ]
     from .server import ForkingServer
 else:
@@ -60,14 +63,20 @@ else:
         "Interface",
         "Scanner",
         "get_listen_fd",
+        "ExpectedMore",
+        "ExpectedUpgrade",
+        "PermissionDenied",
     ]
 
 from .client import Client, ClientInterfaceHandler, SimpleClientInterfaceHandler
 from .error import (
+    ExpectedMore,
+    ExpectedUpgrade,
     InterfaceNotFound,
     InvalidParameter,
     MethodNotFound,
     MethodNotImplemented,
+    PermissionDenied,
     VarlinkEncoder,
     VarlinkError,
 )
