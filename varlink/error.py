@@ -54,6 +54,15 @@ class VarlinkError(Exception):
         elif message["error"] == "org.varlink.service.MethodNotFound":
             return MethodNotFound.new(message, namespaced)
 
+        elif message["error"] == "org.varlink.service.ExpectedMore":
+            return ExpectedMore.new(message, namespaced)
+
+        elif message["error"] == "org.varlink.service.ExpectedUpgrade":
+            return ExpectedUpgrade.new(message, namespaced)
+
+        elif message["error"] == "org.varlink.service.PermissionDenied":
+            return PermissionDenied.new(message, namespaced)
+
         else:
             return cls(message, namespaced)
 
@@ -151,3 +160,36 @@ class InvalidParameter(VarlinkError):
                 "parameters": {"parameter": name},
             },
         )
+
+
+class ExpectedMore(VarlinkError):
+    """The standardized varlink ExpectedMore error as a python exception"""
+
+    @classmethod
+    def new(cls, message, namespaced=False):
+        return cls()
+
+    def __init__(self):
+        VarlinkError.__init__(self, {"error": "org.varlink.service.ExpectedMore", "parameters": {}})
+
+
+class ExpectedUpgrade(VarlinkError):
+    """The standardized varlink ExpectedUpgrade error as a python exception"""
+
+    @classmethod
+    def new(cls, message, namespaced=False):
+        return cls()
+
+    def __init__(self):
+        VarlinkError.__init__(self, {"error": "org.varlink.service.ExpectedUpgrade", "parameters": {}})
+
+
+class PermissionDenied(VarlinkError):
+    """The standardized varlink PermissionDenied error as a python exception"""
+
+    @classmethod
+    def new(cls, message, namespaced=False):
+        return cls()
+
+    def __init__(self):
+        VarlinkError.__init__(self, {"error": "org.varlink.service.PermissionDenied", "parameters": {}})
