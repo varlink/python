@@ -90,10 +90,10 @@ class ActionFailed(varlink.VarlinkError):
 class Example:
     sleep_duration = 1.0
 
-    def TestMore(self, n, _more=True, _server=None):
+    def TestMore(self, n, _more=False, _server=None):
         try:
             if not _more:
-                yield varlink.InvalidParameter("more")
+                yield varlink.ExpectedMore()
 
             yield {"state": {"start": True}, "_continues": True}
 
@@ -256,6 +256,9 @@ def test_service(server_factory) -> None:
 
         with pytest.raises(StopIteration):
             next(it)
+
+        with pytest.raises(varlink.ExpectedMore):
+            con1.TestMore(10, _more=False)
 
         con1.StopServing(_oneway=True)
         time.sleep(0.5)
