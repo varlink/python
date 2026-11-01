@@ -73,25 +73,3 @@ from .error import (
 )
 from .scanner import Interface, Scanner
 from .server import RequestHandler, Server, Service, ThreadingServer, get_listen_fd
-
-
-# There are no tests here, so don't try to run anything discovered from
-# introspecting the symbols (e.g. FunctionTestCase). Instead, all our
-# tests come from within varlink.tests.
-def load_tests(loader, tests, pattern):
-    import os.path
-    import sys
-    from fnmatch import fnmatch
-
-    if pattern is None:
-        pattern = "test_*.py"
-
-    # top level directory cached on loader instance
-    test_dir = os.path.dirname(__file__) + "/tests"
-    for fn in os.listdir(test_dir):
-        if fnmatch(fn, pattern):
-            modname = "varlink.tests." + fn[:-3]
-            __import__(modname)
-            module = sys.modules[modname]
-            tests.addTest(loader.loadTestsFromModule(module))
-    return tests
