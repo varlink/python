@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Test custom JSON encoding by subclassing VarlinkEncoder and
 passing it to a server Service.
 """

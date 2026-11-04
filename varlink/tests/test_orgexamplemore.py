@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Server and Client example of varlink for python
 
 From the main git repository directory run::
